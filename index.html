@@ -615,12 +615,9 @@ html.on-map:not(.sheet-lock),html.on-map:not(.sheet-lock) body{background:#f4f0e
 .ps-list b{display:block;font-size:15px;font-weight:600}
 .ps-list small{display:block;font-size:12px;color:var(--text2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .ed-lab-hint .ti-map-pin-check{color:var(--spa-fg)}
-.wiz-cover{position:relative}
 .cover{position:relative;display:flex;align-items:center;justify-content:center;height:150px;border-radius:16px;overflow:hidden;background:var(--accent-bg)}
 .cover img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
 .cover .en{font-family:"Isometra",cursive;font-size:34px;color:var(--accent-fg);padding:0 16px;text-align:center;line-height:1.1}
-.wiz-cover-btn{position:absolute;right:10px;bottom:10px;height:36px;padding:0 12px;font-size:14px;gap:4px;background:rgba(255,255,255,.92)}
-.wiz-cover-x{position:absolute;right:10px;top:10px;width:30px;height:30px;border:0;border-radius:50%;background:rgba(255,255,255,.92);color:var(--text2);display:flex;align-items:center;justify-content:center;cursor:pointer}
 .wiz-bar{position:fixed;left:0;right:0;bottom:0;z-index:40;max-width:480px;margin:0 auto;display:none;gap:8px;
   padding:12px 16px calc(12px + env(safe-area-inset-bottom));background:var(--page);border-top:1px solid var(--line)}
 .on-new .wiz-bar{display:flex}
@@ -2166,12 +2163,12 @@ tripsEl.addEventListener('click', e => {
 });
 document.getElementById('tripNew').addEventListener('click', () => { location.hash = 'new'; });
 
-// ---------- 建立旅程：一頁就好（目的地、日期、名稱自動帶入、封面選填）；住處、交通方式、匯入清單建好後在「開始規劃」卡片裡做 ----------
+// ---------- 建立旅程：一頁就好（名稱、目的地、日期；名稱沒自己填就自動帶入）；封面、住處、交通方式、匯入清單建好後在「開始規劃」卡片裡做 ----------
 const wizEl = document.getElementById('wiz'), wizBack = document.getElementById('wizBack'), wizNext = document.getElementById('wizNext');
 const WIZ_MODES = [['drive', 'car', '開車／叫車', 'Grab、Uber、計程車'], ['transit', 'bus', '大眾運輸', '捷運、公車、火車'],
   ['moto', 'motorbike', '機車', '自己騎或叫機車'], ['walk', 'walk', '走路為主', '景點都在附近']];
 let wiz;
-function wizReset() { const t = todayYmd(); wiz = { name: '', nameAuto: true, dest: '', geo: null, start: '', end: '', cal: t.slice(0, 7), cover: null, err: '' }; }
+function wizReset() { const t = todayYmd(); wiz = { name: '', nameAuto: true, dest: '', geo: null, start: '', end: '', cal: t.slice(0, 7), err: '' }; }
 const ymd = d => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
 const todayYmd = () => ymd(new Date(Date.now() + NOW_SHIFT));
 const dLabel = v => { const d = new Date(v + 'T00:00'); return `${mdOf(d)}（${'日一二三四五六'[d.getDay()]}）`; };
@@ -2203,16 +2200,13 @@ function renderWiz() {
   const n = wizDays();
   if (wiz.nameAuto) wiz.name = autoName();
   daySub.textContent = '建立旅程';
-  wizEl.innerHTML = `<div class="wiz-h">要去哪裡？</div><p class="wiz-p">住處、交通方式、想去的店，建好之後再慢慢加。</p>
+  wizEl.innerHTML = `<div class="wiz-h">要去哪裡？</div><p class="wiz-p">住處、交通方式、想去的店、封面照片，建好之後再慢慢加。</p>
+    ${field('旅程名稱', `<input type="text" data-k="name" id="wizName" value="${esc(wiz.name)}" placeholder="選好目的地和日期會自動帶入" autocomplete="off" maxlength="40">`)}
     <div class="ed-field ps-field"><span class="ed-lab">目的地<span class="ed-lab-hint">${wiz.geo ? `<i class="ti ti-map-pin-check"></i> ${esc(wiz.geo.label)}` : '打城市名稱，從清單選一個'}</span></span>
       <input type="text" data-k="dest" id="wizDest" value="${esc(wiz.dest)}" placeholder="例如：京都、Bangkok" autocomplete="off"></div>
     <div class="ed-field"><span class="ed-lab">日期<span class="ed-lab-hint">${!wiz.start ? '先點出發日' : !wiz.end ? '再點回程日' : ''}</span></span>${calHtml()}</div>
     <div class="wiz-note${wiz.err ? ' err' : ''}" id="wizNote">${wiz.err ? esc(wiz.err) : n ? `${dLabel(wiz.start)}–${dLabel(wiz.end)}．共 ${n} 天 ${n - 1} 夜` : wiz.start ? `出發 ${dLabel(wiz.start)}` : ''}</div>
-    ${field('旅程名稱', `<input type="text" data-k="name" id="wizName" value="${esc(wiz.name)}" placeholder="選好目的地和日期會自動帶入" autocomplete="off" maxlength="40">`)}
-    <div class="ed-field"><span class="ed-lab">封面照片<span class="ed-lab-hint">選填，之後在總覽也能換</span></span>
-      <div class="wiz-cover">${coverHtml(wiz.cover?.dataUrl, wizEn())}
-        <label class="btn ghost wiz-cover-btn"><i class="ti ti-photo-plus"></i> ${wiz.cover ? '換一張' : '選一張照片'}<input type="file" accept="image/*" id="wizCoverFile" hidden></label>
-        ${wiz.cover ? '<button type="button" class="wiz-cover-x" id="wizCoverX" aria-label="不用照片"><i class="ti ti-x"></i></button>' : ''}</div></div>`;
+`;
   wizBack.textContent = '取消';
   wizNext.textContent = '建立旅程';
   const dest = wizEl.querySelector('#wizDest');
@@ -2228,12 +2222,7 @@ wizEl.addEventListener('input', e => {
   if (!k) return;
   wiz[k] = e.target.value;
   if (k === 'name') wiz.nameAuto = !e.target.value.trim();   // 自己改過名稱就不再自動帶入；清空了就恢復
-  if (k === 'dest') { if (wiz.nameAuto) { wiz.name = autoName(); wizEl.querySelector('#wizName').value = wiz.name; } const en = wizEl.querySelector('.cover .en'); if (en) en.textContent = wizEn(); }
-});
-wizEl.addEventListener('change', async e => {
-  if (e.target.id !== 'wizCoverFile') return;
-  const f = e.target.files[0]; if (!f) return;
-  try { wiz.cover = await shrinkPhoto(f); renderWiz(); } catch (err) { toast(err.message); }
+  if (k === 'dest' && wiz.nameAuto) { wiz.name = autoName(); wizEl.querySelector('#wizName').value = wiz.name; }
 });
 wizEl.addEventListener('click', e => {
   const b = e.target.closest('button'); if (!b) return;
@@ -2243,12 +2232,12 @@ wizEl.addEventListener('click', e => {
     const v = b.dataset.day;
     if (!wiz.start || wiz.end || v < wiz.start) { wiz.start = v; wiz.end = ''; } else wiz.end = v;
     wiz.err = ''; renderWiz();
-  } else if (b.id === 'wizCoverX') { wiz.cover = null; renderWiz(); }
+  }
 });
 wizBack.addEventListener('click', () => { location.hash = 'trips'; });
 wizNext.addEventListener('click', () => {
   const n = wizDays();
-  wiz.err = !wiz.dest.trim() ? '請填目的地' : !wiz.start || !wiz.end ? '請選出發和回程日期' : !n ? '回程不能比出發早' : n > 30 ? '最多 30 天' : !wiz.name.trim() ? '請填旅程名稱' : '';
+  wiz.err = !wiz.dest.trim() ? '請填目的地' : !wiz.start || !wiz.end ? '請選出發和回程日期' : !n ? '回程不能比出發早' : n > 30 ? '最多 30 天' : !wiz.name.trim() ? '請填旅程名稱' : '';   // 名稱會自動帶入，最後才檢查
   if (wiz.err) { renderWiz(); wizEl.querySelector('#wizNote')?.scrollIntoView({ block: 'center', behavior: 'smooth' }); return; }
   openCreateAuth();
 });
@@ -2277,12 +2266,6 @@ function openCreateAuth() {
       const r = await api({ action: 'createTrip', nick, name: wiz.name.trim(), dest, en: wizEn(), region: g.region || '', center: g.center || '',
         start: wiz.start, days: wizDays() }, 60000);
       setNick(nick);
-      if (wiz.cover) {   // 封面：旅程建好才有地方放，先上傳再存到旅程（失敗也照樣進去，之後在總覽換）
-        $('crGo').textContent = '上傳封面…';
-        const auth = { trip: r.trip.id, key: r.trip.view_key, code: r.trip.code, nick };
-        try { const up = await api({ ...auth, action: 'uploadPhoto', data: wiz.cover.b64, mime: 'image/jpeg', name: 'cover' }, 60000);
-          r.trip = (await api({ ...auth, action: 'saveTrip', cover: up.url })).trip; } catch {}
-      }
       rememberTrip(r.trip, 'edit', r.trip.view_key, r.trip.code);
       try { sessionStorage.setItem('trip-created', r.trip.code); } catch {}
       location.href = tripUrl(r.trip.id, r.trip.view_key);   // 換到新旅程（整頁重新載入）
