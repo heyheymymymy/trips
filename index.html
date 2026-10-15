@@ -1674,12 +1674,12 @@ function renderCand() {
       ${it.map && !multi ? navBtn(it.map, it.t) : ''}${editIc}</div>`;
   };
   let body;
-  if (!all.length) body = '<div class="ov-empty">還沒有備選景點。可以從 Google 地圖導入，或編輯行程時「日期」選「備選」</div>';
+  if (!all.length) body = '<div class="ov-empty">還沒有備選景點。按上面「加入新地點」搜尋店名，或貼上 Google 地圖的店家、清單連結</div>';
   else if (candView.sort === 'type' && !candView.f)
     body = TYPES.map(([k, n]) => { const g = shown.filter(c => (c.cls || 'eat') === k);
       return g.length ? `<div class="cand-grp ${k}"><span class="cp-dot"></span>${n}<b>${g.length}</b></div>` + g.map(card).join('') : ''; }).join('');
   else body = shown.map(card).join('');
-  candEl.innerHTML = `<button type="button" class="btn ghost cand-import" id="candImport"><i class="ti ti-map-pin-plus"></i> 從 Google 地圖導入</button>
+  candEl.innerHTML = `<button type="button" class="btn ghost cand-import" id="candImport"><i class="ti ti-plus"></i> 加入新地點</button>
     ${all.length > 1 ? `<div class="cand-bar">
       <div class="cand-chips">${typeChips(all, candView.f, 'cand-filter')}</div>
       <span class="cand-sep" aria-hidden="true"></span>
@@ -1702,7 +1702,7 @@ const SORTS = { new: ['ti-clock', '最新加入'], type: ['ti-category', '依類
 const sortBtn = spin => `<button type="button" class="cand-sortbtn${spin ? ' flip' : ''}" data-sort aria-label="排列：${SORTS[candView.sort][1]}，點一下切換"><i class="ti ${SORTS[candView.sort][0]}"></i></button>`;
 // 編輯模式下點卡片＝編輯
 candEl.addEventListener('click', e => {
-  if (e.target.closest('#candImport')) { if (getAuth()) openImport(); else openAuth(openImport); return; }
+  if (e.target.closest('#candImport')) { withAuth(() => openAddFlow('cand')); return; }   // 搜尋、貼店家連結、貼清單都在同一個面板
   const f = e.target.closest('.cand-filter .chip'), so = e.target.closest('[data-sort]');
   if (f || so) {
     if (f) candView.f = f.dataset.v; else candView.sort = candView.sort === 'new' ? 'type' : 'new';
@@ -1837,7 +1837,7 @@ function setupHtml() {
 function runSetup(k) {
   if (k === 'hide') { markSetup('hide'); renderOverview(); return; }
   if (k === 'stay' || k === 'mode') withAuth(openTripSettings);
-  else if (k === 'import') { markSetup('import'); location.hash = 'cand'; setTimeout(() => withAuth(openImport), 350); }
+  else if (k === 'import') { markSetup('import'); location.hash = 'cand'; setTimeout(() => withAuth(() => openAddFlow('cand')), 350); }
   else if (k === 'invite') { markSetup('invite'); shareTrip('edit'); setTimeout(renderOverview, 600); }
   else if (k === 'cover') withAuth(openCover);
 }
@@ -3479,15 +3479,16 @@ function drawAdd() {
   if (af.step === 1) {
     const cands = (DATA.cand || []).slice().reverse().slice(0, 12);
     const p = af.pick;
-    body.innerHTML = head('要去哪裡？', d ? `第 ${dayNum(af.day)} 天．${d.date}` : '加入備選') + `
+    const toCand = af.day === 'cand';   // 從備選頁進來：選好就直接加入備選（不用選時間）
+    body.innerHTML = head(toCand ? '想去哪裡？' : '要去哪裡？', toCand ? '加入備選．搜尋店名，或貼上 Google 地圖的店家、清單連結' : `第 ${dayNum(af.day)} 天．${d.date}`) + `
       <div class="ed-field ps-field af-search"><i class="ti ti-search"></i><input type="text" id="afQ" value="${esc(af.q)}" placeholder="搜尋店名、景點…" autocomplete="off" enterkeyhint="search"></div>
       ${p ? `<div class="af-card">
           <div class="af-mapwrap"><div class="af-map" id="afMap"></div><button type="button" class="af-recenter" id="afRecenter" aria-label="回到這個地點" hidden><i class="ti ti-current-location"></i></button></div>
           <div class="af-info"><b>${esc(p.name)}</b>${p.rating ? `<span class="af-rate"><i class="ti ti-star-filled"></i> ${p.rating}${p.count ? `（${p.count}）` : ''}</span>` : ''}<small>${esc(p.addr || '')}</small></div>
-          <div class="af-acts"><button type="button" class="btn ghost" id="afRetry">不是這家</button><button type="button" class="btn primary" id="afNext">下一步</button></div></div>`
-      : `<button type="button" class="af-plain" id="afLink" hidden><i class="ti ti-link"></i><span>查這個 Google 地圖連結<small id="afLinkT">店家會直接帶入；清單會整份放進備選</small></span></button>
+          <div class="af-acts"><button type="button" class="btn ghost" id="afRetry">不是這家</button><button type="button" class="btn primary" id="afNext">${toCand ? '加入備選' : '下一步'}</button></div></div>`
+      : `<button type="button" class="af-plain" id="afLink" hidden><i class="ti ti-link"></i><span><span id="afLinkH">查這個 Google 地圖連結</span><small id="afLinkT">店家會直接帶入；清單會列出裡面的地點讓你勾選，放進備選</small></span></button>
         <button type="button" class="af-plain" id="afPlain"${af.q.trim() && !/https?:\/\//.test(af.q) ? '' : ' hidden'}><i class="ti ti-pencil-plus"></i><span><span id="afPlainT">不用地點，直接用「${esc(af.q.trim())}」</span><small>例如自由活動、回住處休息</small></span></button>
-        ${cands.length ? `<div class="ed-field"><span class="ed-lab">從備選挑</span><div class="af-cands">${cands.map(c => `<button type="button" class="chip ${c.cls || 'eat'}" data-cand="${c.id}">${esc(shortName(c.t))}</button>`).join('')}</div></div>` : ''}
+        ${cands.length && !toCand ? `<div class="ed-field"><span class="ed-lab">從備選挑</span><div class="af-cands">${cands.map(c => `<button type="button" class="chip ${c.cls || 'eat'}" data-cand="${c.id}">${esc(shortName(c.t))}</button>`).join('')}</div></div>` : ''}
         ${isDay(af.day) ? `<button type="button" class="af-plain" id="afHome"><i class="ti ti-home"></i><span>回住處<small>${homeFor(af.day) ? esc(homeFor(af.day).name) : '還沒設定住處，點這裡加入'}</small></span></button>` : ''}`}`;
     const q = body.querySelector('#afQ'), region = TRIP?.region;
     tripBias();   // 先在背景準備好搜尋中心
@@ -3504,22 +3505,20 @@ function drawAdd() {
     // 貼上的是 Google 地圖連結（手機分享會多「清單名 · 帳號名」、店名地址）：改成「查這個連結」
     q.addEventListener('input', () => {
       af.q = q.value; const pl = body.querySelector('#afPlain'); if (!pl) return;
-      const link = parseLinks(q.value).find(u => /^https?:\/\//.test(u));
+      const links = parseLinks(q.value).filter(u => /^https?:\/\//.test(u)), link = links[0];
       body.querySelector('#afLink').hidden = !link;
+      body.querySelector('#afLinkH').textContent = links.length > 1 ? `查這 ${links.length} 個 Google 地圖連結` : '查這個 Google 地圖連結';
       pl.hidden = !q.value.trim() || !!link; body.querySelector('#afPlainT').textContent = `不用地點，直接用「${q.value.trim()}」`;
       if (link) body.querySelector('.ps-list')?.setAttribute('hidden', '');
     });
     body.querySelector('#afLink')?.addEventListener('click', async e => {
-      const link = parseLinks(q.value).find(u => /^https?:\/\//.test(u)), btn = e.currentTarget; if (!link) return;
+      const links = parseLinks(q.value).filter(u => /^https?:\/\//.test(u)), link = links[0], btn = e.currentTarget; if (!link) return;
+      if (links.length > 1) { af = null; openBatch(links.join('\n')); return; }   // 好幾個連結：一次列出來，各自查
       btn.disabled = true; body.querySelector('#afLinkT').textContent = '查詢中…（Google 有時要等幾秒）';
       try {
         const r = await api({ ...getAuth(), action: 'lookupPlace', link }, 90000);
         if (!af || !sheet.contains(btn)) return;
-        if (r.list) {   // 清單：交給「從 Google 地圖導入」整份放進備選
-          af = null; openImport();
-          const ta = sheet.querySelector('#imLinks'); ta.value = link; ta.dispatchEvent(new Event('input')); ta.dispatchEvent(new Event('paste'));
-          return;
-        }
+        if (r.list) { af = null; openBatch(link); return; }   // 清單：列出裡面的地點勾選，放進備選
         const p = r.place || {};
         if (!p.loc) throw new Error(p.name ? `找不到「${p.name}」的位置` : '讀不到這個連結');
         af.pick = { name: p.name, addr: p.short || p.addr || '', rating: p.rating || 0, count: p.count || 0, loc: p.loc, pid: p.pid || '', gmap: p.gmap || link, cls: p.cls };
@@ -3529,8 +3528,11 @@ function drawAdd() {
     if (!p) setTimeout(() => q.focus(), 50);
     if (p?.loc) showAddMap(p.loc);
     body.querySelector('#afRetry')?.addEventListener('click', () => { af.pick = null; drawAdd(); });
-    body.querySelector('#afNext')?.addEventListener('click', () => { const cls = af.pick.cls || guessCls(af.pick.types); Object.assign(af, { step: 2, name: af.pick.name, cls, dur: CLS_DUR[cls] || 60 }); drawAdd(); });
-    body.querySelector('#afPlain')?.addEventListener('click', () => { Object.assign(af, { step: 2, pick: null, name: af.q.trim(), cls: 'other', dur: 60 }); drawAdd(); });
+    body.querySelector('#afNext')?.addEventListener('click', () => {
+      const cls = af.pick.cls || guessCls(af.pick.types); Object.assign(af, { name: af.pick.name, cls, dur: CLS_DUR[cls] || 60 });
+      if (toCand) saveAdd(); else { af.step = 2; drawAdd(); }
+    });
+    body.querySelector('#afPlain')?.addEventListener('click', () => { Object.assign(af, { step: 2, pick: null, name: af.q.trim(), cls: 'other', dur: 60 }); if (toCand) saveAdd(); else drawAdd(); });
     body.querySelector('#afHome')?.addEventListener('click', () => {
       const h = homeFor(af.day);
       if (!h) { af = null; openTripSettings(); toast('加好住處後，再按「加入行程」就能選「回住處」', '', null, 5000); return; }   // 還沒設定住處：先去旅程設定加
@@ -3611,7 +3613,7 @@ function saveAdd() {
   saveData('新增'); closeSheet(); af = null;
   if (day !== was && isDay(day)) location.hash = day; else renderPage(current);
   // 復原：從備選排進來的放回備選，新加的刪掉
-  toast(`已加入「${name}」`, '復原', () => { const [d2, x] = findItem(it.id); if (!x) return;
+  toast(day === 'cand' ? `已加入備選「${name}」` : `已加入「${name}」`, '復原', () => { const [d2, x] = findItem(it.id); if (!x) return;
     if (from) moveDay(x.id, d2, from); else DATA[d2] = DATA[d2].filter(z => z.id !== x.id);
     saveData('復原'); renderPage(current); }, 5000);
   resumeLookups();   // 選了 Google 地點：背景補描述、營業時間、筆記
@@ -4013,6 +4015,12 @@ function saveEditor() {
 
 // ---------- 從 Google 地圖導入（備選頁） ----------
 // 貼上一個或多個分享連結 → 雲端解開連結拿店名，再請 Gemini 查描述／類型／提醒 → 預覽可以改 → 加入備選
+// 一次加好幾個（貼了清單連結、好幾個連結）：用原本的匯入畫面列出來勾選，放進備選
+function openBatch(text) {
+  openImport();
+  sheet.querySelector('#shTitle').textContent = '加入好幾個地點';
+  const ta = sheet.querySelector('#imLinks'); ta.value = text; ta.dispatchEvent(new Event('input')); ta.dispatchEvent(new Event('paste'));
+}
 function openImport() {
   openSheet(`
     <div class="sh-head"><div style="flex:1;min-width:0"><div class="sh-title" id="shTitle">從 Google 地圖導入</div>
