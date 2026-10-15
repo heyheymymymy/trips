@@ -2476,7 +2476,7 @@ function attachPlaceSuggest(input, onPick, onType, opts = {}) {
   const close = () => { box.hidden = true; box.innerHTML = ''; items = []; };
   const ask = async () => {
     const q = input.value.trim(), my = ++seq;
-    if (!q) { close(); return; }
+    if (!q || /https?:\/\//.test(q)) { close(); return; }   // 貼的是網址：不查地點建議
     let places;
     try {
       const key = await getMapsKey(); if (!key) return;
@@ -3485,7 +3485,8 @@ function drawAdd() {
           <div class="af-mapwrap"><div class="af-map" id="afMap"></div><button type="button" class="af-recenter" id="afRecenter" aria-label="回到這個地點" hidden><i class="ti ti-current-location"></i></button></div>
           <div class="af-info"><b>${esc(p.name)}</b>${p.rating ? `<span class="af-rate"><i class="ti ti-star-filled"></i> ${p.rating}${p.count ? `（${p.count}）` : ''}</span>` : ''}<small>${esc(p.addr || '')}</small></div>
           <div class="af-acts"><button type="button" class="btn ghost" id="afRetry">不是這家</button><button type="button" class="btn primary" id="afNext">下一步</button></div></div>`
-      : `<button type="button" class="af-plain" id="afPlain"${af.q.trim() ? '' : ' hidden'}><i class="ti ti-pencil-plus"></i><span><span id="afPlainT">不用地點，直接用「${esc(af.q.trim())}」</span><small>例如自由活動、回住處休息</small></span></button>
+      : `<button type="button" class="af-plain" id="afLink" hidden><i class="ti ti-link"></i><span>查這個 Google 地圖連結<small id="afLinkT">店家會直接帶入；清單會整份放進備選</small></span></button>
+        <button type="button" class="af-plain" id="afPlain"${af.q.trim() && !/https?:\/\//.test(af.q) ? '' : ' hidden'}><i class="ti ti-pencil-plus"></i><span><span id="afPlainT">不用地點，直接用「${esc(af.q.trim())}」</span><small>例如自由活動、回住處休息</small></span></button>
         ${cands.length ? `<div class="ed-field"><span class="ed-lab">從備選挑</span><div class="af-cands">${cands.map(c => `<button type="button" class="chip ${c.cls || 'eat'}" data-cand="${c.id}">${esc(shortName(c.t))}</button>`).join('')}</div></div>` : ''}
         ${isDay(af.day) ? `<button type="button" class="af-plain" id="afHome"><i class="ti ti-home"></i><span>回住處<small>${homeFor(af.day) ? esc(homeFor(af.day).name) : '還沒設定住處，點這裡加入'}</small></span></button>` : ''}`}`;
     const q = body.querySelector('#afQ'), region = TRIP?.region;
@@ -3500,11 +3501,35 @@ function drawAdd() {
             loc: loc ? `${loc.lat().toFixed(6)},${loc.lng().toFixed(6)}` : '', pid: place.id || '', gmap: place.googleMapsURI || '', types: [place.primaryType, ...(place.types || [])].filter(Boolean) };
         } });
     // 打字中不重畫面板（會打斷正在查的地點建議）：只更新「不用地點」那顆按鈕
-    q.addEventListener('input', () => { af.q = q.value; const pl = body.querySelector('#afPlain'); if (!pl) return; pl.hidden = !q.value.trim(); body.querySelector('#afPlainT').textContent = `不用地點，直接用「${q.value.trim()}」`; });
+    // 貼上的是 Google 地圖連結（手機分享會多「清單名 · 帳號名」、店名地址）：改成「查這個連結」
+    q.addEventListener('input', () => {
+      af.q = q.value; const pl = body.querySelector('#afPlain'); if (!pl) return;
+      const link = parseLinks(q.value).find(u => /^https?:\/\//.test(u));
+      body.querySelector('#afLink').hidden = !link;
+      pl.hidden = !q.value.trim() || !!link; body.querySelector('#afPlainT').textContent = `不用地點，直接用「${q.value.trim()}」`;
+      if (link) body.querySelector('.ps-list')?.setAttribute('hidden', '');
+    });
+    body.querySelector('#afLink')?.addEventListener('click', async e => {
+      const link = parseLinks(q.value).find(u => /^https?:\/\//.test(u)), btn = e.currentTarget; if (!link) return;
+      btn.disabled = true; body.querySelector('#afLinkT').textContent = '查詢中…（Google 有時要等幾秒）';
+      try {
+        const r = await api({ ...getAuth(), action: 'lookupPlace', link }, 90000);
+        if (!af || !sheet.contains(btn)) return;
+        if (r.list) {   // 清單：交給「從 Google 地圖導入」整份放進備選
+          af = null; openImport();
+          const ta = sheet.querySelector('#imLinks'); ta.value = link; ta.dispatchEvent(new Event('input')); ta.dispatchEvent(new Event('paste'));
+          return;
+        }
+        const p = r.place || {};
+        if (!p.loc) throw new Error(p.name ? `找不到「${p.name}」的位置` : '讀不到這個連結');
+        af.pick = { name: p.name, addr: p.short || p.addr || '', rating: p.rating || 0, count: p.count || 0, loc: p.loc, pid: p.pid || '', gmap: p.gmap || link, cls: p.cls };
+        af.q = p.name; drawAdd();
+      } catch (err) { btn.disabled = false; body.querySelector('#afLinkT').textContent = '查不到：' + (err.code === 'network' ? '請檢查網路' : err.message); }
+    });
     if (!p) setTimeout(() => q.focus(), 50);
     if (p?.loc) showAddMap(p.loc);
     body.querySelector('#afRetry')?.addEventListener('click', () => { af.pick = null; drawAdd(); });
-    body.querySelector('#afNext')?.addEventListener('click', () => { const cls = guessCls(af.pick.types); Object.assign(af, { step: 2, name: af.pick.name, cls, dur: CLS_DUR[cls] }); drawAdd(); });
+    body.querySelector('#afNext')?.addEventListener('click', () => { const cls = af.pick.cls || guessCls(af.pick.types); Object.assign(af, { step: 2, name: af.pick.name, cls, dur: CLS_DUR[cls] || 60 }); drawAdd(); });
     body.querySelector('#afPlain')?.addEventListener('click', () => { Object.assign(af, { step: 2, pick: null, name: af.q.trim(), cls: 'other', dur: 60 }); drawAdd(); });
     body.querySelector('#afHome')?.addEventListener('click', () => {
       const h = homeFor(af.day);
@@ -4174,13 +4199,12 @@ async function locateMissing() {
   locRunning = false;
   if (n && !editing) saveData('補座標');
 }
+// 貼上的內容：有網址就只拿網址（手機分享 Google 地圖清單會多一行「清單名 · 帳號名」、分享店家會帶店名地址，這些都不要）；
+// 完全沒有網址才把每一行當成店名
 const parseLinks = text => {
-  const links = [];
-  for (const line of text.split(/\n+/)) {
-    const urls = line.match(/https?:\/\/\S+/g);
-    (urls || [line.trim()]).forEach(u => { if (u && !links.includes(u)) links.push(u); });
-  }
-  return links;
+  const urls = (text.match(/https?:\/\/[^\s，。、（）「」『』【】《》]+/g) || []).map(u => u.replace(/[)\].,;!?'"]+$/, ''));
+  const items = urls.length ? urls : text.split(/\n+/).map(l => l.trim()).filter(Boolean);
+  return [...new Set(items)];
 };
 // 背景查詢：描述欄位是 PENDING 的卡片就是還沒查完的（存在雲端，所以關掉網頁、換手機打開都會接著查）
 // 查好只補還沒填的欄位，查詢途中自己改過的不會被蓋掉
