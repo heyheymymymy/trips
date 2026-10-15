@@ -531,6 +531,18 @@ button.ov-stay{width:100%;font:inherit;text-align:left;cursor:pointer}
 .st-row small.st-n{margin-top:1px}
 .st-row > i:last-child{color:var(--muted);font-size:18px}
 .st-list + .wiz-add{margin-top:6px}
+/* 旅程設定最下面：刪除旅程（只有建立的人看得到） */
+.ts-del{display:flex;align-items:center;justify-content:center;gap:6px;width:100%;margin-top:24px;padding:12px;border:0;background:none;font:inherit;font-size:15px;color:#C2412D;cursor:pointer}
+.btn.primary.danger-fill{background:#C2412D;border-color:#C2412D;color:#fff}
+.btn.primary.danger-fill[disabled]{opacity:.4}
+/* 我的旅程：長按選單 */
+.tm-list{display:flex;flex-direction:column;gap:8px;margin-top:14px}
+.tm-opt{display:flex;align-items:center;gap:12px;width:100%;padding:12px 14px;border:1px solid var(--border);border-radius:14px;background:#fff;font:inherit;text-align:left;color:var(--text);cursor:pointer}
+.tm-opt > i{flex:none;width:34px;height:34px;border-radius:50%;background:var(--other-bg);color:var(--text2);font-size:18px;display:flex;align-items:center;justify-content:center}
+.tm-opt span{flex:1;min-width:0}
+.tm-opt b{display:block;font-size:15px}
+.tm-opt small{display:block;margin-top:2px;font-size:12px;color:var(--text2);line-height:1.4}
+.trip-card{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
 /* 旅程設定：日期一行，點了展開月曆 */
 .ts-date{display:flex;align-items:center;gap:8px;width:100%;height:44px;padding:0 12px;border:1px solid var(--border);border-radius:10px;background:#fff;font:inherit;font-size:16px;color:var(--text);text-align:left;cursor:pointer}
 .ts-date span{flex:1;min-width:0}
@@ -972,10 +984,15 @@ function rememberTrip(t, role, key, code) {
   const old = myTrips().find(x => x.id === t.id);
   if (code === undefined) code = role === 'edit' ? old?.code || '' : '';
   const list = myTrips().filter(x => x.id !== t.id);
-  list.unshift({ id: t.id, key, code, role, name: t.name, dest: t.dest, en: t.en, start: t.start, days: Number(t.days) || 0, cover: t.cover || old?.cover || '', members: t.members || [] });
+  list.unshift({ id: t.id, key, code, role, name: t.name, dest: t.dest, en: t.en, start: t.start, days: Number(t.days) || 0, cover: t.cover || old?.cover || '', members: t.members || [], ...(old?.owner ? { owner: old.owner } : {}) });
   try { localStorage.setItem(MINE_KEY, JSON.stringify(list.slice(0, 50))); } catch {}
 }
 let TRIP_CODE = TRIP_ID ? myTrips().find(x => x.id === TRIP_ID)?.code || '' : '';
+// 擁有者鑰匙：建立旅程時雲端給的，只記在建立的人的手機（「帶到其他裝置」也會一起帶）；刪除旅程要用
+function setTripOwner(id, owner) { const list = myTrips(), t = list.find(x => x.id === id); if (!t || !owner) return; t.owner = owner; try { localStorage.setItem(MINE_KEY, JSON.stringify(list)); } catch {} }
+const tripRemoved = id => { try { localStorage.setItem(MINE_KEY, JSON.stringify(myTrips().filter(x => x.id !== id))); localStorage.removeItem('trip-cache-' + id + TEST_SUFFIX); } catch {} };
+// 能不能刪除這趟：手機裡有擁有者鑰匙；有鑰匙之前建立的舊旅程，暱稱跟建立的人一樣也可以
+const canDeleteTrip = () => TRIP_ROLE === 'edit' && !!(myTrips().find(x => x.id === TRIP_ID)?.owner || (TRIP && !TRIP.has_owner && TRIP.created_by && TRIP.created_by === getNick()));
 // 旅程網址：保留測試用的 api、now 參數
 function tripUrl(id, key, hash = 'overview') {
   const q = new URLSearchParams();
@@ -1410,6 +1427,7 @@ async function load(force) {
     const first = !TRIP;
     applyServer(r); refreshView(); resumeLookups(); setTimeout(locateMissing, 3000);
     if (justCreated && TRIP?.code) { justCreated = false; setTimeout(openSaveTrip, 400); }   // 剛建好：提醒存連結
+    if (first) { let o = ''; try { o = sessionStorage.getItem('open-settings'); sessionStorage.removeItem('open-settings'); } catch {} if (o === TRIP_ID && TRIP_ROLE === 'edit') setTimeout(() => withAuth(openTripSettings), 300); }   // 從「我的旅程」長按選了旅程設定
     // 第一次在這支手機打開：網址指定的那一天，或旅行期間的今天
     const go = wantPage && isDay(wantPage) ? wantPage : first && current === 'overview' && tripNow()?.day;
     wantPage = null;
@@ -2004,7 +2022,7 @@ function openSaveTrip() {
 }
 // 2. 帶到其他裝置：把這支手機記住的所有旅程（代號、鑰匙、編輯碼）打包在網址 # 後面（不會送到伺服器）
 function carryUrl() {
-  const packed = btoa(JSON.stringify(myTrips().map(t => [t.id, t.key, t.code || '']))).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+  const packed = btoa(JSON.stringify(myTrips().map(t => t.owner ? [t.id, t.key, t.code || '', t.owner] : [t.id, t.key, t.code || '']))).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
   return location.origin + tripUrl('', '', 'import=' + packed);
 }
 function openCarry() {
@@ -2018,11 +2036,11 @@ function importCarry() {
   try { list = JSON.parse(atob(m[1].replace(/-/g, '+').replace(/_/g, '/'))); } catch {}
   const mine = myTrips();
   let added = 0;
-  for (const [id, key, code] of Array.isArray(list) ? list : []) {
+  for (const [id, key, code, owner] of Array.isArray(list) ? list : []) {
     if (!/^t\w+$/.test(id || '') || !key) continue;
     const old = mine.find(x => x.id === id);
-    if (old) { if (!old.code && code) Object.assign(old, { code, role: 'edit', key }); continue; }
-    mine.push({ id, key, code: code || '', role: code ? 'edit' : 'view' }); added++;
+    if (old) { if (!old.code && code) Object.assign(old, { code, role: 'edit', key }); if (owner && !old.owner) old.owner = owner; continue; }
+    mine.push({ id, key, code: code || '', role: code ? 'edit' : 'view', ...(owner ? { owner } : {}) }); added++;
   }
   try { localStorage.setItem(MINE_KEY, JSON.stringify(mine.slice(0, 50))); } catch {}
   history.replaceState(null, '', location.pathname + location.search + '#trips');
@@ -2068,7 +2086,8 @@ function openTripSettings() {
         <div class="wiz-opts grid">${WIZ_MODES.map(([k, ic, nm]) => `<button type="button" class="wiz-opt${st.mode === k ? ' on' : ''}" data-mode="${k}"><i class="ti ti-${ic}"></i><span><b>${nm}</b></span></button>`).join('')}</div></div>
       <div class="ed-field"><span class="ed-lab">封面照片 <span class="ed-lab-hint">顯示在「我的旅程」</span></span>
         <button type="button" class="btn ghost" id="tsCover"><i class="ti ti-photo"></i> ${TRIP.cover ? '換封面' : '放一張封面'}</button></div>
-      <div class="err" id="tsErr" hidden></div>`;
+      <div class="err" id="tsErr" hidden></div>
+      ${canDeleteTrip() ? '<button type="button" class="ts-del" id="tsDel"><i class="ti ti-trash"></i> 刪除旅程</button>' : ''}`;
     sheet.scrollTop = open;
     attachPlaceSuggest(sheet.querySelector('#tsDest'), g => { Object.assign(st, { dest: g.name, geo: g }); draw(); },
       () => { if (st.geo) { st.geo = null; sheet.querySelector('#tsDestHint').textContent = '查地點、地圖會以這裡為中心'; } });
@@ -2092,6 +2111,7 @@ function openTripSettings() {
     const b = e.target.closest('button'); if (!b) return;
     if (b.id === 'tsCover') { openCover(); return; }
     if (b.id === 'tsDate') { st.dateOpen = !st.dateOpen; draw(); return; }
+    if (b.id === 'tsDel') { openDeleteTrip(); return; }
     if (b.dataset.cal) { const [y, mo] = st.cal.split('-').map(Number); st.cal = ymd(new Date(y, mo - 1 + +b.dataset.cal, 1)).slice(0, 7); draw(); return; }
     if (b.dataset.day) {   // 第一下＝出發日、第二下＝最後一天（點到出發日之前就重選出發）；都選好再點＝重來
       const v = b.dataset.day;
@@ -2129,6 +2149,33 @@ function openTripSettings() {
       const notes = [changes.mode && '之前算好的交通時間不會自動改，可以在編輯模式按交通按鈕重算', r.moved && `${r.moved} 個行程移到備選`].filter(Boolean);
       toast(notes.length ? `已儲存。${notes.join('；')}` : '已儲存旅程設定', notes.length ? '知道了' : '', () => {}, notes.length ? 8000 : 2000);
     } catch (x) { btn.disabled = false; btn.textContent = '儲存'; err(x.code === 'network' ? '連不上雲端，請檢查網路' : x.message); }
+  });
+}
+// 刪除整趟旅程（只有建立的人）：所有人的連結都會打不開，要打「刪除」兩個字確認
+function openDeleteTrip() {
+  openSheet(`
+    <div class="sh-head"><div style="flex:1;min-width:0"><div class="sh-title" id="shTitle">刪除「${esc(TRIP.name)}」？</div>
+      <div class="sh-sub">所有人的連結都會打不開，大家的「我的旅程」也會拿掉這趟。30 天內後悔還可以救回來</div></div>
+      <button class="sh-close" aria-label="關閉"><i class="ti ti-x"></i></button></div>
+    <label class="ed-field"><span class="ed-lab">確認 <span class="ed-lab-hint">請輸入「刪除」兩個字</span></span><input type="text" id="tdTxt" autocomplete="off" placeholder="刪除"></label>
+    <div class="err" id="tdErr" hidden></div>
+    <div class="ed-actions">
+      <button type="button" class="btn ghost ed-cancel">取消</button>
+      <button type="button" class="btn primary danger-fill" id="tdGo" style="flex:1" disabled>刪除旅程</button>
+    </div>`, '#tdTxt', true);
+  const txt = sheet.querySelector('#tdTxt'), go = sheet.querySelector('#tdGo');
+  txt.addEventListener('input', () => { go.disabled = txt.value.trim() !== '刪除'; });
+  go.addEventListener('click', async () => {
+    go.disabled = true; go.textContent = '刪除中…';
+    try {
+      await api({ ...getAuth(), action: 'deleteTrip', owner: myTrips().find(x => x.id === TRIP_ID)?.owner || '' }, 30000);
+      tripRemoved(TRIP_ID);
+      try { sessionStorage.setItem('trip-deleted', TRIP.name); } catch {}
+      location.href = tripUrl('', '', 'trips');
+    } catch (x) {
+      go.disabled = false; go.textContent = '刪除旅程';
+      const el = sheet.querySelector('#tdErr'); el.textContent = x.code === 'network' ? '連不上雲端，請檢查網路' : x.message; el.hidden = false;
+    }
   });
 }
 // ---------- 住宿：住處列表、加入／編輯一間（月曆選入住、退房；看得到其他住處佔用的晚上）----------
@@ -2596,7 +2643,48 @@ async function refreshTrips() {
     if (current === 'trips') renderTrips();
   } catch {}
 }
+// 「我的旅程」長按：旅程設定（有編輯碼）、從列表拿掉（只有這支手機，旅程本身還在）
+let tripPress = null, tripPressed = false;
+const tripPressEnd = () => { if (!tripPress) return; clearTimeout(tripPress.timer); tripPress.el.classList.remove('pressing'); tripPress = null; };
+function tripPressStart(e, x, y) {
+  const el = e.target.closest('[data-trip]'); if (!el || sheet.classList.contains('on')) return;
+  tripPress = { x, y, el, timer: setTimeout(() => {
+    tripPressEnd(); tripPressed = true; setTimeout(() => tripPressed = false, 600); navigator.vibrate?.(10);
+    openTripMenu(el.dataset.trip);
+  }, PRESS_MS) };
+  setTimeout(() => { if (tripPress?.el === el) el.classList.add('pressing'); }, 120);
+}
+tripsEl.addEventListener('touchstart', e => { if (e.touches.length === 1) tripPressStart(e, e.touches[0].clientX, e.touches[0].clientY); else tripPressEnd(); }, { passive: true });
+tripsEl.addEventListener('touchmove', e => { if (tripPress && (Math.abs(e.touches[0].clientX - tripPress.x) > MOVE_TOL || Math.abs(e.touches[0].clientY - tripPress.y) > MOVE_TOL)) tripPressEnd(); }, { passive: true });
+tripsEl.addEventListener('touchend', tripPressEnd);
+tripsEl.addEventListener('touchcancel', tripPressEnd);
+tripsEl.addEventListener('mousedown', e => { if (e.button === 0) tripPressStart(e, e.clientX, e.clientY); });
+addEventListener('mouseup', tripPressEnd);
+addEventListener('scroll', tripPressEnd, { passive: true });
+tripsEl.addEventListener('contextmenu', e => { if (e.target.closest('[data-trip]')) e.preventDefault(); });
+function openTripMenu(id) {
+  const t = myTrips().find(x => x.id === id); if (!t) return;
+  const opt = (k, ic, title, sub, cls = '') => `<button type="button" class="tm-opt${cls}" data-tm="${k}"><i class="ti ${ic}"></i><span><b>${title}</b><small>${sub}</small></span></button>`;
+  openSheet(`
+    <div class="sh-head"><div style="flex:1;min-width:0"><div class="sh-title" id="shTitle">${esc(t.name || '旅程')}</div></div>
+      <button class="sh-close" aria-label="關閉"><i class="ti ti-x"></i></button></div>
+    <div class="tm-list">
+      ${t.role === 'edit' ? opt('set', 'ti-settings', '旅程設定', t.owner ? '名稱、目的地、日期、交通方式，也可以刪除旅程' : '名稱、目的地、日期、交通方式') : ''}
+      ${opt('hide', 'ti-eye-off', '從列表拿掉', '只有創建旅程的人可以刪除旅程，從你的列表拿掉後，原本的旅程不受影響')}
+    </div>`);
+  sheet.querySelector('.tm-list').addEventListener('click', e => {
+    const b = e.target.closest('[data-tm]'); if (!b) return;
+    if (b.dataset.tm === 'set') {
+      if (id === TRIP_ID && TRIP && t.key === TRIP_KEY) { closeSheet(); location.hash = 'overview'; withAuth(openTripSettings); return; }
+      try { sessionStorage.setItem('open-settings', id); } catch {}   // 別趟：換網址重新載入，載入後打開設定
+      location.href = tripUrl(id, t.key);
+    } else {
+      tripRemoved(id); closeSheet(); renderTrips(); toast('已從列表拿掉');
+    }
+  });
+}
 tripsEl.addEventListener('click', e => {
+  if (tripPressed) { tripPressed = false; e.preventDefault(); return; }   // 長按放開的那一下不要打開旅程
   if (e.target.closest('#tripsCarry')) { openCarry(); return; }
   const c = e.target.closest('[data-trip]'); if (!c) return;
   const t = myTrips().find(x => x.id === c.dataset.trip); if (!t) return;
@@ -2708,7 +2796,7 @@ function openCreateAuth() {
       const r = await api({ action: 'createTrip', nick, name: wiz.name.trim(), dest, en: wizEn(), region: g.region || '', center: g.center || '',
         start: wiz.start, days: wizDays() }, 60000);
       setNick(nick);
-      rememberTrip(r.trip, 'edit', r.trip.view_key, r.trip.code);
+      rememberTrip(r.trip, 'edit', r.trip.view_key, r.trip.code); setTripOwner(r.trip.id, r.owner);
       try { sessionStorage.setItem('trip-created', r.trip.code); } catch {}
       location.href = tripUrl(r.trip.id, r.trip.view_key);   // 換到新旅程（整頁重新載入）
     } catch (e) {
@@ -5004,6 +5092,7 @@ if (shownToday) history.replaceState(null, '', '#' + shownToday);
 if (TRIP_ID && TRIP && TRIP_ROLE) rememberTrip(TRIP, TRIP_ROLE, TRIP_KEY, TRIP_CODE);
 showPage(shownToday || location.hash.slice(1) || (TRIP_ID ? 'overview' : 'trips'), false);
 try { justCreated = !!sessionStorage.getItem('trip-created'); sessionStorage.removeItem('trip-created'); } catch {}
+try { const d = sessionStorage.getItem('trip-deleted'); if (d) { sessionStorage.removeItem('trip-deleted'); setTimeout(() => toast(`已刪除「${d}」`), 300); } } catch {}
 { const n = importCarry(); if (n) { renderTrips(); toast(n > 0 ? `已加入 ${n} 趟旅程` : '這些旅程本來就在列表裡了'); } }
 if (resumeDraft && getAuth()) {
   editStart = resumeDraft;
