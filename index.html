@@ -414,6 +414,8 @@ html.on-map:not(.sheet-lock),html.on-map:not(.sheet-lock) body{background:#f4f0e
 .editing .cards{cursor:copy}
 .clash{box-shadow:inset 0 0 0 2px #E24B4A}
 .tag-ok{white-space:nowrap}
+.tag-q{white-space:nowrap;opacity:.8}
+.sh-pending{margin-top:14px;padding:10px 12px;border-radius:10px;background:#FAF7F3;font-size:13px;line-height:1.5;color:var(--text2)}
 .fab{position:fixed;right:max(20px,calc(50vw - 220px));bottom:calc(24px + env(safe-area-inset-bottom));z-index:40;width:52px;height:52px;border-radius:50%;
   border:0;background:var(--accent-fg);color:#fff;font-size:24px;display:none;align-items:center;justify-content:center;box-shadow:0 4px 14px rgba(60,30,10,.22);cursor:pointer}
 .fab i{display:block;line-height:1}
@@ -1031,6 +1033,8 @@ const routeRule = () => ({ drive: '800 公尺內算步行，其他算開車（�
 const tripStays = () => TRIP?.stays || [];
 const stayOn = md => md ? tripStays().find(x => (x.nights || []).includes(md)) || null : null;
 const tonightStay = day => isDay(day) ? stayOn(dayInfo(day).date) : null;
+// 「回住處」用的住處：當晚住的；最後一天（沒有當晚，例如退房那天）用前一晚住的
+const homeFor = day => tonightStay(day) || morningStay(day);
 const morningStay = day => isDay(day) && dayNum(day) > 1 ? stayOn(dayInfo('d' + (dayNum(day) - 1)).date) : null;
 // 每天第一個行程的「上一站」：前一晚的住處（有座標才算），用來算從住處出發的交通時間
 const homePrev = day => { const h = morningStay(day); return h?.loc ? { id: 'home', t: h.name, loc: h.loc, home: true } : null; };
@@ -1553,13 +1557,14 @@ function renderCards(items, day) {
     }
     const showNav = it.map && h >= MIN_NAV_H;
     // 描述：標題＋時間之外還放得下至少一行才顯示（半小時左右的小卡片就不顯示）
-    const descLines = (it, h) => { const n = Math.floor((h - 52) / 16); return it.desc && n >= 1 ? `<div class="d" style="-webkit-line-clamp:${n}">${esc(it.desc)}</div>` : ''; };
+    const descLines = (it, h) => { const n = Math.floor((h - 52) / 16); return it.desc && it.desc !== PENDING && n >= 1 ? `<div class="d" style="-webkit-line-clamp:${n}">${esc(it.desc)}</div>` : ''; };
     const compact = h < COMPACT_H;
     const tags = (it.booked ? ' · <span class="tag-ok"><i class="ti ti-circle-check"></i> 已訂位</span>' : '') +
-                 (it.alert ? ` · <i class="ti ti-alert-triangle"></i> ${esc(it.alert)}` : '');
+                 (it.alert ? ` · <i class="ti ti-alert-triangle"></i> ${esc(it.alert)}` : '') +
+                 (it.desc === PENDING ? ' · <span class="tag-q"><i class="ti ti-loader-2 spin"></i> 查詢資訊中</span>' : '');   // 剛加入、背景還在查（小卡片看不到描述，放在時間這一行）
     const b = div('blk ' + it.cls + (showNav ? ' has-nav' : '') + (compact ? ' compact' : '') + extra,
       compact
-        ? `<div class="t">${esc(it.t)}<span class="tm">· ${T(it.s)}–${T(it.e)}</span></div>${showNav ? navBtn(it.map, it.t) : ''}${editIc}`
+        ? `<div class="t">${esc(it.t)}<span class="tm">· ${T(it.s)}–${T(it.e)}${it.desc === PENDING ? ' <i class="ti ti-loader-2 spin"></i>' : ''}</span></div>${showNav ? navBtn(it.map, it.t) : ''}${editIc}`
         : `<div class="t">${esc(it.t)}</div>${descLines(it, h)}<div class="s">${T(it.s)}–${T(it.e)} · ${durLabel(mins)}${tags}</div>${showNav ? navBtn(it.map, it.t) : ''}${editIc}`);
     b.dataset.id = it.id;
     setCol(b, it.id);
@@ -1971,7 +1976,7 @@ function openTripSettings() {
       <div class="ed-field"><span class="ed-lab">住處 <span class="ed-lab-hint">每天第一段交通從前一晚的住處算</span></span></div>
       ${st.stays.map((h, i) => `<div class="wiz-stay" data-stay="${i}" style="margin-top:8px">
         <div class="wiz-stay-h">住處 ${i + 1}<button type="button" data-del="${i}" aria-label="刪除住處 ${i + 1}"><i class="ti ti-x"></i></button></div>
-        <label class="ed-field"><span class="ed-lab">名稱或地址${h.loc ? ' <span class="ed-lab-hint"><i class="ti ti-map-pin-check"></i> 已找到位置</span>' : ''}</span>
+        <label class="ed-field ps-field"><span class="ed-lab">名稱或地址${h.loc ? ` <span class="ed-lab-hint"><i class="ti ti-map-pin-check"></i> ${esc(h.addr || '已找到位置')}</span>` : ' <span class="ed-lab-hint">打飯店名稱，從清單選一個</span>'}</span>
           <input type="text" data-stay-name="${i}" value="${esc(h.name)}" placeholder="飯店名稱，或貼 Google 地圖連結" autocomplete="off"></label>
         <div class="ed-field"><span class="ed-lab">住哪幾晚</span><div class="chips nights">${nights.map(n => `<button type="button" class="chip${(h.nights || []).includes(n) ? ' on' : ''}" data-night="${n}">${n}</button>`).join('')}</div></div>
       </div>`).join('')}
@@ -1980,6 +1985,19 @@ function openTripSettings() {
     sheet.scrollTop = open;
     attachPlaceSuggest(sheet.querySelector('#tsDest'), g => { Object.assign(st, { dest: g.name, geo: g }); draw(); },
       () => { if (st.geo) { st.geo = null; sheet.querySelector('#tsDestHint').textContent = '查地點、地圖會以這裡為中心'; } });
+    // 住處：只找住宿（飯店、旅館、民宿），以目的地為中心；選了直接帶入地址和位置，存檔時不用再查
+    tripBias();
+    sheet.querySelectorAll('[data-stay-name]').forEach(inp => attachPlaceSuggest(inp, g => {
+      Object.assign(st.stays[inp.dataset.stayName], g); draw();
+    }, null, {
+      request: () => ({ includedPrimaryTypes: ['lodging'], ...(biasAt ? { locationBias: { center: biasAt, radius: 30000 } } : {}), ...(TRIP?.region ? { includedRegionCodes: [TRIP.region] } : {}) }),
+      resolve: async (pr, name) => {
+        const place = pr.toPlace();
+        try { await place.fetchFields({ fields: ['displayName', 'formattedAddress', 'location'] }); } catch {}
+        const loc = place.location, ll = loc ? `${loc.lat().toFixed(6)},${loc.lng().toFixed(6)}` : '';
+        return { name: place.displayName || name, addr: pr.secondaryText?.text || place.formattedAddress || '', loc: ll, pid: place.id || '',
+          map: ll ? `https://www.google.com/maps/place/${encodeURIComponent(place.displayName || name)}/@${ll},17z` : '' };
+      } }));
   };
   openSheet(`
     <div class="sh-head"><div style="flex:1;min-width:0"><div class="sh-title" id="shTitle">旅程設定</div>
@@ -1995,9 +2013,10 @@ function openTripSettings() {
   body.addEventListener('input', e => {
     if (e.target.id === 'tsName') st.name = e.target.value;
     else if (e.target.id === 'tsDest') st.dest = e.target.value;
-    else if (e.target.dataset.stayName != null) {   // 名稱改了：位置要重查
+    // 改住處名稱：只改名字（例如換成自己習慣的叫法），從清單選過的位置留著；要換一家就從清單重新選。名稱清空才把位置一起清掉
+    else if (e.target.dataset.stayName != null) {
       const h = st.stays[e.target.dataset.stayName], v = e.target.value.trim();
-      Object.assign(h, { name: v }); ['map', 'loc', 'pid', 'addr'].forEach(k => delete h[k]);
+      h.name = v; if (!v) ['map', 'loc', 'pid', 'addr'].forEach(k => delete h[k]);
     }
   });
   body.addEventListener('click', e => {
@@ -2745,6 +2764,7 @@ const sheet = document.getElementById('sheet'), sheetBg = document.getElementByI
 let lastFocus = null;
 function openSheet(html, focusSel, dialog) {
   sheet.innerHTML = '<div class="grab"></div>' + html;
+  sheet._infoId = null;   // 換成別的面板：背景查好時不要蓋掉
   sheet._photoJob = null;
   lastFocus = document.activeElement;
   sheet.scrollTop = 0;
@@ -2811,7 +2831,8 @@ function openNote(title, info, mine, q, ex = {}) {
     ${info.full ? `<details class="full-note"${info.points ? '' : ' open'}><summary>完整筆記 <i class="ti ti-chevron-down"></i></summary>
       <div class="full-txt">${linkify(info.full)}</div></details>` : ''}
     ${info.links ? `<div class="sh-sec">參考連結</div><div class="sh-links">${info.links.map(([t, u]) => `<a href="${esc(u)}" target="_blank" rel="noopener"><i class="ti ti-external-link"></i> ${esc(t)}</a>`).join('')}</div>` : ''}
-    ${!mine && !info.points && !info.full && !info.links && !ex.desc ? '<div class="sh-empty">還沒有筆記，長按卡片可以編輯</div>' : ''}
+    ${ex.pending ? '<div class="sh-pending"><i class="ti ti-loader-2 spin"></i> 正在用 Google 查詢這個地點的資訊（描述、營業時間、評分），查好會自動出現</div>' : ''}
+    ${!ex.pending && !mine && !info.points && !info.full && !info.links && !ex.desc ? '<div class="sh-empty">還沒有筆記，長按卡片可以編輯</div>' : ''}
     ${ex.action ? `<div class="ed-actions"><button type="button" class="btn primary sh-act" style="flex:1"><i class="ti ${ex.action.icon}"></i> ${esc(ex.action.label)}</button></div>` : ''}`);
   if (ex.action) sheet.querySelector('.sh-act').onclick = ex.action.fn;
 }
@@ -2825,7 +2846,8 @@ function openCardInfo(id) {
   if (it.booked) meta.push(['ti-circle-check', '已訂位']);
   if (it.alert) meta.push(['ti-alert-triangle', it.alert]);
   const action = day === 'cand' ? { label: '排進行程', icon: 'ti-calendar-plus', fn: () => { const go = () => openDayPicker(id); if (getAuth()) go(); else openAuth(go); } } : null;
-  openNote(it.t, multi ? null : NOTES[it.note], it.mine, multi ? '' : it.map, { desc: it.desc === PENDING ? '' : it.desc, meta, action, alert: it.alert });
+  openNote(it.t, multi ? null : NOTES[it.note], it.mine, multi ? '' : it.map, { desc: it.desc === PENDING ? '' : it.desc, meta, action, alert: it.alert, pending: it.desc === PENDING });
+  sheet._infoId = id;   // 背景查好時，如果還開著這張的資訊就重畫
 }
 // 點展開後的某一站／某個選項
 function openSubInfo(id, kind, i) {
@@ -3465,7 +3487,7 @@ function drawAdd() {
           <div class="af-acts"><button type="button" class="btn ghost" id="afRetry">不是這家</button><button type="button" class="btn primary" id="afNext">下一步</button></div></div>`
       : `<button type="button" class="af-plain" id="afPlain"${af.q.trim() ? '' : ' hidden'}><i class="ti ti-pencil-plus"></i><span><span id="afPlainT">不用地點，直接用「${esc(af.q.trim())}」</span><small>例如自由活動、回住處休息</small></span></button>
         ${cands.length ? `<div class="ed-field"><span class="ed-lab">從備選挑</span><div class="af-cands">${cands.map(c => `<button type="button" class="chip ${c.cls || 'eat'}" data-cand="${c.id}">${esc(shortName(c.t))}</button>`).join('')}</div></div>` : ''}
-        ${tonightStay(af.day) ? `<button type="button" class="af-plain" id="afHome"><i class="ti ti-home"></i><span>回住處<small>${esc(tonightStay(af.day).name)}</small></span></button>` : ''}`}`;
+        ${isDay(af.day) ? `<button type="button" class="af-plain" id="afHome"><i class="ti ti-home"></i><span>回住處<small>${homeFor(af.day) ? esc(homeFor(af.day).name) : '還沒設定住處，點這裡加入'}</small></span></button>` : ''}`}`;
     const q = body.querySelector('#afQ'), region = TRIP?.region;
     tripBias();   // 先在背景準備好搜尋中心
     attachPlaceSuggest(q, pick => { af.pick = pick; af.q = pick.name; drawAdd(); }, () => { af.q = q.value; },
@@ -3484,7 +3506,11 @@ function drawAdd() {
     body.querySelector('#afRetry')?.addEventListener('click', () => { af.pick = null; drawAdd(); });
     body.querySelector('#afNext')?.addEventListener('click', () => { const cls = guessCls(af.pick.types); Object.assign(af, { step: 2, name: af.pick.name, cls, dur: CLS_DUR[cls] }); drawAdd(); });
     body.querySelector('#afPlain')?.addEventListener('click', () => { Object.assign(af, { step: 2, pick: null, name: af.q.trim(), cls: 'other', dur: 60 }); drawAdd(); });
-    body.querySelector('#afHome')?.addEventListener('click', () => { const h = tonightStay(af.day); Object.assign(af, { step: 2, home: h, pick: null, name: '回住處休息', cls: 'other', dur: 60 }); drawAdd(); });
+    body.querySelector('#afHome')?.addEventListener('click', () => {
+      const h = homeFor(af.day);
+      if (!h) { af = null; openTripSettings(); toast('加好住處後，再按「加入行程」就能選「回住處」', '', null, 5000); return; }   // 還沒設定住處：先去旅程設定加
+      Object.assign(af, { step: 2, home: h, pick: null, name: '回住處休息', cls: 'other', dur: 60 }); drawAdd();
+    });
     body.querySelectorAll('[data-cand]').forEach(b => b.addEventListener('click', () => {
       const [, it] = findItem(b.dataset.cand); if (!it) return;
       Object.assign(af, { step: 2, cand: it.id, pick: null, name: it.t, cls: it.cls || 'eat', dur: m(it.e) - m(it.s) || 60 }); drawAdd();
@@ -3642,7 +3668,7 @@ function openEditor(id, startAt, toDay, replaceId) {
     ${ed.pick ? '<div class="ed-hint"><i class="ti ti-info-circle"></i> 這是多選一的行程，名稱可以取像「早餐二選一」。要改裡面的店家，請展開後直接點那一家</div>' : ''}
     ${ed.group || ed.pick ? '' : `
     <label class="ed-field"><span class="ed-lab-row"><span class="ed-lab">地圖 <span class="ed-lab-hint">貼上 Google 地圖的分享連結最準確</span></span>
-      ${tonightStay(ed.day) ? `<button type="button" class="swap-btn" id="edHome"><i class="ti ti-home"></i> 回住處</button>` : ''}</span>
+      ${homeFor(ed.day) ? `<button type="button" class="swap-btn" id="edHome"><i class="ti ti-home"></i> 回住處</button>` : ''}</span>
       <span class="clr-wrap"><input id="edMap" type="text" value="${esc(ed.map)}" placeholder="貼上分享連結，或輸入店名" autocomplete="off" inputmode="url"><button type="button" class="clr-btn" aria-label="清除" tabindex="-1"><i class="ti ti-x"></i></button></span></label>
     <div class="map-status" id="edMapStatus"></div>
     <div class="map-status" id="edMates"${placeMates(ed.id && !ed.group && !ed.pick ? findItem(ed.id)[1] : null, ed.id ? findItem(ed.id)[1] : null).length ? '' : ' hidden'}>${mateHint(placeMates(ed.id && !ed.group && !ed.pick ? findItem(ed.id)[1] : null, ed.id ? findItem(ed.id)[1] : null).length)}</div>`}
@@ -3761,7 +3787,7 @@ function wireEditor() {
   // 回住處：地點填當晚的住處（座標、地點代號一起帶入，不用再查）；名稱空白就叫「回住處休息」
   $('edHome')?.addEventListener('click', e => {
     e.preventDefault();
-    const h = tonightStay(ed.day); if (!h) return;
+    const h = homeFor(ed.day); if (!h) return;
     $('edMap').value = h.map || h.name; ed.home = h;
     if (!$('edT').value.trim()) $('edT').value = '回住處休息';
     sheet.querySelector('#edCls .chip.other')?.click();
@@ -4225,6 +4251,7 @@ async function bgLookup({ id, link }) {
   }
   saveData('查詢地點');
   if (day === current && !drag) renderPage(current);
+  if (sheet.classList.contains('on') && sheet._infoId === id) openCardInfo(id);   // 資訊面板開著：換成查好的內容
   toast(p ? `「${it.t}」查好了` : `「${it.t}」查不到資料：${fail}`);
 }
 // 請 AI 照 Google 地圖的資料寫中文描述、提醒、區域；失敗回傳 null（只是少了描述）
