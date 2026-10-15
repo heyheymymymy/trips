@@ -543,7 +543,8 @@ button.ov-stay{width:100%;font:inherit;text-align:left;cursor:pointer}
 .tm-opt b{display:block;font-size:15px}
 .tm-opt.danger b,.tm-opt.danger > i{color:#C2412D}
 .tm-opt small{display:block;margin-top:2px;font-size:12px;color:var(--text2);line-height:1.4}
-.trip-card{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
+.trip-card,.trip-card *{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
+.trip-card img{pointer-events:none}   /* 長按封面不要跳出 iPhone 的圖片預覽 */
 /* 旅程設定：日期一行，點了展開月曆 */
 .ts-date{display:flex;align-items:center;gap:8px;width:100%;height:44px;padding:0 12px;border:1px solid var(--border);border-radius:10px;background:#fff;font:inherit;font-size:16px;color:var(--text);text-align:left;cursor:pointer}
 .ts-date span{flex:1;min-width:0}
@@ -2685,7 +2686,8 @@ function openTripMenu(id) {
       ${t.role === 'edit' ? opt('set', 'ti-settings', '旅程設定', '名稱、目的地、日期、交通方式、行程封面') : ''}
       ${listIsCreator(t) ? '' : opt('hide', 'ti-eye-off', '從列表拿掉', '只有創建旅程的人可以刪除旅程，從你的列表拿掉後，原本的旅程不受影響')}
       ${listCanDelete(t) ? opt('del', 'ti-trash', '刪除旅程', '確定不去了嗎？刪掉後大家都看不到這趟旅程囉', ' danger') : ''}
-    </div>`);
+    </div>
+    ${t.role === 'edit' && t.has_owner === false && t.created_by && t.created_by !== getNick() ? `<div class="sh-empty">這趟是「${esc(t.created_by)}」建立的，你現在的暱稱是「${esc(getNick() || '還沒填')}」，暱稱一樣才能刪除</div>` : ''}`);
   sheet.querySelector('.tm-list').addEventListener('click', e => {
     const b = e.target.closest('[data-tm]'); if (!b) return;
     if (b.dataset.tm === 'set' || b.dataset.tm === 'del') {
