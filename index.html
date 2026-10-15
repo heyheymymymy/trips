@@ -541,6 +541,7 @@ button.ov-stay{width:100%;font:inherit;text-align:left;cursor:pointer}
 .tm-opt > i{flex:none;width:34px;height:34px;border-radius:50%;background:var(--other-bg);color:var(--text2);font-size:18px;display:flex;align-items:center;justify-content:center}
 .tm-opt span{flex:1;min-width:0}
 .tm-opt b{display:block;font-size:15px}
+.tm-opt.danger b,.tm-opt.danger > i{color:#C2412D}
 .tm-opt small{display:block;margin-top:2px;font-size:12px;color:var(--text2);line-height:1.4}
 .trip-card{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
 /* 旅程設定：日期一行，點了展開月曆 */
@@ -984,7 +985,8 @@ function rememberTrip(t, role, key, code) {
   const old = myTrips().find(x => x.id === t.id);
   if (code === undefined) code = role === 'edit' ? old?.code || '' : '';
   const list = myTrips().filter(x => x.id !== t.id);
-  list.unshift({ id: t.id, key, code, role, name: t.name, dest: t.dest, en: t.en, start: t.start, days: Number(t.days) || 0, cover: t.cover || old?.cover || '', members: t.members || [], ...(old?.owner ? { owner: old.owner } : {}) });
+  list.unshift({ id: t.id, key, code, role, name: t.name, dest: t.dest, en: t.en, start: t.start, days: Number(t.days) || 0, cover: t.cover || old?.cover || '', members: t.members || [], ...(old?.owner ? { owner: old.owner } : {}),
+    ...(t.has_owner !== undefined ? { has_owner: t.has_owner, created_by: t.created_by || '' } : old?.has_owner !== undefined ? { has_owner: old.has_owner, created_by: old.created_by } : {}) });
   try { localStorage.setItem(MINE_KEY, JSON.stringify(list.slice(0, 50))); } catch {}
 }
 let TRIP_CODE = TRIP_ID ? myTrips().find(x => x.id === TRIP_ID)?.code || '' : '';
@@ -992,7 +994,11 @@ let TRIP_CODE = TRIP_ID ? myTrips().find(x => x.id === TRIP_ID)?.code || '' : ''
 function setTripOwner(id, owner) { const list = myTrips(), t = list.find(x => x.id === id); if (!t || !owner) return; t.owner = owner; try { localStorage.setItem(MINE_KEY, JSON.stringify(list)); } catch {} }
 const tripRemoved = id => { try { localStorage.setItem(MINE_KEY, JSON.stringify(myTrips().filter(x => x.id !== id))); localStorage.removeItem('trip-cache-' + id + TEST_SUFFIX); } catch {} };
 // 能不能刪除這趟：手機裡有擁有者鑰匙；有鑰匙之前建立的舊旅程，暱稱跟建立的人一樣也可以
-const canDeleteTrip = () => TRIP_ROLE === 'edit' && !!(myTrips().find(x => x.id === TRIP_ID)?.owner || (TRIP && !TRIP.has_owner && TRIP.created_by && TRIP.created_by === getNick()));
+const canDeleteTrip = () => TRIP_ROLE === 'edit' && !!(myTrips().find(x => x.id === TRIP_ID)?.owner || (TRIP && TRIP.has_owner === false && TRIP.created_by && TRIP.created_by === getNick()));
+// 「我的旅程」列表上的判斷（還沒打開過、不知道建立的人是誰時先當作可以，打開後再確認）
+// 確定是建立的人：不給「從列表拿掉」（拿掉就看不到、也刪不掉了，擁有者鑰匙也會跟著不見）
+const listIsCreator = t => t.role === 'edit' && (!!t.owner || (t.has_owner === false && t.created_by === getNick()));
+const listCanDelete = t => t.role === 'edit' && (!!t.owner || (t.has_owner === false ? t.created_by === getNick() : t.has_owner === undefined));
 // 旅程網址：保留測試用的 api、now 參數
 function tripUrl(id, key, hash = 'overview') {
   const q = new URLSearchParams();
@@ -1427,7 +1433,9 @@ async function load(force) {
     const first = !TRIP;
     applyServer(r); refreshView(); resumeLookups(); setTimeout(locateMissing, 3000);
     if (justCreated && TRIP?.code) { justCreated = false; setTimeout(openSaveTrip, 400); }   // 剛建好：提醒存連結
-    if (first) { let o = ''; try { o = sessionStorage.getItem('open-settings'); sessionStorage.removeItem('open-settings'); } catch {} if (o === TRIP_ID && TRIP_ROLE === 'edit') setTimeout(() => withAuth(openTripSettings), 300); }   // 從「我的旅程」長按選了旅程設定
+    // 從「我的旅程」長按選了旅程設定／刪除：載入後打開（手機裡有舊資料時一打開就有 TRIP，所以不能只看第一次載入）
+    { let o = ''; try { o = sessionStorage.getItem('trip-act') || ''; sessionStorage.removeItem('trip-act'); } catch {}
+      const [oid, act] = o.split(':'); if (oid === TRIP_ID && TRIP_ROLE === 'edit') setTimeout(() => runTripAct(act), 300); }
     // 第一次在這支手機打開：網址指定的那一天，或旅行期間的今天
     const go = wantPage && isDay(wantPage) ? wantPage : first && current === 'overview' && tripNow()?.day;
     wantPage = null;
@@ -1880,7 +1888,7 @@ function renderOverview() {
   if (TRIP) {
     html += '<div class="ov-foot">';
     html += `<div class="ov-sec">同行的人</div><div class="ov-members">${TRIP.members?.length ? TRIP.members.map(n => `<span>${esc(n)}</span>`).join('') : '<span class="ov-empty">還沒有人改過行程</span>'}</div>`;
-    html += `<button type="button" class="inv-btn trip-set" id="tripSet"><i class="ti ti-settings"></i><span><b>旅程設定</b><small>名稱、目的地、交通方式</small></span><i class="ti ti-chevron-right"></i></button>`;
+    html += `<button type="button" class="inv-btn trip-set" id="tripSet"><i class="ti ti-settings"></i><span><b>旅程設定</b><small>名稱、目的地、日期、交通方式、行程封面</small></span><i class="ti ti-chevron-right"></i></button>`;
     if (TRIP_ROLE === 'edit' && TRIP.code) html += `<div class="inv">
       <div class="inv-code"><span>編輯碼</span><b>${esc(TRIP.code)}</b><small>拿到連結的人都能看，輸入編輯碼才能修改</small></div>
       <button type="button" class="inv-btn" data-invite="edit"><i class="ti ti-user-plus"></i><span><b>邀請一起規劃</b><small>分享連結，訊息附上編輯碼</small></span><i class="ti ti-share-2"></i></button>
@@ -2094,7 +2102,7 @@ function openTripSettings() {
   };
   openSheet(`
     <div class="sh-head"><div style="flex:1;min-width:0"><div class="sh-title" id="shTitle">旅程設定</div>
-      <div class="sh-sub">名稱、目的地、日期、交通方式</div></div>
+      <div class="sh-sub">名稱、目的地、日期、交通方式、行程封面</div></div>
       <button class="sh-close" aria-label="關閉"><i class="ti ti-x"></i></button></div>
     <div id="tsBody"></div>
     <div class="ed-actions">
@@ -2155,7 +2163,7 @@ function openTripSettings() {
 function openDeleteTrip() {
   openSheet(`
     <div class="sh-head"><div style="flex:1;min-width:0"><div class="sh-title" id="shTitle">刪除「${esc(TRIP.name)}」？</div>
-      <div class="sh-sub">所有人的連結都會打不開，大家的「我的旅程」也會拿掉這趟。30 天內後悔還可以救回來</div></div>
+      <div class="sh-sub">確定不去了嗎？刪掉後大家都看不到這趟旅程囉</div></div>
       <button class="sh-close" aria-label="關閉"><i class="ti ti-x"></i></button></div>
     <label class="ed-field"><span class="ed-lab">確認 <span class="ed-lab-hint">請輸入「刪除」兩個字</span></span><input type="text" id="tdTxt" autocomplete="off" placeholder="刪除"></label>
     <div class="err" id="tdErr" hidden></div>
@@ -2662,6 +2670,11 @@ tripsEl.addEventListener('mousedown', e => { if (e.button === 0) tripPressStart(
 addEventListener('mouseup', tripPressEnd);
 addEventListener('scroll', tripPressEnd, { passive: true });
 tripsEl.addEventListener('contextmenu', e => { if (e.target.closest('[data-trip]')) e.preventDefault(); });
+function runTripAct(act) {
+  if (act === 'del') withAuth(() => canDeleteTrip() ? openDeleteTrip()
+    : toast(TRIP.has_owner === false && TRIP.created_by ? `這趟是「${TRIP.created_by}」建立的，暱稱要一樣才能刪除（你現在是「${getNick()}」）` : '只有創建旅程的人可以刪除旅程', '知道了', () => {}, 8000));
+  else withAuth(openTripSettings);
+}
 function openTripMenu(id) {
   const t = myTrips().find(x => x.id === id); if (!t) return;
   const opt = (k, ic, title, sub, cls = '') => `<button type="button" class="tm-opt${cls}" data-tm="${k}"><i class="ti ${ic}"></i><span><b>${title}</b><small>${sub}</small></span></button>`;
@@ -2669,14 +2682,16 @@ function openTripMenu(id) {
     <div class="sh-head"><div style="flex:1;min-width:0"><div class="sh-title" id="shTitle">${esc(t.name || '旅程')}</div></div>
       <button class="sh-close" aria-label="關閉"><i class="ti ti-x"></i></button></div>
     <div class="tm-list">
-      ${t.role === 'edit' ? opt('set', 'ti-settings', '旅程設定', t.owner ? '名稱、目的地、日期、交通方式，也可以刪除旅程' : '名稱、目的地、日期、交通方式') : ''}
-      ${opt('hide', 'ti-eye-off', '從列表拿掉', '只有創建旅程的人可以刪除旅程，從你的列表拿掉後，原本的旅程不受影響')}
+      ${t.role === 'edit' ? opt('set', 'ti-settings', '旅程設定', '名稱、目的地、日期、交通方式、行程封面') : ''}
+      ${listIsCreator(t) ? '' : opt('hide', 'ti-eye-off', '從列表拿掉', '只有創建旅程的人可以刪除旅程，從你的列表拿掉後，原本的旅程不受影響')}
+      ${listCanDelete(t) ? opt('del', 'ti-trash', '刪除旅程', '確定不去了嗎？刪掉後大家都看不到這趟旅程囉', ' danger') : ''}
     </div>`);
   sheet.querySelector('.tm-list').addEventListener('click', e => {
     const b = e.target.closest('[data-tm]'); if (!b) return;
-    if (b.dataset.tm === 'set') {
-      if (id === TRIP_ID && TRIP && t.key === TRIP_KEY) { closeSheet(); location.hash = 'overview'; withAuth(openTripSettings); return; }
-      try { sessionStorage.setItem('open-settings', id); } catch {}   // 別趟：換網址重新載入，載入後打開設定
+    if (b.dataset.tm === 'set' || b.dataset.tm === 'del') {
+      const act = b.dataset.tm;
+      if (id === TRIP_ID && TRIP && t.key === TRIP_KEY) { closeSheet(); location.hash = 'overview'; runTripAct(act); return; }
+      try { sessionStorage.setItem('trip-act', id + ':' + act); } catch {}   // 別趟：換網址重新載入，載入後打開設定或刪除確認
       location.href = tripUrl(id, t.key);
     } else {
       tripRemoved(id); closeSheet(); renderTrips(); toast('已從列表拿掉');
@@ -2698,15 +2713,17 @@ const wizEl = document.getElementById('wiz'), wizBack = document.getElementById(
 const WIZ_MODES = [['drive', 'car', '開車／叫車', 'Grab、Uber、計程車'], ['transit', 'bus', '大眾運輸', '捷運、公車、火車'],
   ['moto', 'motorbike', '機車', '自己騎或叫機車'], ['walk', 'walk', '走路為主', '景點都在附近']];
 let wiz;
-function wizReset() { const t = todayYmd(); wiz = { name: '', nameAuto: true, dest: '', geo: null, start: '', end: '', cal: t.slice(0, 7), err: '' }; }
+function wizReset() { const t = todayYmd(); wiz = { name: '', dest: '', geo: null, start: '', end: '', cal: t.slice(0, 7), err: '' }; }
 const ymd = d => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
 const todayYmd = () => ymd(new Date(Date.now() + NOW_SHIFT));
 const dLabel = v => { const d = new Date(v + 'T00:00'); return `${mdOf(d)}（${'日一二三四五六'[d.getDay()]}）`; };
 const destCity = d => String(d || '').split(/[,，]/)[0].trim();
 // 封面英文字：選了 Google 地點用它的英文名（京都 → Kyoto），不然用打的字
 const wizEn = () => (wiz.geo?.en || destCity(wiz.dest) || 'Trip').replace(/\.$/, '') + '.';
-// 名稱還沒自己改過：跟著目的地和天數自動帶入（例如「曼谷 3 日」）
-const autoName = () => { const c = destCity(wiz.dest), n = wizDays(); return c ? (n ? `${c} ${n} 日` : c) : ''; };
+// 名稱沒填就用這個（也是名稱欄的提示文字）：「京都四天三夜快樂之旅」；一天就是「京都一日快樂之旅」
+const wizName = () => wiz.name.trim() || autoName();   // 有填用填的，沒填用提示文字
+const zhNum = n => { const d = '零一二三四五六七八九'; return n <= 10 ? (n === 10 ? '十' : d[n]) : n < 20 ? '十' + d[n - 10] : d[Math.floor(n / 10)] + '十' + (n % 10 ? d[n % 10] : ''); };
+const autoName = () => { const c = destCity(wiz.dest), n = wizDays(); return c ? `${c}${n > 1 ? `${zhNum(n)}天${zhNum(n - 1)}夜` : n ? '一日' : ''}快樂之旅` : ''; };
 function calHtml(w = wiz) {   // 建立旅程、旅程設定共用：w 有 start、end、cal（顯示哪個月）
   const [y, m] = w.cal.split('-').map(Number), first = new Date(y, m - 1, 1), total = new Date(y, m, 0).getDate(), today = todayYmd();
   let g = '日一二三四五六'.split('').map(w => `<span class="cal-w">${w}</span>`).join('') + '<span></span>'.repeat(first.getDay());
@@ -2728,10 +2745,9 @@ function wizDays() { const s = parseD(wiz.start), e = parseD(wiz.end); return s 
 function renderWiz() {
   const field = (lab, html, hint = '') => `<label class="ed-field"><span class="ed-lab">${lab}${hint ? `<span class="ed-lab-hint">${hint}</span>` : ''}</span>${html}</label>`;
   const n = wizDays();
-  if (wiz.nameAuto) wiz.name = autoName();
   daySub.textContent = '建立旅程';
   wizEl.innerHTML = `<div class="wiz-h">要去哪裡？</div><p class="wiz-p">住處、交通方式、想去的店、封面照片，建好之後再慢慢加。</p>
-    ${field('旅程名稱', `<input type="text" data-k="name" id="wizName" value="${esc(wiz.name)}" placeholder="選好目的地和日期會自動帶入" autocomplete="off" maxlength="40">`)}
+    ${field('旅程名稱', `<input type="text" data-k="name" id="wizName" value="${esc(wiz.name)}" placeholder="${esc(autoName() || '京都四天三夜快樂之旅')}" autocomplete="off" maxlength="40">`)}
     <div class="ed-field ps-field"><span class="ed-lab">目的地<span class="ed-lab-hint">${wiz.geo ? `<i class="ti ti-map-pin-check"></i> ${esc(wiz.geo.label)}` : '打城市名稱，從清單選一個'}</span></span>
       <input type="text" data-k="dest" id="wizDest" value="${esc(wiz.dest)}" placeholder="例如：京都、Bangkok" autocomplete="off"></div>
     <div class="ed-field"><span class="ed-lab">日期<span class="ed-lab-hint">${!wiz.start ? '先點出發日' : !wiz.end ? '再點回程日' : ''}</span></span>${calHtml()}</div>
@@ -2751,8 +2767,7 @@ wizEl.addEventListener('input', e => {
   const k = e.target.dataset.k;
   if (!k) return;
   wiz[k] = e.target.value;
-  if (k === 'name') wiz.nameAuto = !e.target.value.trim();   // 自己改過名稱就不再自動帶入；清空了就恢復
-  if (k === 'dest' && wiz.nameAuto) { wiz.name = autoName(); wizEl.querySelector('#wizName').value = wiz.name; }
+  if (k === 'dest') wizEl.querySelector('#wizName').placeholder = autoName() || '京都四天三夜快樂之旅';   // 沒填名稱時會用提示文字當名稱
 });
 wizEl.addEventListener('click', e => {
   const b = e.target.closest('button'); if (!b) return;
@@ -2767,14 +2782,14 @@ wizEl.addEventListener('click', e => {
 wizBack.addEventListener('click', () => { location.hash = 'trips'; });
 wizNext.addEventListener('click', () => {
   const n = wizDays();
-  wiz.err = !wiz.dest.trim() ? '請填目的地' : !wiz.start || !wiz.end ? '請選出發和回程日期' : !n ? '回程不能比出發早' : n > 30 ? '最多 30 天' : !wiz.name.trim() ? '請填旅程名稱' : '';   // 名稱會自動帶入，最後才檢查
+  wiz.err = !wiz.dest.trim() ? '請填目的地' : !wiz.start || !wiz.end ? '請選出發和回程日期' : !n ? '回程不能比出發早' : n > 30 ? '最多 30 天' : '';
   if (wiz.err) { renderWiz(); wizEl.querySelector('#wizNote')?.scrollIntoView({ block: 'center', behavior: 'smooth' }); return; }
   openCreateAuth();
 });
 // 建立旅程：只要暱稱（記在這支手機）；建好會拿到這趟的編輯碼
 function openCreateAuth() {
   openSheet(`
-    <div class="sh-head"><div style="flex:1;min-width:0"><div class="sh-title" id="shTitle">建立「${esc(wiz.name.trim())}」</div>
+    <div class="sh-head"><div style="flex:1;min-width:0"><div class="sh-title" id="shTitle">建立「${esc(wizName())}」</div>
       <div class="sh-sub">資料會存在這個網站的 Google 試算表，架網站的人看得到</div></div>
       <button class="sh-close" aria-label="關閉"><i class="ti ti-x"></i></button></div>
     <label class="ed-field"><span class="ed-lab">你的暱稱 <span class="ed-lab-hint">旅伴會看到是誰改的</span></span>
@@ -2793,7 +2808,7 @@ function openCreateAuth() {
     try {
       const dest = wiz.dest.trim();
       const g = wiz.geo || {};
-      const r = await api({ action: 'createTrip', nick, name: wiz.name.trim(), dest, en: wizEn(), region: g.region || '', center: g.center || '',
+      const r = await api({ action: 'createTrip', nick, name: wizName(), dest, en: wizEn(), region: g.region || '', center: g.center || '',
         start: wiz.start, days: wizDays() }, 60000);
       setNick(nick);
       rememberTrip(r.trip, 'edit', r.trip.view_key, r.trip.code); setTripOwner(r.trip.id, r.owner);
