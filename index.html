@@ -605,6 +605,16 @@ html.on-map:not(.sheet-lock),html.on-map:not(.sheet-lock) body{background:#f4f0e
 .wiz-opts.grid .wiz-opt{padding:10px 12px;gap:8px}
 .wiz-opts.grid .wiz-opt > i{width:30px;height:30px;font-size:16px}
 .wiz-opts.grid .wiz-opt small{display:none}
+.ps-field{position:relative}
+.ps-list{position:absolute;left:0;right:0;top:100%;z-index:30;margin-top:4px;padding:4px;border:1px solid var(--border);border-radius:12px;background:#fff;box-shadow:0 8px 24px rgba(60,40,20,.14)}
+.ps-list[hidden]{display:none}
+.ps-list button{display:flex;align-items:center;gap:10px;width:100%;padding:9px 10px;border:0;border-radius:8px;background:none;font:inherit;text-align:left;color:var(--text);cursor:pointer}
+.ps-list button:active,.ps-list button:hover{background:#FAF7F3}
+.ps-list i{flex:none;color:var(--muted);font-size:17px}
+.ps-list span{min-width:0}
+.ps-list b{display:block;font-size:15px;font-weight:600}
+.ps-list small{display:block;font-size:12px;color:var(--text2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ed-lab-hint .ti-map-pin-check{color:var(--spa-fg)}
 .wiz-cover{position:relative}
 .cover{position:relative;display:flex;align-items:center;justify-content:center;height:150px;border-radius:16px;overflow:hidden;background:var(--accent-bg)}
 .cover img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
@@ -1857,7 +1867,7 @@ function openTripSettings() {
     const open = sheet.scrollTop;
     sheet.querySelector('#tsBody').innerHTML = `
       <label class="ed-field"><span class="ed-lab">旅程名稱</span><input id="tsName" type="text" value="${esc(st.name)}" maxlength="40" autocomplete="off"></label>
-      <label class="ed-field"><span class="ed-lab">目的地 <span class="ed-lab-hint">查地點、地圖會以這裡為中心</span></span><input id="tsDest" type="text" value="${esc(st.dest)}" maxlength="60" autocomplete="off"></label>
+      <div class="ed-field ps-field"><span class="ed-lab">目的地 <span class="ed-lab-hint" id="tsDestHint">${st.geo ? `<i class="ti ti-map-pin-check"></i> ${esc(st.geo.label)}` : '查地點、地圖會以這裡為中心'}</span></span><input id="tsDest" type="text" value="${esc(st.dest)}" maxlength="60" autocomplete="off"></div>
       <div class="ed-field"><span class="ed-lab">主要交通方式 <span class="ed-lab-hint">自動計算交通時間用</span></span>
         <div class="wiz-opts grid">${WIZ_MODES.map(([k, ic, nm]) => `<button type="button" class="wiz-opt${st.mode === k ? ' on' : ''}" data-mode="${k}"><i class="ti ti-${ic}"></i><span><b>${nm}</b></span></button>`).join('')}</div></div>
       <div class="ed-field"><span class="ed-lab">住處 <span class="ed-lab-hint">每天第一段交通從前一晚的住處算</span></span></div>
@@ -1870,6 +1880,8 @@ function openTripSettings() {
       <button type="button" class="wiz-add" id="tsAddStay"><i class="ti ti-plus"></i>${st.stays.length ? '再加一間住處' : '加入住處'}</button>
       <div class="err" id="tsErr" hidden></div>`;
     sheet.scrollTop = open;
+    attachPlaceSuggest(sheet.querySelector('#tsDest'), g => { Object.assign(st, { dest: g.name, geo: g }); draw(); },
+      () => { if (st.geo) { st.geo = null; sheet.querySelector('#tsDestHint').textContent = '查地點、地圖會以這裡為中心'; } });
   };
   openSheet(`
     <div class="sh-head"><div style="flex:1;min-width:0"><div class="sh-title" id="shTitle">旅程設定</div>
@@ -1912,7 +1924,7 @@ function openTripSettings() {
     const stays = st.stays.filter(h => h.name.trim());
     const changes = {};
     if (st.name.trim() !== TRIP.name) changes.name = st.name.trim();
-    if (st.dest.trim() !== TRIP.dest) changes.dest = st.dest.trim();
+    if (st.dest.trim() !== TRIP.dest) { changes.dest = st.dest.trim(); if (st.geo) Object.assign(changes, { region: st.geo.region, center: st.geo.center, en: st.geo.en ? st.geo.en + '.' : '' }); }
     if (st.mode !== tripMode()) changes.mode = st.mode;
     if (JSON.stringify(stays) !== JSON.stringify(tripStays())) changes.stays = stays;
     if (!Object.keys(changes).length) { closeSheet(); return; }
@@ -2159,11 +2171,13 @@ const wizEl = document.getElementById('wiz'), wizBack = document.getElementById(
 const WIZ_MODES = [['drive', 'car', '開車／叫車', 'Grab、Uber、計程車'], ['transit', 'bus', '大眾運輸', '捷運、公車、火車'],
   ['moto', 'motorbike', '機車', '自己騎或叫機車'], ['walk', 'walk', '走路為主', '景點都在附近']];
 let wiz;
-function wizReset() { const t = todayYmd(); wiz = { name: '', nameAuto: true, dest: '', start: '', end: '', cal: t.slice(0, 7), cover: null, err: '' }; }
+function wizReset() { const t = todayYmd(); wiz = { name: '', nameAuto: true, dest: '', geo: null, start: '', end: '', cal: t.slice(0, 7), cover: null, err: '' }; }
 const ymd = d => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
 const todayYmd = () => ymd(new Date(Date.now() + NOW_SHIFT));
 const dLabel = v => { const d = new Date(v + 'T00:00'); return `${mdOf(d)}（${'日一二三四五六'[d.getDay()]}）`; };
 const destCity = d => String(d || '').split(/[,，]/)[0].trim();
+// 封面英文字：選了 Google 地點用它的英文名（京都 → Kyoto），不然用打的字
+const wizEn = () => (wiz.geo?.en || destCity(wiz.dest) || 'Trip').replace(/\.$/, '') + '.';
 // 名稱還沒自己改過：跟著目的地和天數自動帶入（例如「曼谷 3 日」）
 const autoName = () => { const c = destCity(wiz.dest), n = wizDays(); return c ? (n ? `${c} ${n} 日` : c) : ''; };
 function calHtml() {
@@ -2190,16 +2204,22 @@ function renderWiz() {
   if (wiz.nameAuto) wiz.name = autoName();
   daySub.textContent = '建立旅程';
   wizEl.innerHTML = `<div class="wiz-h">要去哪裡？</div><p class="wiz-p">住處、交通方式、想去的店，建好之後再慢慢加。</p>
-    ${field('目的地', `<input type="text" data-k="dest" value="${esc(wiz.dest)}" placeholder="城市，例如 Bangkok" autocomplete="off">`)}
+    <div class="ed-field ps-field"><span class="ed-lab">目的地<span class="ed-lab-hint">${wiz.geo ? `<i class="ti ti-map-pin-check"></i> ${esc(wiz.geo.label)}` : '打城市名稱，從清單選一個'}</span></span>
+      <input type="text" data-k="dest" id="wizDest" value="${esc(wiz.dest)}" placeholder="例如：京都、Bangkok" autocomplete="off"></div>
     <div class="ed-field"><span class="ed-lab">日期<span class="ed-lab-hint">${!wiz.start ? '先點出發日' : !wiz.end ? '再點回程日' : ''}</span></span>${calHtml()}</div>
     <div class="wiz-note${wiz.err ? ' err' : ''}" id="wizNote">${wiz.err ? esc(wiz.err) : n ? `${dLabel(wiz.start)}–${dLabel(wiz.end)}．共 ${n} 天 ${n - 1} 夜` : wiz.start ? `出發 ${dLabel(wiz.start)}` : ''}</div>
     ${field('旅程名稱', `<input type="text" data-k="name" id="wizName" value="${esc(wiz.name)}" placeholder="選好目的地和日期會自動帶入" autocomplete="off" maxlength="40">`)}
     <div class="ed-field"><span class="ed-lab">封面照片<span class="ed-lab-hint">選填，之後在總覽也能換</span></span>
-      <div class="wiz-cover">${coverHtml(wiz.cover?.dataUrl, (destCity(wiz.dest) || 'Trip') + '.')}
+      <div class="wiz-cover">${coverHtml(wiz.cover?.dataUrl, wizEn())}
         <label class="btn ghost wiz-cover-btn"><i class="ti ti-photo-plus"></i> ${wiz.cover ? '換一張' : '選一張照片'}<input type="file" accept="image/*" id="wizCoverFile" hidden></label>
         ${wiz.cover ? '<button type="button" class="wiz-cover-x" id="wizCoverX" aria-label="不用照片"><i class="ti ti-x"></i></button>' : ''}</div></div>`;
   wizBack.textContent = '取消';
   wizNext.textContent = '建立旅程';
+  const dest = wizEl.querySelector('#wizDest');
+  attachPlaceSuggest(dest, g => {
+    Object.assign(wiz, { dest: g.name, geo: g });
+    const keep = document.activeElement; renderWiz(); if (keep === dest) wizEl.querySelector('#wizDest')?.blur();
+  }, () => { if (wiz.geo) { wiz.geo = null; const h = dest.closest('.ed-field').querySelector('.ed-lab-hint'); if (h) h.textContent = '打城市名稱，從清單選一個'; } });
 }
 // 封面：有照片顯示照片，沒有就是淺陶土色底＋英文目的地
 const coverHtml = (url, en) => `<span class="cover${url ? ' has' : ''}">${url ? photoImg(url) : `<span class="en">${esc(en)}</span>`}</span>`;
@@ -2208,7 +2228,7 @@ wizEl.addEventListener('input', e => {
   if (!k) return;
   wiz[k] = e.target.value;
   if (k === 'name') wiz.nameAuto = !e.target.value.trim();   // 自己改過名稱就不再自動帶入；清空了就恢復
-  if (k === 'dest' && wiz.nameAuto) { wiz.name = autoName(); wizEl.querySelector('#wizName').value = wiz.name; const en = wizEl.querySelector('.cover .en'); if (en) en.textContent = (destCity(wiz.dest) || 'Trip') + '.'; }
+  if (k === 'dest') { if (wiz.nameAuto) { wiz.name = autoName(); wizEl.querySelector('#wizName').value = wiz.name; } const en = wizEl.querySelector('.cover .en'); if (en) en.textContent = wizEn(); }
 });
 wizEl.addEventListener('change', async e => {
   if (e.target.id !== 'wizCoverFile') return;
@@ -2253,7 +2273,8 @@ function openCreateAuth() {
     $('crGo').disabled = true; $('crGo').textContent = '建立中…'; $('crErr').hidden = true;
     try {
       const dest = wiz.dest.trim();
-      const r = await api({ action: 'createTrip', nick, name: wiz.name.trim(), dest, en: dest.split(/[,，]/)[0].replace(/\.$/, '') + '.',
+      const g = wiz.geo || {};
+      const r = await api({ action: 'createTrip', nick, name: wiz.name.trim(), dest, en: wizEn(), region: g.region || '', center: g.center || '',
         start: wiz.start, days: wizDays() }, 60000);
       setNick(nick);
       if (wiz.cover) {   // 封面：旅程建好才有地方放，先上傳再存到旅程（失敗也照樣進去，之後在總覽換）
@@ -2324,6 +2345,60 @@ function loadMaps(key) {
     document.head.appendChild(sc);
   });
   return mapsReady;
+}
+// ---------- 目的地：打字時列出 Google 的地點建議（城市、地區、國家），點一個就記下國家、座標、英文名 ----------
+// 金鑰：旅程載入時拿到的；建立旅程時還沒有旅程，跟 API 要一次（存在手機）
+const MAPS_KEY_STORE = 'trip-maps-key' + TEST_SUFFIX;
+async function getMapsKey() {
+  if (MAPS_KEY) return MAPS_KEY;
+  try { const k = localStorage.getItem(MAPS_KEY_STORE); if (k) return k; } catch {}
+  if (!API) return '';
+  try { const r = await fetch(API + '?action=config').then(x => x.json()); if (r.mapsKey) { try { localStorage.setItem(MAPS_KEY_STORE, r.mapsKey); } catch {} return r.mapsKey; } } catch {}
+  return '';
+}
+// input：目的地欄位；onPick({ name, label, region, center, en })：點了某個建議；onType()：又打字了（之前選的不算數）
+// 金鑰沒開放地點建議、網路不通時不會跳出清單，照樣可以直接打字（建立時由 API 查）
+function attachPlaceSuggest(input, onPick, onType) {
+  const box = document.createElement('div'); box.className = 'ps-list'; box.hidden = true;
+  input.insertAdjacentElement('afterend', box);
+  input.setAttribute('autocomplete', 'off');
+  let timer = null, seq = 0, token = null, items = [];
+  const close = () => { box.hidden = true; box.innerHTML = ''; items = []; };
+  const ask = async () => {
+    const q = input.value.trim(), my = ++seq;
+    if (!q) { close(); return; }
+    let places;
+    try {
+      const key = await getMapsKey(); if (!key) return;
+      await loadMaps(key); places = await google.maps.importLibrary('places');
+      token = token || new places.AutocompleteSessionToken();   // 同一次選擇的查詢算一次計費
+      const { suggestions } = await places.AutocompleteSuggestion.fetchAutocompleteSuggestions({ input: q, sessionToken: token, includedPrimaryTypes: ['(regions)'] });
+      if (my !== seq || document.activeElement !== input) return;
+      items = (suggestions || []).map(x => x.placePrediction).filter(Boolean).slice(0, 5);
+    } catch { return; }
+    box.innerHTML = items.map((p, i) => `<button type="button" data-i="${i}"><i class="ti ti-map-pin"></i><span><b>${esc(p.mainText?.text || p.text?.text || '')}</b><small>${esc(p.secondaryText?.text || '')}</small></span></button>`).join('');
+    box.hidden = !items.length;
+  };
+  input.addEventListener('input', e => { if (e.isComposing) return; onType?.(); clearTimeout(timer); timer = setTimeout(ask, 250); });
+  input.addEventListener('compositionend', () => { onType?.(); clearTimeout(timer); timer = setTimeout(ask, 250); });   // 注音、拼音選完字才查
+  input.addEventListener('blur', () => setTimeout(close, 200));
+  box.addEventListener('pointerdown', e => e.preventDefault());   // 點清單時輸入框不要先失去焦點
+  box.addEventListener('click', async e => {
+    const b = e.target.closest('[data-i]'); if (!b) return;
+    const p = items[+b.dataset.i]; close();
+    const name = p.mainText?.text || p.text?.text || '', label = [name, p.secondaryText?.text].filter(Boolean).join('，');
+    input.value = name;
+    try {
+      const place = p.toPlace();
+      await place.fetchFields({ fields: ['location', 'addressComponents'] });
+      const en = new google.maps.places.Place({ id: place.id, requestedLanguage: 'en' });
+      await en.fetchFields({ fields: ['displayName'] });
+      const country = (place.addressComponents || []).find(c => c.types.includes('country'));
+      const loc = place.location;
+      onPick({ name, label, region: country?.shortText || '', center: loc ? `${loc.lat().toFixed(5)},${loc.lng().toFixed(5)}` : '', en: en.displayName || '' });
+    } catch { onPick({ name, label, region: '', center: '', en: '' }); }
+    token = null;
+  });
 }
 // 淡淡的大地色底圖；店家、公車站這類 Google 自己的標記拿掉，只留我們的圖釘
 const MAP_STYLE = [
