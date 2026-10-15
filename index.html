@@ -35,7 +35,9 @@ html,body{margin:0;background:var(--page);color:var(--text);-webkit-text-size-ad
 .app{max-width:480px;margin:0 auto;min-height:100vh;padding-bottom:env(safe-area-inset-bottom)}
 header{position:sticky;top:0;z-index:10;background:var(--page);padding:calc(12px + env(safe-area-inset-top)) 16px 10px;border-bottom:1px solid var(--line)}
 /* 天數列：放得下時置中；放不下時可左右滑，兩側保留 16px 邊界 */
-.tabs{overflow-x:auto;scrollbar-width:none;margin:0 -16px 10px;-webkit-overflow-scrolling:touch;scroll-padding:0 16px}
+.tabs-row{display:flex;align-items:center;margin:0 -16px 10px}
+.on-trips .tabs-row{display:none}
+.tabs{overflow-x:auto;scrollbar-width:none;flex:1;min-width:0;-webkit-overflow-scrolling:touch;scroll-padding:0 16px}
 .tabs-in{display:flex;align-items:center;gap:2px;width:max-content;margin:0 auto;padding:0 16px}
 .tabs::-webkit-scrollbar{display:none}
 /* 還能往左／往右滑時，該側邊緣淡出 */
@@ -332,7 +334,7 @@ html.on-map:not(.sheet-lock),html.on-map:not(.sheet-lock) body{background:#f4f0e
 /* 編輯列蓋掉天數列，高度跟天數列一樣（30px），進出編輯時頁首不會跳動 */
 .editbar{display:none;align-items:center;gap:6px;height:30px;margin:0 0 10px;padding:0;background:none;color:var(--accent-fg);font-size:13px;font-weight:600}
 .editing .editbar{display:flex}
-.editing .tabs{display:none}
+.editing .tabs,.editing .tabs-row{display:none}
 .eb-label{flex:1}
 .eb-btn{height:26px;padding:0 12px;border-radius:999px;border:0;background:var(--accent-bg);color:var(--accent-fg);font-size:13px;font-weight:600;cursor:pointer}
 .eb-btn.done{background:var(--accent-fg);color:#fff}
@@ -381,7 +383,7 @@ html.on-map:not(.sheet-lock),html.on-map:not(.sheet-lock) body{background:#f4f0e
 .editing .stop{cursor:pointer}
 /* 拖曳 */
 /* 卡片長按＝編輯，不要選取文字或跳出系統的「拷貝」選單 */
-.layer .blk,.layer .grp,.cand-page .blk{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
+.layer .blk,.layer .grp,.cand-page .blk,.st-row{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
 .blk,.grp,.stop{transition-property:height,top,transform,background-color}
 .pressing{transform:scale(.97);transition:transform .55s ease!important}
 .stop.pressing{transform:none;background:rgba(0,0,0,.04)}
@@ -512,6 +514,50 @@ html.on-map:not(.sheet-lock),html.on-map:not(.sheet-lock) body{background:#f4f0e
 .inv-btn small{display:block;margin-top:1px;font-size:12px;color:var(--text2)}
 .inv-btn > i:last-child:not(:first-child){color:var(--muted);font-size:18px}
 .ov-stays{display:flex;flex-direction:column;gap:8px}
+.ov-sec-row{display:flex;align-items:baseline}
+.ov-sec-act{margin-left:auto;padding:0;border:0;background:none;font:inherit;font-size:12px;font-weight:600;color:var(--accent-fg);cursor:pointer}
+button.ov-stay{width:100%;font:inherit;text-align:left;cursor:pointer}
+.ov-stay.add > i:last-child{color:var(--accent-fg)}
+/* 住宿列表：左邊編號圈圈＋虛線串起第一間、第二間…，右邊卡片是照片、名稱、日期、晚數 */
+.st-list{display:flex;flex-direction:column;gap:12px}
+.st-item{position:relative;display:flex;align-items:center;gap:10px}
+.st-item + .st-item::before{content:"";position:absolute;left:13px;bottom:50%;height:calc(100% + 12px - 28px);margin-bottom:14px;border-left:1.5px dashed var(--line)}
+.st-step{flex:none;position:relative;z-index:1;width:28px;height:28px;border:1.5px solid;border-radius:50%;background:var(--page);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700}
+.st-row{flex:1;min-width:0;text-decoration:none;display:flex;align-items:center;gap:12px;padding:10px 12px 10px 10px;border:1px solid var(--border);border-radius:16px;background:#fff;font:inherit;text-align:left;color:var(--text);cursor:pointer;box-shadow:0 1px 4px rgba(60,40,20,.06)}
+.st-pic{flex:none;position:relative;width:64px;height:64px;border-radius:12px;overflow:hidden;display:flex;align-items:center;justify-content:center;font-size:24px}
+.st-pic img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;z-index:1}
+.st-row > span:nth-child(2){flex:1;min-width:0}
+.st-row b{display:block;font-size:15px;line-height:1.3;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.st-row small{display:block;margin-top:3px;font-size:12px;color:var(--text2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.st-row small.st-n{margin-top:1px}
+.st-row > i:last-child{color:var(--muted);font-size:18px}
+.st-list + .wiz-add{margin-top:6px}
+/* 住處資訊：地址一行一行，點了複製 */
+.st-addrs{display:flex;flex-direction:column;gap:6px}
+.st-al{display:flex;align-items:flex-start;gap:8px;width:100%;padding:10px 12px;border:1px solid var(--border);border-radius:12px;background:#fff;font:inherit;text-align:left;color:var(--text);cursor:pointer}
+.st-al span{flex:1;min-width:0;font-size:15px;line-height:1.5;user-select:text;-webkit-user-select:text}
+.st-al i{flex:none;color:var(--muted);font-size:17px;margin-top:3px}
+.st-al-wait{font-size:12px;color:var(--muted)}
+.st-when{font-size:15px;color:var(--text)}
+.st-photo .clr-wrap{display:none}   /* 住處照片只留「上傳」，不用貼網址 */
+.st-photo .ph-row{justify-content:flex-end}
+/* 編輯住處：地址放大放明顯，點了開 Google 地圖 */
+.st-addr{display:flex;align-items:center;gap:10px;margin:-2px 0 14px;padding:4px 2px;color:var(--text);text-decoration:none}
+.st-addr > i:first-child{flex:none;font-size:22px;color:var(--accent-fg)}
+.st-addr > span{flex:1;min-width:0;font-size:15px;font-weight:600;line-height:1.4}
+.st-addr small{display:block;font-size:11px;font-weight:400;color:var(--text2);margin-bottom:1px}
+.st-addr > i:last-child{flex:none;color:var(--muted);font-size:18px}
+.st-cal + .st-cal{margin-top:8px}
+.st-cal .cal-h{justify-content:center}
+.cal-d.out{color:#D5CEC5;cursor:default;display:flex;align-items:center;justify-content:center}
+/* 其他住處：半透明的粗色帶蓋在數字上（像螢光筆），從入住日中間畫到退房日中間 */
+.cal-bar{position:absolute;top:2px;bottom:2px;z-index:2;opacity:.22;pointer-events:none}   /* 跟選取中的範圍一樣粗 */
+.cal-bar.r{left:50%;right:0}
+.cal-bar.l{left:0;right:50%}
+.cal-bar.r.end{left:calc(50% - 18px);border-radius:18px 0 0 18px}   /* 入住日：圓頭從數字開始 */
+.cal-bar.l.end{right:calc(50% - 18px);border-radius:0 18px 18px 0}   /* 退房日：圓頭停在數字 */
+.st-legend{display:flex;flex-direction:column;gap:4px;margin-top:8px;font-size:12px;color:var(--text2)}
+.st-legend i{display:inline-block;width:16px;height:10px;margin-right:6px;border-radius:5px;vertical-align:-1px;opacity:.3}
 .ov-stay{display:flex;align-items:center;gap:12px;padding:12px 14px;border:1px solid var(--border);border-radius:14px;background:#fff;color:var(--text);text-decoration:none}
 .ov-stay > i:first-child{flex:none;width:34px;height:34px;border-radius:50%;background:var(--other-bg);color:var(--other-fg);font-size:18px;display:flex;align-items:center;justify-content:center}
 .ov-stay > span{flex:1;min-width:0}
@@ -529,10 +575,20 @@ html.on-map:not(.sheet-lock),html.on-map:not(.sheet-lock) body{background:#f4f0e
 .ov-hero-t span{display:block;margin-top:1px;font-size:13px;opacity:.85;font-variant-numeric:tabular-nums}
 .ov-hero-cam{position:absolute;right:12px;bottom:12px;width:32px;height:32px;border-radius:50%;background:rgba(255,255,255,.9);color:var(--text2);display:flex;align-items:center;justify-content:center;font-size:16px}
 .setup{margin:0 0 16px;padding:12px 14px 6px;border-radius:16px;background:#FAF7F3}
-.setup-h{display:flex;align-items:baseline;gap:8px;margin-bottom:4px}
-.setup-h b{font-size:15px}
-.setup-h span{font-size:12px;color:var(--text2);font-variant-numeric:tabular-nums}
-.setup-h button{margin-left:auto;padding:4px 0;border:0;background:none;font:inherit;font-size:12px;color:var(--muted);cursor:pointer}
+.setup-h{display:flex;align-items:center;gap:8px;margin-bottom:4px}
+.setup-toggle{display:flex;align-items:center;gap:8px;padding:2px 0;border:0;background:none;font:inherit;color:var(--text);cursor:pointer}
+.setup-toggle b{font-size:15px}
+.setup-toggle span{font-size:12px;color:var(--text2);font-variant-numeric:tabular-nums}
+.setup-toggle i{font-size:16px;color:var(--muted);transition:transform .2s}
+.setup:not(.fold) .setup-toggle i{transform:rotate(180deg)}
+.setup-skip{margin-left:auto;padding:4px 0;border:0;background:none;font:inherit;font-size:12px;color:var(--muted);cursor:pointer}
+/* 收合：列表高度動畫（grid 0fr ↔ 1fr） */
+.setup-rows{display:grid;grid-template-rows:1fr;transition:grid-template-rows .22s ease}
+.setup-rows > *{min-height:0}
+.setup-rows{overflow:hidden}
+.setup.fold .setup-rows{grid-template-rows:0fr}
+.setup.fold{padding-top:10px;padding-bottom:10px}   /* 收起來：只剩標題這一行，上下留白一樣 */
+.setup.fold .setup-h{margin-bottom:0}
 .setup-row{display:flex;align-items:center;gap:12px;width:100%;padding:9px 0;border:0;border-top:1px solid var(--line);background:none;font:inherit;text-align:left;color:var(--text);cursor:pointer}
 .setup-row:first-of-type{border-top:0}
 .setup-row > i:first-child{flex:none;width:30px;height:30px;border-radius:50%;background:#fff;color:var(--accent-fg);font-size:16px;display:flex;align-items:center;justify-content:center}
@@ -790,7 +846,7 @@ input.sw:focus-visible{outline:2px solid var(--accent-bg);outline-offset:2px}
 .ed-lock{background:#FFF1E2;color:#8A4B22}
 .ed-hint{background:var(--line);color:var(--text2)}
 .err{color:#C2412D;font-size:13px;margin-top:6px}
-.ed-actions{position:sticky;bottom:calc(-24px - env(safe-area-inset-bottom));display:flex;gap:8px;margin:20px -18px 0;
+.ed-actions{position:sticky;z-index:5;bottom:calc(-24px - env(safe-area-inset-bottom));display:flex;gap:8px;margin:20px -18px 0;
   padding:12px 18px calc(12px + env(safe-area-inset-bottom));background:#fff;border-top:1px solid var(--line)}
 .btn{height:44px;padding:0 16px;border-radius:12px;font-size:16px;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:4px;justify-content:center}
 .btn.ghost{border:1px solid var(--border);background:#fff;color:var(--text)}
@@ -803,11 +859,12 @@ input.sw:focus-visible{outline:2px solid var(--accent-bg);outline-offset:2px}
   <header>
     <div class="editbar"><span class="eb-label"><i class="ti ti-pencil"></i> <span id="ebDay"></span>編輯中 · <span id="ebSt" class="eb-st">點空白處新增</span></span>
       <button type="button" class="eb-btn" id="editCancel">取消</button><button type="button" class="eb-btn done" id="editDone">完成</button></div>
+    <div class="tabs-row">
     <nav class="tabs"><div class="tabs-in">
       <button class="tab" data-page="overview">總覽</button><button class="tab day" data-page="d1" aria-label="第 1 天">1</button><button class="tab day" data-page="d2" aria-label="第 2 天">2</button>
       <button class="tab day" data-page="d3" aria-label="第 3 天">3</button><button class="tab day" data-page="d4" aria-label="第 4 天">4</button><button class="tab day" data-page="d5" aria-label="第 5 天">5</button>
       <button class="tab day" data-page="d6" aria-label="第 6 天">6</button><button class="tab day" data-page="d7" aria-label="第 7 天">7</button><button class="tab day" data-page="d8" aria-label="第 8 天">8</button><button class="tab" data-page="cand">備選</button>
-    </div></nav>
+    </div></nav></div>
     <div class="day-title" id="dayTitle"></div>
     <div class="day-sub" id="daySub"></div>
     <button type="button" class="map-btn" id="mapBtn" aria-label="看地圖" hidden><i class="ti ti-map"></i></button>
@@ -1121,10 +1178,10 @@ function splitPhoto(url) {
 const joinPhoto = (src, x, y) => !src || (Math.round(x) === 50 && Math.round(y) === 50) ? src : `${src}#p=${Math.round(x)},${Math.round(y)}`;
 const photoImg = (url, attrs = '') => { const p = splitPhoto(url); return `<img src="${esc(p.src)}" alt="" style="object-position:${p.x}% ${p.y}%"${attrs}>`; };
 // 編輯視窗裡的「照片」：放在筆記最上方。可以貼圖片網址，也可以從手機上傳（存到雲端硬碟）
-function photoField(id, key) {
+function photoField(id, key, hint) {
   const url = splitPhoto(NOTES[key]?.photo).src, n = noteUsers(key);
   return `
-    <div class="ed-field ed-photo"><span class="ed-lab">照片 <span class="ed-lab-hint">放在筆記最上方${n > 1 ? `，${n} 個地方共用` : ''}</span></span>
+    <div class="ed-field ed-photo"><span class="ed-lab">照片 <span class="ed-lab-hint">${hint || `放在筆記最上方${n > 1 ? `，${n} 個地方共用` : ''}`}</span></span>
       <div class="ph-prev" id="${id}Prev"></div>
       <div class="ph-row"><span class="clr-wrap"><input id="${id}" type="text" value="${esc(url)}" placeholder="貼上圖片網址" autocomplete="off" inputmode="url"><button type="button" class="clr-btn" aria-label="清除" tabindex="-1"><i class="ti ti-x"></i></button></span>
         <label class="btn ghost ph-up"><i class="ti ti-upload"></i> 上傳<input type="file" accept="image/*" id="${id}File" hidden></label></div>
@@ -1594,15 +1651,17 @@ function updateHeader(page) {
     daySub.innerHTML = `${d.date}．${d.wd}${d.zh || editing ? `．<span id="subTheme">${esc(d.zh)}</span>` : ''}`;
   } else {
     dayTitle.textContent = PAGES[page].en;
-    if (page === 'overview') daySub.innerHTML = TRIP ? `<button type="button" class="trip-sw" id="tripSw" aria-label="回到我的旅程"><span>${esc(TRIP.name)}</span>．${dayInfo('d1').date}–${dayInfo(lastDay()).date}<i class="ti ti-chevron-down"></i></button>` : '';
+    if (page === 'overview') daySub.textContent = TRIP ? `${dayInfo('d1').date}–${dayInfo(lastDay()).date}．${DAY_KEYS.length} 天 ${DAY_KEYS.length - 1} 夜` : '';
     else daySub.textContent = page === 'cand' ? `備選景點．${(DATA.cand || []).length} 個` : PAGES[page].sub;
   }
   document.documentElement.classList.toggle('on-trips', page === 'trips' || page === 'new');
   document.documentElement.classList.toggle('on-new', page === 'new');
   fab.classList.toggle('day', isDay(page) || page === 'cand');
-  mapBtn.hidden = !(isDay(page) || page === 'cand');
-  mapBtn.innerHTML = `<i class="ti ${mapMode ? 'ti-list' : 'ti-map'}"></i>`;
-  mapBtn.setAttribute('aria-label', mapMode ? '回到清單' : '看地圖');
+  // 總覽頁沒有地圖，同一個位置改放房子：回到「我的旅程」
+  const home = page === 'overview';
+  mapBtn.hidden = !(home || isDay(page) || page === 'cand');
+  mapBtn.innerHTML = `<i class="ti ${home ? 'ti-home' : mapMode ? 'ti-list' : 'ti-map'}"></i>`;
+  mapBtn.setAttribute('aria-label', home ? '回到我的旅程' : mapMode ? '回到清單' : '看地圖');
   applyHeaderEditable();
   document.getElementById('routeFab').classList.toggle('day', isDay(page));
   document.getElementById('ebDay').textContent = isDay(page) ? `第 ${dayNum(page)} 天` : page === 'cand' ? '備選' : '';
@@ -1754,7 +1813,7 @@ function renderOverview() {
   const listed = it => it.cls !== 'other' || /機場|airport/i.test(it.t);
   const todos = CHECKS.filter(c => c.kind === 'todo').sort((a, b) => a.order - b.order);
   const tips = CHECKS.filter(c => c.kind === 'tip').sort((a, b) => a.order - b.order);
-  if (TRIP) html += heroHtml() + setupHtml();
+  if (TRIP) html += setupHtml();   // 封面照片不放總覽（佔空間），只在「我的旅程」列表顯示
   html += `<div class="seg ov-seg" data-i="${ovTab === 'todo' ? 1 : 0}"><span class="seg-thumb"></span>
     <button type="button" data-ovtab="days"${ovTab === 'days' ? ' class="on"' : ''}>每天</button>
     <button type="button" data-ovtab="todo"${ovTab === 'todo' ? ' class="on"' : ''}>待辦清單</button></div>`;
@@ -1773,13 +1832,11 @@ function renderOverview() {
     ? '<div class="ov-chips">' + booked.map(({ d, it }) =>
       `<button type="button" class="ov-chip ${it.cls || 'eat'}" data-go="${d.k}"><b>${d.info.date} ${T(it.s)}</b> ${esc(shortName(it.t))}</button>`).join('') + '</div>'
     : '<div class="ov-empty">還沒有勾「已訂位」的行程</div>');
-  // 住宿：建立旅程時填的住處，點了導航
-  if (tripStays().length) html += '<div class="ov-sec">住宿</div><div class="ov-stays">' + tripStays().map(h => {
-    const ns = (h.nights || []).slice().sort((a, b) => DAY_KEYS.findIndex(k => dayInfo(k).date === a) - DAY_KEYS.findIndex(k => dayInfo(k).date === b));
-    const when = ns.length ? `${ns[0]} 起 ${ns.length} 晚` : '';
-    return `<a class="ov-stay" href="${esc(mapHref(h.map || withCity(h.name)))}" target="_blank" rel="noopener"><i class="ti ti-home"></i>
-      <span><b>${esc(h.name)}</b><small>${[when, h.addr].filter(Boolean).map(esc).join('．')}</small></span><i class="ti ti-navigation"></i></a>`;
-  }).join('') + '</div>';
+  // 住宿：照片卡片，點了導航、長按編輯
+  const canEdit = TRIP_ROLE === 'edit';
+  if (!tripStays().length && canEdit) html += '<div class="ov-sec">住宿</div><button type="button" class="ov-stay add" id="staysAdd"><i class="ti ti-bed"></i><span><b>加入住處</b><small>每天第一段交通從住處算，加入行程可以一鍵回住處</small></span><i class="ti ti-plus"></i></button>';
+  if (tripStays().length) html += '<div class="ov-sec">住宿</div>' + stayListHtml()
+    + (canEdit ? '<button type="button" class="wiz-add" id="staysAdd"><i class="ti ti-plus"></i>加入住處</button>' : '');
   } else {
   // 待辦、注意事項都照新增的順序；做完的待辦留在原位，劃線變淡
   const addRow = (kind, ph) => `<label class="ck-add"><i class="ti ti-plus"></i><input type="text" class="ck-new" data-kind="${kind}" placeholder="${ph}" enterkeyhint="done" autocomplete="off"></label>`;
@@ -1793,7 +1850,7 @@ function renderOverview() {
   if (TRIP) {
     html += '<div class="ov-foot">';
     html += `<div class="ov-sec">同行的人</div><div class="ov-members">${TRIP.members?.length ? TRIP.members.map(n => `<span>${esc(n)}</span>`).join('') : '<span class="ov-empty">還沒有人改過行程</span>'}</div>`;
-    html += `<button type="button" class="inv-btn trip-set" id="tripSet"><i class="ti ti-settings"></i><span><b>旅程設定</b><small>名稱、目的地、住處、交通方式</small></span><i class="ti ti-chevron-right"></i></button>`;
+    html += `<button type="button" class="inv-btn trip-set" id="tripSet"><i class="ti ti-settings"></i><span><b>旅程設定</b><small>名稱、目的地、交通方式</small></span><i class="ti ti-chevron-right"></i></button>`;
     if (TRIP_ROLE === 'edit' && TRIP.code) html += `<div class="inv">
       <div class="inv-code"><span>編輯碼</span><b>${esc(TRIP.code)}</b><small>拿到連結的人都能看，輸入編輯碼才能修改</small></div>
       <button type="button" class="inv-btn" data-invite="edit"><i class="ti ti-user-plus"></i><span><b>邀請一起規劃</b><small>分享連結，訊息附上編輯碼</small></span><i class="ti ti-share-2"></i></button>
@@ -1806,6 +1863,7 @@ function renderOverview() {
     html += '</div>';
   }
   ovEl.innerHTML = html;
+  if (TRIP_ROLE === 'edit' && ovEl.querySelector('.st-row')) stayPhotos();   // 住處還沒照片的，有編輯碼的人打開時順手補
 }
 // 總覽最上面的封面：照片（沒有就是淺陶土色底＋英文目的地），疊上旅程名稱和日期；可以編輯的人點了換封面
 function heroHtml() {
@@ -1820,23 +1878,31 @@ const markSetup = k => { const o = getSetup(); o[k] = true; try { localStorage.s
 function setupSteps() {
   const f = getSetup();
   return [
-    ['stay', 'ti-home', '加入住處', '每天第一段交通從住處算', tripStays().length > 0],
+    ['stay', 'ti-bed', '加入住處', '每天第一段交通從住處算', tripStays().length > 0],
     ['mode', 'ti-route', '選交通方式', `現在是「${modeName(tripMode())}」`, !!f.mode || tripMode() !== 'drive'],
     ['import', 'ti-map-pin-plus', '匯入想去的地方', '貼 Google 地圖清單，放進備選', (DATA.cand || []).length > 0 || !!f.import],
     ['invite', 'ti-user-plus', '邀請旅伴', '分享連結和編輯碼', (TRIP.members || []).length > 1 || !!f.invite],
-    ['cover', 'ti-photo', '放一張封面', '點上面的封面也可以換', !!TRIP.cover],
+    ['cover', 'ti-photo', '放一張封面', '顯示在「我的旅程」，之後在旅程設定可以換', !!TRIP.cover],
   ];
 }
 function setupHtml() {
   if (TRIP_ROLE !== 'edit' || getSetup().hide) return '';
   const steps = setupSteps(), done = steps.filter(x => x[4]).length;
   if (done === steps.length) return '';
-  return `<div class="setup"><div class="setup-h"><b>開始規劃</b><span>${done}/${steps.length}</span><button type="button" data-setup="hide">先不用</button></div>
-    ${steps.map(([k, ic, t, sub, ok]) => `<button type="button" class="setup-row${ok ? ' ok' : ''}" data-setup="${k}"><i class="ti ${ok ? 'ti-circle-check-filled' : ic}"></i><span><b>${t}</b><small>${sub}</small></span>${ok ? '' : '<i class="ti ti-chevron-right"></i>'}</button>`).join('')}</div>`;
+  // 點標題可以收合（記在這支手機）；右邊「跳過引導」整張拿掉
+  const fold = !!getSetup().fold;
+  return `<div class="setup${fold ? ' fold' : ''}"><div class="setup-h"><button type="button" class="setup-toggle" data-setup="fold" aria-expanded="${!fold}"><b>開始規劃</b><span>${done}/${steps.length}</span><i class="ti ti-chevron-down"></i></button><button type="button" class="setup-skip" data-setup="hide">跳過引導</button></div>
+    <div class="setup-rows"><div>${steps.map(([k, ic, t, sub, ok]) => `<button type="button" class="setup-row${ok ? ' ok' : ''}" data-setup="${k}"><i class="ti ${ok ? 'ti-circle-check-filled' : ic}"></i><span><b>${t}</b><small>${sub}</small></span>${ok ? '' : '<i class="ti ti-chevron-right"></i>'}</button>`).join('')}</div></div></div>`;
 }
 function runSetup(k) {
   if (k === 'hide') { markSetup('hide'); renderOverview(); return; }
-  if (k === 'stay' || k === 'mode') withAuth(openTripSettings);
+  if (k === 'fold') {   // 收合／展開：只切換樣式，不重畫（才有動畫）
+    const o = getSetup(); o.fold = !o.fold; try { localStorage.setItem(SETUP_KEY(), JSON.stringify(o)); } catch {}
+    const card = ovEl.querySelector('.setup'); card.classList.toggle('fold', o.fold); card.querySelector('.setup-toggle').setAttribute('aria-expanded', String(!o.fold));
+    return;
+  }
+  if (k === 'stay') withAuth(() => openStayEditor(null));
+  else if (k === 'mode') withAuth(openTripSettings);
   else if (k === 'import') { markSetup('import'); location.hash = 'cand'; setTimeout(() => withAuth(() => openAddFlow('cand')), 350); }
   else if (k === 'invite') { markSetup('invite'); shareTrip('edit'); setTimeout(renderOverview, 600); }
   else if (k === 'cover') withAuth(openCover);
@@ -1964,8 +2030,7 @@ async function copyText(text) {
 }
 // 旅程設定：名稱、目的地、主要交通方式、住處（日期和天數之後再做：要搬動每天的卡片）
 function openTripSettings() {
-  const st = { name: TRIP.name, dest: TRIP.dest, mode: tripMode(), stays: clone(tripStays()) };
-  const nights = DAY_KEYS.slice(0, -1).map(k => dayInfo(k).date);   // 最後一天不用住
+  const st = { name: TRIP.name, dest: TRIP.dest, mode: tripMode() };   // 住處另外在總覽的「住宿」管理
   const draw = () => {
     const open = sheet.scrollTop;
     sheet.querySelector('#tsBody').innerHTML = `
@@ -1973,31 +2038,12 @@ function openTripSettings() {
       <div class="ed-field ps-field"><span class="ed-lab">目的地 <span class="ed-lab-hint" id="tsDestHint">${st.geo ? `<i class="ti ti-map-pin-check"></i> ${esc(st.geo.label)}` : '查地點、地圖會以這裡為中心'}</span></span><input id="tsDest" type="text" value="${esc(st.dest)}" maxlength="60" autocomplete="off"></div>
       <div class="ed-field"><span class="ed-lab">主要交通方式 <span class="ed-lab-hint">自動計算交通時間用</span></span>
         <div class="wiz-opts grid">${WIZ_MODES.map(([k, ic, nm]) => `<button type="button" class="wiz-opt${st.mode === k ? ' on' : ''}" data-mode="${k}"><i class="ti ti-${ic}"></i><span><b>${nm}</b></span></button>`).join('')}</div></div>
-      <div class="ed-field"><span class="ed-lab">住處 <span class="ed-lab-hint">每天第一段交通從前一晚的住處算</span></span></div>
-      ${st.stays.map((h, i) => `<div class="wiz-stay" data-stay="${i}" style="margin-top:8px">
-        <div class="wiz-stay-h">住處 ${i + 1}<button type="button" data-del="${i}" aria-label="刪除住處 ${i + 1}"><i class="ti ti-x"></i></button></div>
-        <label class="ed-field ps-field"><span class="ed-lab">名稱或地址${h.loc ? ` <span class="ed-lab-hint"><i class="ti ti-map-pin-check"></i> ${esc(h.addr || '已找到位置')}</span>` : ' <span class="ed-lab-hint">打飯店名稱，從清單選一個</span>'}</span>
-          <input type="text" data-stay-name="${i}" value="${esc(h.name)}" placeholder="飯店名稱，或貼 Google 地圖連結" autocomplete="off"></label>
-        <div class="ed-field"><span class="ed-lab">住哪幾晚</span><div class="chips nights">${nights.map(n => `<button type="button" class="chip${(h.nights || []).includes(n) ? ' on' : ''}" data-night="${n}">${n}</button>`).join('')}</div></div>
-      </div>`).join('')}
-      <button type="button" class="wiz-add" id="tsAddStay"><i class="ti ti-plus"></i>${st.stays.length ? '再加一間住處' : '加入住處'}</button>
+      <div class="ed-field"><span class="ed-lab">封面照片 <span class="ed-lab-hint">顯示在「我的旅程」</span></span>
+        <button type="button" class="btn ghost" id="tsCover"><i class="ti ti-photo"></i> ${TRIP.cover ? '換封面' : '放一張封面'}</button></div>
       <div class="err" id="tsErr" hidden></div>`;
     sheet.scrollTop = open;
     attachPlaceSuggest(sheet.querySelector('#tsDest'), g => { Object.assign(st, { dest: g.name, geo: g }); draw(); },
       () => { if (st.geo) { st.geo = null; sheet.querySelector('#tsDestHint').textContent = '查地點、地圖會以這裡為中心'; } });
-    // 住處：只找住宿（飯店、旅館、民宿），以目的地為中心；選了直接帶入地址和位置，存檔時不用再查
-    tripBias();
-    sheet.querySelectorAll('[data-stay-name]').forEach(inp => attachPlaceSuggest(inp, g => {
-      Object.assign(st.stays[inp.dataset.stayName], g); draw();
-    }, null, {
-      request: () => ({ includedPrimaryTypes: ['lodging'], ...(biasAt ? { locationBias: { center: biasAt, radius: 30000 } } : {}), ...(TRIP?.region ? { includedRegionCodes: [TRIP.region] } : {}) }),
-      resolve: async (pr, name) => {
-        const place = pr.toPlace();
-        try { await place.fetchFields({ fields: ['displayName', 'formattedAddress', 'location'] }); } catch {}
-        const loc = place.location, ll = loc ? `${loc.lat().toFixed(6)},${loc.lng().toFixed(6)}` : '';
-        return { name: place.displayName || name, addr: pr.secondaryText?.text || place.formattedAddress || '', loc: ll, pid: place.id || '',
-          map: ll ? `https://www.google.com/maps/place/${encodeURIComponent(place.displayName || name)}/@${ll},17z` : '' };
-      } }));
   };
   openSheet(`
     <div class="sh-head"><div style="flex:1;min-width:0"><div class="sh-title" id="shTitle">旅程設定</div>
@@ -2013,47 +2059,235 @@ function openTripSettings() {
   body.addEventListener('input', e => {
     if (e.target.id === 'tsName') st.name = e.target.value;
     else if (e.target.id === 'tsDest') st.dest = e.target.value;
-    // 改住處名稱：只改名字（例如換成自己習慣的叫法），從清單選過的位置留著；要換一家就從清單重新選。名稱清空才把位置一起清掉
-    else if (e.target.dataset.stayName != null) {
-      const h = st.stays[e.target.dataset.stayName], v = e.target.value.trim();
-      h.name = v; if (!v) ['map', 'loc', 'pid', 'addr'].forEach(k => delete h[k]);
-    }
   });
   body.addEventListener('click', e => {
     const b = e.target.closest('button'); if (!b) return;
+    if (b.id === 'tsCover') { openCover(); return; }
     if (b.dataset.mode) { st.mode = b.dataset.mode; draw(); }
-    else if (b.dataset.night) {
-      const h = st.stays[b.closest('[data-stay]').dataset.stay], n = b.dataset.night;
-      h.nights = (h.nights || []).includes(n) ? h.nights.filter(x => x !== n) : [...(h.nights || []), n];
-      st.stays.forEach(o => { if (o !== h && (o.nights || []).includes(n)) o.nights = o.nights.filter(x => x !== n); });   // 同一晚只住一個地方
-      draw();
-    } else if (b.dataset.del) { st.stays.splice(+b.dataset.del, 1); draw(); }
-    else if (b.id === 'tsAddStay') {
-      const taken = st.stays.flatMap(h => h.nights || []);
-      st.stays.push({ name: '', nights: nights.filter(n => !taken.includes(n)) }); draw();
-      body.querySelector(`[data-stay-name="${st.stays.length - 1}"]`)?.focus();
-    }
   });
   sheet.querySelector('#tsSave').addEventListener('click', async e => {
     const err = msg => { const el = body.querySelector('#tsErr'); el.textContent = msg; el.hidden = false; el.scrollIntoView({ block: 'nearest' }); };
     if (!st.name.trim()) return err('請填旅程名稱');
     if (!st.dest.trim()) return err('請填目的地');
-    const stays = st.stays.filter(h => h.name.trim());
     const changes = {};
     if (st.name.trim() !== TRIP.name) changes.name = st.name.trim();
     if (st.dest.trim() !== TRIP.dest) { changes.dest = st.dest.trim(); if (st.geo) Object.assign(changes, { region: st.geo.region, center: st.geo.center, en: st.geo.en ? st.geo.en + '.' : '' }); }
     if (st.mode !== tripMode()) changes.mode = st.mode;
-    if (JSON.stringify(stays) !== JSON.stringify(tripStays())) changes.stays = stays;
     if (!Object.keys(changes).length) { closeSheet(); return; }
-    const btn = e.currentTarget; btn.disabled = true; btn.textContent = changes.stays || changes.dest ? '儲存中，查位置…' : '儲存中…';
+    const btn = e.currentTarget; btn.disabled = true; btn.textContent = changes.dest ? '儲存中，查位置…' : '儲存中…';
     try {
       const r = await api({ ...getAuth(), action: 'saveTrip', ...changes }, 60000);
       setTrip({ ...TRIP, ...r.trip }); rememberTrip(TRIP, 'edit', TRIP_KEY, TRIP_CODE); cache(); markSetup('mode');
       closeSheet(); updateHeader(current); if (current) renderPage(current);
-      const lost = (r.trip.stays || []).filter(h => !h.loc).map(h => h.name);
-      const notes = [lost.length && `找不到「${lost[0]}」的位置，可以改貼 Google 地圖連結`, changes.mode && '之前算好的交通時間不會自動改，可以在編輯模式按交通按鈕重算'].filter(Boolean);
+      const notes = [changes.mode && '之前算好的交通時間不會自動改，可以在編輯模式按交通按鈕重算'].filter(Boolean);
       toast(notes.length ? `已儲存。${notes.join('；')}` : '已儲存旅程設定', notes.length ? '知道了' : '', () => {}, notes.length ? 8000 : 2000);
     } catch (x) { btn.disabled = false; btn.textContent = '儲存'; err(x.code === 'network' ? '連不上雲端，請檢查網路' : x.message); }
+  });
+}
+// ---------- 住宿：住處列表、加入／編輯一間（月曆選入住、退房；看得到其他住處佔用的晚上）----------
+const STAY_COLORS = [['#E9F0E4', '#3F5E3A'], ['#E5EEF3', '#355C74'], ['#EEEAF4', '#5B4B7A'], ['#F4E3E7', '#7A2E40'], ['#F3ECE3', '#6B4E36']];
+const tripDates = () => DAY_KEYS.map((k, i) => { const d = new Date(TRIP.start + 'T00:00'); d.setDate(d.getDate() + i); return { ymd: ymd(d), md: dayInfo(k).date }; });
+const mdOfYmd = v => { const d = new Date(v + 'T00:00'); return `${d.getMonth() + 1}/${d.getDate()}`; };
+// 住哪幾晚 → 「11/7–11/9．2 晚」（退房那天＝最後一晚的隔天）
+function stayRange(h) {
+  const ds = tripDates(), idx = (h.nights || []).map(n => ds.findIndex(x => x.md === n)).filter(i => i >= 0).sort((a, b) => a - b);
+  if (!idx.length) return '還沒選日期';
+  const out = new Date(ds[idx[idx.length - 1]].ymd + 'T00:00'); out.setDate(out.getDate() + 1);
+  return `${ds[idx[0]].md}–${mdOfYmd(ymd(out))}．${idx.length} 晚`;
+}
+// 住宿列表用：「11/7 週六 – 11/14 週六」和晚數分兩行
+const stayIdx = h => { const ds = tripDates(); return (h.nights || []).map(n => ds.findIndex(x => x.md === n)).filter(i => i >= 0).sort((a, b) => a - b); };
+const stayNights = h => stayIdx(h).length;
+function stayDates(h) {
+  const ds = tripDates(), idx = stayIdx(h);
+  if (!idx.length) return '還沒選日期';
+  const out = new Date(ds[idx[idx.length - 1]].ymd + 'T00:00'); out.setDate(out.getDate() + 1);
+  const wd = d => '週' + '日一二三四五六'[d.getDay()];
+  return `${ds[idx[0]].md} ${wd(new Date(ds[idx[0]].ymd + 'T00:00'))} – ${mdOfYmd(ymd(out))} ${wd(out)}`;
+}
+// 從 Google 地圖找這個地方的第一張照片，存到雲端硬碟，回傳網址（找不到回傳空字串）
+async function googlePhoto(link, name) {
+  const p = (await api({ ...getAuth(), action: 'lookupPlace', link }, 60000)).place;
+  if (!p?.photo) return '';
+  return (await api({ ...getAuth(), action: 'placePhoto', photo: p.photo, name }, 60000)).url || '';
+}
+// 住處照片：從 Google 地圖存一張，放在跟住處同名的筆記（行程裡的飯店卡片也會用到）；查到就補進總覽的住宿卡片
+const stayPhotoTried = new Set();
+async function stayPhotos() {
+  for (const h of tripStays()) {
+    const key = h.name;
+    if (NOTES[key]?.photo || stayPhotoTried.has(key) || /^https?:/.test(key)) continue;
+    stayPhotoTried.add(key);
+    try {
+      const url = await googlePhoto(h.map || withCity(key), key);
+      if (!url || NOTES[key]?.photo) continue;
+      setNoteField(key, 'photo', url); saveData('住處照片');
+      const img = [...ovEl.querySelectorAll('.st-row')].find(b => tripStays()[+b.dataset.stay]?.name === key)?.querySelector('.st-pic');
+      if (img && !img.querySelector('img')) img.insertAdjacentHTML('afterbegin', photoImg(url, ' onerror="this.remove()"'));
+    } catch {}
+  }
+}
+// 還沒有住處的晚上（最後一天不用住）
+const gapNights = (stays = tripStays()) => tripDates().slice(0, -1).map(x => x.md).filter(md => !stays.some(h => (h.nights || []).includes(md)));
+async function saveStays(stays, msg) {
+  const r = await api({ ...getAuth(), action: 'saveTrip', stays }, 60000);
+  setTrip({ ...TRIP, ...r.trip }); rememberTrip(TRIP, 'edit', TRIP_KEY, TRIP_CODE); cache();
+  if (current) renderPage(current);
+  const lost = (r.trip.stays || []).filter(h => !h.loc).map(h => h.name);
+  toast(lost.length ? `${msg}，但找不到「${lost[0]}」的位置，可以改貼 Google 地圖連結` : msg, lost.length ? '知道了' : '', () => {}, lost.length ? 7000 : 2000);
+}
+// 住宿卡片：照片、名稱、日期、晚數，左邊 1、2、3 圈圈用虛線串起來。點了看資訊（導航在資訊裡），長按編輯
+// 住處資訊：照片、名稱、英文地址（給司機、海關看或拿去查都方便）、住宿日期；導航按鈕在標題右邊
+// 用 Google 地圖查這個住處在某個語言的地址；查過的記在這支手機
+async function stayAddr(h, lang) {
+  const ck = `stay-addr:${h.pid || h.name}:${lang}`;
+  try { const c = localStorage.getItem(ck); if (c) return c; } catch {}
+  const key = await getMapsKey(); if (!key) return '';
+  await loadMaps(key);
+  const { Place } = await google.maps.importLibrary('places');
+  let id = h.pid;
+  if (!id) { await tripBias(); const { places } = await Place.searchByText({ textQuery: withCity(h.name), fields: ['id'], maxResultCount: 1, ...(biasAt ? { locationBias: biasAt } : {}) }); id = places?.[0]?.id; }
+  if (!id) return '';
+  const place = new Place({ id, requestedLanguage: lang });
+  await place.fetchFields({ fields: ['formattedAddress'] });
+  const a = place.formattedAddress || '';
+  if (a) try { localStorage.setItem(ck, a); } catch {}
+  return a;
+}
+function openStayInfo(i) {
+  const h = tripStays()[i]; if (!h) return;
+  const n = stayNights(h);
+  const line = t => `<button type="button" class="st-al" data-copy="${esc(t)}"><span>${esc(t)}</span><i class="ti ti-copy"></i></button>`;
+  openNote(h.name, { ...NOTES[h.name], orig: '' }, '', h.map || withCity(h.name), { quiet: true, html: `
+    <div class="sh-sec">地址</div><div class="st-addrs" id="stAddrs"><div class="st-al-wait"><i class="ti ti-loader-2 spin"></i> 查英文地址…</div></div>
+    <div class="sh-sec">住宿日期</div><div class="st-when">${stayDates(h)}${n ? `．${n} 晚` : ''}</div>` });
+  const box = sheet.querySelector('#stAddrs');
+  box.addEventListener('click', async e => { const b = e.target.closest('[data-copy]'); if (b) toast(await copyText(b.dataset.copy) ? '地址已複製' : '沒辦法複製，請長按選取'); });
+  // 查不到英文地址（沒網路、地圖載入失敗）才退回存著的地址
+  stayAddr(h, 'en').catch(() => '').then(a => { if (box.isConnected) box.innerHTML = a || h.addr ? line(a || h.addr) : '<div class="st-al-wait">查不到地址</div>'; });
+}
+function stayListHtml() {
+  const list = tripStays().map((h, i) => ({ h, i, first: tripDates().findIndex(x => (h.nights || []).includes(x.md)) })).sort((a, b) => (a.first < 0 ? 99 : a.first) - (b.first < 0 ? 99 : b.first));
+  return `<div class="st-list">${list.map(({ h, i }, n) => { const c = STAY_COLORS[n % STAY_COLORS.length], ph = NOTES[h.name]?.photo;
+    return `<div class="st-item"><span class="st-step" style="border-color:${c[1]};color:${c[1]}">${n + 1}</span>
+    <button type="button" class="st-row" data-stay="${i}"><span class="st-pic" style="background:${c[0]};color:${c[1]}">${ph ? photoImg(ph, ' onerror="this.remove()"') : ''}<i class="ti ti-bed"></i></span>
+    <span><b>${esc(h.name)}</b><small>${stayDates(h)}</small>${stayNights(h) ? `<small class="st-n">${stayNights(h)} 晚</small>` : ''}</span><i class="ti ti-chevron-right"></i></button></div>`; }).join('')}</div>`;
+}
+function openStayEditor(idx) {
+  const all = tripStays(), cur = idx == null ? null : all[idx], ds = tripDates();
+  // 原本住的晚上 → 入住、退房日（中間有空的晚上就取頭尾）
+  const ni = cur ? (cur.nights || []).map(n => ds.findIndex(x => x.md === n)).filter(i => i >= 0).sort((a, b) => a - b) : [];
+  const es = { name: cur?.name || '', map: cur?.map || '', loc: cur?.loc || '', pid: cur?.pid || '', addr: cur?.addr || '',
+    ci: ni.length ? ds[ni[0]].ymd : '', co: ni.length ? (() => { const d = new Date(ds[ni[ni.length - 1]].ymd + 'T00:00'); d.setDate(d.getDate() + 1); return ymd(d); })() : '' };
+  const others = all.map((h, i) => ({ h, i })).filter(x => x.i !== idx);
+  if (!cur) { const g = gapNights(all)[0]; if (g) es.ci = ds.find(x => x.md === g).ymd; }   // 新的住處：入住日先帶「還沒有住處的第一晚」（接在上一間退房那天）
+  const colorOf = i => STAY_COLORS[others.findIndex(x => x.i === i) % STAY_COLORS.length];
+  const owner = md => others.find(x => (x.h.nights || []).includes(md));
+  const lastYmd = ds[ds.length - 1].ymd;   // 最晚退房＝旅程最後一天（最後一天不用住）
+  const nightsOf = () => { if (!es.ci || !es.co) return []; return ds.filter(x => x.ymd >= es.ci && x.ymd < es.co).map(x => x.md); };
+  const cal = () => {
+    const first = new Date(ds[0].ymd + 'T00:00'), last = new Date(lastYmd + 'T00:00');
+    let html = '';
+    for (let y = first.getFullYear(), mo = first.getMonth(); y < last.getFullYear() || (y === last.getFullYear() && mo <= last.getMonth()); mo === 11 ? (y++, mo = 0) : mo++) {
+      const f = new Date(y, mo, 1), total = new Date(y, mo + 1, 0).getDate();
+      let g = '日一二三四五六'.split('').map(w => `<span class="cal-w">${w}</span>`).join('') + '<span></span>'.repeat(f.getDay());
+      for (let d = 1; d <= total; d++) {
+        const v = ymd(new Date(y, mo, d)), md = mdOfYmd(v), inTrip = v >= ds[0].ymd && v <= lastYmd, c = ['cal-d'];
+        if (!inTrip) { g += `<span class="cal-d out"><span>${d}</span></span>`; continue; }
+        if (v === es.ci) c.push('s'), es.co && c.push('has-e');
+        if (v === es.co) c.push('e');
+        if (es.ci && es.co && v > es.ci && v < es.co) c.push('in');
+        // 其他住處：從入住日中間畫到退房日中間（今晚住的往右半格、昨晚住的往左半格），退房日跟下一間入住日剛好接上
+        const prev = new Date(v + 'T00:00'); prev.setDate(prev.getDate() - 1);
+        const oR = owner(md), oL = owner(mdOfYmd(ymd(prev)));
+        const bar = (o, side) => o ? `<i class="cal-bar ${side}${(side === 'r' ? oL : oR) === o ? '' : ' end'}" style="background:${colorOf(o.i)[1]}"></i>` : '';
+        g += `<button type="button" class="${c.join(' ')}" data-day="${v}"><span>${d}</span>${bar(oL, 'l')}${bar(oR, 'r')}</button>`;
+      }
+      html += `<div class="cal st-cal"><div class="cal-h"><b>${y} 年 ${mo + 1} 月</b></div><div class="cal-g">${g}</div></div>`;
+    }
+    return html;
+  };
+  const draw = () => {
+    const ns = nightsOf(), taken = ns.map(md => ({ md, o: owner(md) })).filter(x => x.o);
+    sheet.querySelector('#stBody').innerHTML = `
+      <label class="ed-field ps-field"><span class="ed-lab">名稱或地址 <span class="ed-lab-hint" id="stHint">${es.loc ? (es.addr ? '' : '<i class="ti ti-map-pin-check"></i> 已找到位置') : '打飯店名稱，從清單選一個'}</span></span>
+        <input type="text" id="stName" value="${esc(es.name)}" placeholder="飯店名稱，或貼 Google 地圖連結" autocomplete="off"></label>
+      ${es.addr ? `<a class="st-addr" href="${esc(mapHref(es.map || withCity(es.name)))}" target="_blank" rel="noopener"><i class="ti ti-map-pin-filled"></i><span><small>地址</small>${esc(es.addr)}</span><i class="ti ti-external-link"></i></a>` : ''}
+      <div class="ed-field"><span class="ed-lab">入住、退房 <span class="ed-lab-hint">${!es.ci ? '先點入住日' : !es.co ? '再點退房日' : ''}</span></span>${cal()}</div>
+      <div class="wiz-note">${es.ci && es.co ? `${mdOfYmd(es.ci)} 入住 → ${mdOfYmd(es.co)} 退房．${ns.length} 晚` : es.ci ? `${mdOfYmd(es.ci)} 入住` : ''}</div>
+      ${others.length ? `<div class="st-legend">${others.map(x => `<span><i style="background:${colorOf(x.i)[1]}"></i>${esc(x.h.name)}　${stayRange(x.h)}</span>`).join('')}</div>` : ''}
+      ${taken.length ? `<div class="ed-hint"><i class="ti ti-info-circle"></i> ${taken.map(x => `${x.md} 原本住「${esc(x.o.h.name)}」`).join('、')}，會改成這間</div>` : ''}
+      <div class="err" id="stErr" hidden></div>`;
+    const nameEl = sheet.querySelector('#stName');
+    tripBias();
+    attachPlaceSuggest(nameEl, g => { Object.assign(es, g); draw(); autoPhoto(g.map || withCity(g.name), g.name); }, null, {
+      request: () => ({ includedPrimaryTypes: ['lodging'], ...(biasAt ? { locationBias: { center: biasAt, radius: 30000 } } : {}), ...(TRIP?.region ? { includedRegionCodes: [TRIP.region] } : {}) }),
+      resolve: async (pr, name) => {
+        const place = pr.toPlace();
+        try { await place.fetchFields({ fields: ['displayName', 'formattedAddress', 'location'] }); } catch {}
+        const loc = place.location, ll = loc ? `${loc.lat().toFixed(6)},${loc.lng().toFixed(6)}` : '';
+        return { name: place.displayName || name, addr: pr.secondaryText?.text || place.formattedAddress || '', loc: ll, pid: place.id || '',
+          map: ll ? `https://www.google.com/maps/place/${encodeURIComponent(place.displayName || name)}/@${ll},17z` : '' };
+      } });
+    // 改名稱只改名字，選過的位置留著（要換一家從清單重新選）；清空才把位置一起清掉
+    nameEl.addEventListener('input', () => { es.name = nameEl.value.trim(); if (!es.name) Object.assign(es, { map: '', loc: '', pid: '', addr: '' }); });
+  };
+  openSheet(`
+    <div class="sh-head"><div style="flex:1;min-width:0"><div class="sh-title" id="shTitle">${cur ? '編輯住處' : '加入住處'}</div>
+      <div class="sh-sub">同一晚只能住一個地方</div></div>
+      <button class="sh-close" aria-label="關閉"><i class="ti ti-x"></i></button></div>
+    ${cur ? `<div class="st-photo">${photoField('stPhoto', cur.name, '自動從 Google 地圖抓一張，也可以上傳換掉')}</div>` : ''}
+    <div id="stBody"></div>
+    <div class="ed-actions">
+      ${cur ? '<button type="button" class="btn ghost danger" id="stDel"><i class="ti ti-trash"></i></button>' : ''}
+      <button type="button" class="btn ghost" id="stBack">取消</button>
+      <button type="button" class="btn primary" id="stSave">儲存</button>
+    </div>`, cur ? null : '#stName');
+  draw();
+  // 照片（只有編輯既有住處才有；新加的住處存好後由總覽自動抓）：使用者自己上傳過就不再自動換；選了別家飯店就重抓一張
+  let photoManual = false, photoSeq = 0;
+  if (cur) wirePhoto('stPhoto', cur.name);
+  const phIn = sheet.querySelector('#stPhoto'), phSt = sheet.querySelector('#stPhotoSt');
+  phIn?.addEventListener('input', e => { if (e.isTrusted) photoManual = true; });
+  sheet.querySelector('#stPhotoFile')?.addEventListener('change', () => { photoManual = true; });
+  async function autoPhoto(link, name) {
+    if (!phIn || photoManual || !link) return;
+    const seq = ++photoSeq;
+    phSt.textContent = '從 Google 地圖找照片中…';
+    let url = '';
+    try { url = await googlePhoto(link, name); } catch {}
+    if (seq !== photoSeq || photoManual || !phIn.isConnected) return;
+    phSt.textContent = url ? '' : '找不到這間的照片，可以自己上傳';
+    if (url) { phIn.value = url; phIn.dispatchEvent(new Event('input')); }
+  }
+  if (cur && !NOTES[cur.name]?.photo) autoPhoto(cur.map || withCity(cur.name), cur.name);
+  sheet.querySelector('#stBody').addEventListener('click', e => {
+    const b = e.target.closest('[data-day]'); if (!b) return;
+    const v = b.dataset.day;
+    // 第一下入住、第二下退房；點到入住日（含）之前＝重選入住；都選好再點＝重來。最後一天只能當退房日
+    if (!es.ci || es.co || v <= es.ci) { if (v === lastYmd) return; es.ci = v; es.co = ''; } else es.co = v;
+    draw();
+  });
+  sheet.querySelector('#stBack').addEventListener('click', closeSheet);
+  sheet.querySelector('#stDel')?.addEventListener('click', async () => {
+    if (!confirm(`刪除「${cur.name}」？`)) return;
+    try { await saveStays(all.filter((_, i) => i !== idx), '已刪除住處'); closeSheet(); } catch (x) { toast(x.message); }
+  });
+  sheet.querySelector('#stSave').addEventListener('click', async e => {
+    const err = m => { const el = sheet.querySelector('#stErr'); el.textContent = m; el.hidden = false; el.scrollIntoView({ block: 'nearest' }); };
+    if (!es.name) return err('請填住處名稱');
+    if (!es.ci || !es.co) return err('請在月曆上點入住日和退房日');
+    const ns = nightsOf();
+    const me = { name: es.name, nights: ns, ...(es.map ? { map: es.map } : {}), ...(es.loc ? { loc: es.loc } : {}), ...(es.pid ? { pid: es.pid } : {}), ...(es.addr ? { addr: es.addr } : {}) };
+    // 其他住處讓出這幾晚；讓到一晚都不剩的就拿掉
+    const rest = others.map(x => ({ ...x.h, nights: (x.h.nights || []).filter(n => !ns.includes(n)) })).filter(h => h.nights.length);
+    const btn = e.currentTarget; btn.disabled = true; btn.textContent = es.loc ? '儲存中…' : '儲存中，查位置…';
+    try {
+      await saveStays([...rest, me], cur ? '已更新住處' : '已加入住處'); markSetup('stay');
+      if (savePhoto('stPhoto', me.name)) { saveData('住處照片'); renderPage(current); }
+      closeSheet();
+    }
+    catch (x) { btn.disabled = false; btn.textContent = '儲存'; err(x.code === 'network' ? '連不上雲端，請檢查網路' : x.message); }
   });
 }
 function openResetLinks() {
@@ -2081,11 +2315,33 @@ function openResetLinks() {
     } catch (e) { b.disabled = false; toast(e.message); }
   }));
 }
+// 總覽的住宿卡片：長按編輯（跟行程卡片一樣），點一下看資訊
+let stayPress = null, stayPressed = false;
+function stayPressEnd() { if (!stayPress) return; clearTimeout(stayPress.timer); stayPress.el.classList.remove('pressing'); stayPress = null; }
+function stayPressStart(e, x, y) {
+  const el = e.target.closest('.st-row[data-stay]'); if (!el || sheet.classList.contains('on')) return;
+  stayPress = { x, y, el, timer: setTimeout(() => {
+    stayPressEnd(); stayPressed = true; setTimeout(() => stayPressed = false, 600); navigator.vibrate?.(10);
+    withAuth(() => openStayEditor(+el.dataset.stay));
+  }, PRESS_MS) };
+  setTimeout(() => { if (stayPress?.el === el) el.classList.add('pressing'); }, 120);
+}
+ovEl.addEventListener('touchstart', e => { if (e.touches.length === 1) stayPressStart(e, e.touches[0].clientX, e.touches[0].clientY); else stayPressEnd(); }, { passive: true });
+ovEl.addEventListener('touchmove', e => { if (stayPress && (Math.abs(e.touches[0].clientX - stayPress.x) > MOVE_TOL || Math.abs(e.touches[0].clientY - stayPress.y) > MOVE_TOL)) stayPressEnd(); }, { passive: true });
+ovEl.addEventListener('touchend', stayPressEnd);
+ovEl.addEventListener('touchcancel', stayPressEnd);
+ovEl.addEventListener('mousedown', e => { if (e.button === 0) stayPressStart(e, e.clientX, e.clientY); });
+addEventListener('mouseup', stayPressEnd);
+addEventListener('scroll', stayPressEnd, { passive: true });
+ovEl.addEventListener('contextmenu', e => { if (e.target.closest('.st-row')) e.preventDefault(); });
 ovEl.addEventListener('click', e => {
   const inv = e.target.closest('[data-invite]'); if (inv) { shareTrip(inv.dataset.invite); return; }
   if (e.target.closest('#invReset')) { withAuth(openResetLinks); return; }
   if (e.target.closest('#invCode')) { openAuth(); return; }
   if (e.target.closest('#tripSet')) { withAuth(openTripSettings); return; }
+  if (stayPressed) { stayPressed = false; e.preventDefault(); return; }   // 長按放開的那一下不要再打開資訊
+  const sr = e.target.closest('.st-row[data-stay]'); if (sr) { openStayInfo(+sr.dataset.stay); return; }
+  if (e.target.closest('#staysAdd')) { withAuth(() => openStayEditor(null)); return; }
   const su = e.target.closest('[data-setup]'); if (su) { runSetup(su.dataset.setup); return; }
   if (e.target.closest('#ovHero')) { if (TRIP_ROLE === 'edit') withAuth(openCover); else if (!TRIP.cover) openAuth(); return; }
   if (ckSuppress) { ckSuppress = false; e.preventDefault(); e.stopPropagation(); return; }   // 剛拖曳完放開的那一下，不算點擊
@@ -2403,7 +2659,6 @@ function openCreateAuth() {
   $('crGo').addEventListener('click', go);
   $('crNick').addEventListener('keydown', e => { if (e.key === 'Enter' && !e.isComposing) go(); });
 }
-daySub.addEventListener('click', e => { if (e.target.closest('#tripSw')) location.hash = 'trips'; });
 
 function showPage(page, animate = true) {
   if (TRIP_ID && !TRIP && /^d\d+$/.test(page)) wantPage = page;   // 還不知道這趟有幾天：載入後再跳過去
@@ -2439,6 +2694,7 @@ mapView.querySelector('.map-zoom').addEventListener('click', e => {
   const b = e.target.closest('[data-zoom]'); if (b && gmap) gmap.setZoom(gmap.getZoom() + +b.dataset.zoom);
 });
 mapBtn.addEventListener('click', () => {
+  if (current === 'overview') { location.hash = 'trips'; return; }
   mapMode = !mapMode;
   try { sessionStorage.setItem('cm-map', mapMode ? '1' : ''); } catch {}
   updateHeader(current); renderPage(current); scrollTo({ top: 0 });
@@ -2825,6 +3081,7 @@ function openNote(title, info, mine, q, ex = {}) {
     <div class="sh-head"><div style="flex:1;min-width:0"><div class="sh-title" id="shTitle">${esc(title)}</div><div class="sh-sub">${esc(info.orig || '')}</div></div>
       ${q ? navBtn(q, title) : ''}<button class="sh-close" aria-label="關閉"><i class="ti ti-x"></i></button></div>
     ${ex.desc ? `<div class="sh-desc">${esc(ex.desc)}</div>` : ''}
+    ${ex.html || ''}
     ${ex.meta?.length ? `<div class="sh-meta">${ex.meta.map(([ic, t]) => `<div><i class="ti ${ic}"></i><span>${esc(t)}</span></div>`).join('')}</div>` : ''}
     ${mine ? `<div class="mine"><b>筆記摘要</b>${esc(mine)}</div>` : ''}
     ${info.points ? `<div class="sh-sec">重點整理</div><ul class="sh-list">${info.points.map(p => `<li>${esc(p)}</li>`).join('')}</ul>` : ''}
@@ -2832,7 +3089,7 @@ function openNote(title, info, mine, q, ex = {}) {
       <div class="full-txt">${linkify(info.full)}</div></details>` : ''}
     ${info.links ? `<div class="sh-sec">參考連結</div><div class="sh-links">${info.links.map(([t, u]) => `<a href="${esc(u)}" target="_blank" rel="noopener"><i class="ti ti-external-link"></i> ${esc(t)}</a>`).join('')}</div>` : ''}
     ${ex.pending ? '<div class="sh-pending"><i class="ti ti-loader-2 spin"></i> 正在用 Google 查詢這個地點的資訊（描述、營業時間、評分），查好會自動出現</div>' : ''}
-    ${!ex.pending && !mine && !info.points && !info.full && !info.links && !ex.desc ? '<div class="sh-empty">還沒有筆記，長按卡片可以編輯</div>' : ''}
+    ${!ex.pending && !ex.quiet && !mine && !info.points && !info.full && !info.links && !ex.desc ? '<div class="sh-empty">還沒有筆記，長按卡片可以編輯</div>' : ''}
     ${ex.action ? `<div class="ed-actions"><button type="button" class="btn primary sh-act" style="flex:1"><i class="ti ${ex.action.icon}"></i> ${esc(ex.action.label)}</button></div>` : ''}`);
   if (ex.action) sheet.querySelector('.sh-act').onclick = ex.action.fn;
 }
@@ -3489,7 +3746,7 @@ function drawAdd() {
       : `<button type="button" class="af-plain" id="afLink" hidden><i class="ti ti-link"></i><span><span id="afLinkH">查這個 Google 地圖連結</span><small id="afLinkT">店家會直接帶入；清單會列出裡面的地點讓你勾選，放進備選</small></span></button>
         <button type="button" class="af-plain" id="afPlain"${af.q.trim() && !/https?:\/\//.test(af.q) ? '' : ' hidden'}><i class="ti ti-pencil-plus"></i><span><span id="afPlainT">不用地點，直接用「${esc(af.q.trim())}」</span><small>例如自由活動、回住處休息</small></span></button>
         ${cands.length && !toCand ? `<div class="ed-field"><span class="ed-lab">從備選挑</span><div class="af-cands">${cands.map(c => `<button type="button" class="chip ${c.cls || 'eat'}" data-cand="${c.id}">${esc(shortName(c.t))}</button>`).join('')}</div></div>` : ''}
-        ${isDay(af.day) ? `<button type="button" class="af-plain" id="afHome"><i class="ti ti-home"></i><span>回住處<small>${homeFor(af.day) ? esc(homeFor(af.day).name) : '還沒設定住處，點這裡加入'}</small></span></button>` : ''}`}`;
+        ${isDay(af.day) ? `<button type="button" class="af-plain" id="afHome"><i class="ti ti-bed"></i><span>回住處<small>${homeFor(af.day) ? esc(homeFor(af.day).name) : '還沒設定住處，點這裡加入'}</small></span></button>` : ''}`}`;
     const q = body.querySelector('#afQ'), region = TRIP?.region;
     tripBias();   // 先在背景準備好搜尋中心
     attachPlaceSuggest(q, pick => { af.pick = pick; af.q = pick.name; drawAdd(); }, () => { af.q = q.value; },
@@ -3535,7 +3792,7 @@ function drawAdd() {
     body.querySelector('#afPlain')?.addEventListener('click', () => { Object.assign(af, { step: 2, pick: null, name: af.q.trim(), cls: 'other', dur: 60 }); if (toCand) saveAdd(); else drawAdd(); });
     body.querySelector('#afHome')?.addEventListener('click', () => {
       const h = homeFor(af.day);
-      if (!h) { af = null; openTripSettings(); toast('加好住處後，再按「加入行程」就能選「回住處」', '', null, 5000); return; }   // 還沒設定住處：先去旅程設定加
+      if (!h) { af = null; openStayEditor(null); return; }   // 還沒設定住處：先加一間
       Object.assign(af, { step: 2, home: h, pick: null, name: '回住處休息', cls: 'other', dur: 60 }); drawAdd();
     });
     body.querySelectorAll('[data-cand]').forEach(b => b.addEventListener('click', () => {
@@ -3545,7 +3802,7 @@ function drawAdd() {
     return;
   }
   // 第二步：什麼時候
-  const where = af.pick ? `<i class="ti ti-map-pin-check"></i> ${esc(af.pick.name)}` : af.cand ? '<i class="ti ti-bookmark"></i> 從備選' : af.home ? `<i class="ti ti-home"></i> ${esc(af.home.name)}` : '不用地點';
+  const where = af.pick ? `<i class="ti ti-map-pin-check"></i> ${esc(af.pick.name)}` : af.cand ? '<i class="ti ti-bookmark"></i> 從備選' : af.home ? `<i class="ti ti-bed"></i> ${esc(af.home.name)}` : '不用地點';
   const durs = [30, 60, 90, 120, 180];
   body.innerHTML = head('什麼時候？', where) + `
     <label class="ed-field"><span class="ed-lab">名稱</span><input type="text" id="afName" value="${esc(af.name)}" autocomplete="off" maxlength="60"></label>
@@ -3695,7 +3952,7 @@ function openEditor(id, startAt, toDay, replaceId) {
     ${ed.pick ? '<div class="ed-hint"><i class="ti ti-info-circle"></i> 這是多選一的行程，名稱可以取像「早餐二選一」。要改裡面的店家，請展開後直接點那一家</div>' : ''}
     ${ed.group || ed.pick ? '' : `
     <label class="ed-field"><span class="ed-lab-row"><span class="ed-lab">地圖 <span class="ed-lab-hint">貼上 Google 地圖的分享連結最準確</span></span>
-      ${homeFor(ed.day) ? `<button type="button" class="swap-btn" id="edHome"><i class="ti ti-home"></i> 回住處</button>` : ''}</span>
+      ${homeFor(ed.day) ? `<button type="button" class="swap-btn" id="edHome"><i class="ti ti-bed"></i> 回住處</button>` : ''}</span>
       <span class="clr-wrap"><input id="edMap" type="text" value="${esc(ed.map)}" placeholder="貼上分享連結，或輸入店名" autocomplete="off" inputmode="url"><button type="button" class="clr-btn" aria-label="清除" tabindex="-1"><i class="ti ti-x"></i></button></span></label>
     <div class="map-status" id="edMapStatus"></div>
     <div class="map-status" id="edMates"${placeMates(ed.id && !ed.group && !ed.pick ? findItem(ed.id)[1] : null, ed.id ? findItem(ed.id)[1] : null).length ? '' : ' hidden'}>${mateHint(placeMates(ed.id && !ed.group && !ed.pick ? findItem(ed.id)[1] : null, ed.id ? findItem(ed.id)[1] : null).length)}</div>`}
@@ -4290,7 +4547,7 @@ async function bgLookup({ id, link }) {
 async function describe(p) {
   try {
     const r = await api({ ...getAuth(), action: 'describePlace', facts: { name: p.name, type: (TYPE_NAME[p.cls] || '') + (p.type ? `（${p.type}）` : ''),
-      addr: p.addr, summary: p.summary, rating: p.rating, count: p.count, price: p.price, hours: (p.hoursText || '').replace(/\n/g, '；'), pay: p.pay, reviews: p.reviews } }, 90000);
+      addr: p.addr, summary: p.summary, rating: p.rating, count: p.count, price: p.price, hours: (p.hoursText || '').replace(/\n/g, '；'), pay: p.pay, reviews: p.reviews } }, 180000);   // Gemini 免費版尖峰時可能要一兩分鐘
     return r.place;
   } catch { return null; }
 }
