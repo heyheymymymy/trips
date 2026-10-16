@@ -638,6 +638,23 @@ button.ov-stay{width:100%;font:inherit;text-align:left;cursor:pointer}
 .trips-empty{padding:60px 16px;text-align:center;font-size:14px;color:var(--text2);line-height:1.7}
 .trips-empty small{display:block;margin-top:14px;font-size:12px;color:var(--muted)}
 .trips-carry{margin-top:22px;text-align:center}
+/* Google 登入：還沒登入是一張卡片，登入了是一行帳號＋登出 */
+.acct-in{display:flex;align-items:center;gap:12px;width:100%;margin-top:22px;padding:14px;border:1px solid var(--border);border-radius:14px;background:#fff;font:inherit;text-align:left;color:var(--text);cursor:pointer}
+.acct-in > i:first-child{flex:none;width:36px;height:36px;border-radius:50%;background:var(--accent-bg);color:var(--accent-fg);font-size:19px;display:flex;align-items:center;justify-content:center}
+.acct-in span{flex:1;min-width:0}
+.acct-in b{display:block;font-size:15px}
+.acct-in small{display:block;margin-top:2px;font-size:12px;color:var(--text2)}
+.acct-in > i:last-child{color:var(--muted)}
+.acct{display:flex;align-items:center;gap:10px;margin-top:22px;padding:10px 4px;border-top:1px solid var(--line)}
+.acct-pic{flex:none;width:32px;height:32px;border-radius:50%;overflow:hidden;background:var(--other-bg);color:var(--text2);display:flex;align-items:center;justify-content:center}
+.acct-pic img{width:100%;height:100%;object-fit:cover}
+.acct-t{flex:1;min-width:0}
+.acct-t b{display:block;font-size:14px}
+.acct-t small{display:block;font-size:12px;color:var(--text2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.acct-out{flex:none;height:32px;padding:0 12px;border:1px solid var(--border);border-radius:999px;background:#fff;font:inherit;font-size:13px;color:var(--text2);cursor:pointer}
+.g-btn{display:flex;justify-content:center;min-height:44px;align-items:center;margin-top:18px}
+.g-note{margin-top:16px;font-size:12px;color:var(--muted);text-align:center;line-height:1.6}
+.g-note a{color:var(--text2)}
 .trips-carry button{display:inline-flex;align-items:center;gap:6px;height:38px;padding:0 14px;border:1px solid var(--border);border-radius:999px;background:#fff;font:inherit;font-size:14px;color:var(--text);cursor:pointer}
 .trips-carry small{display:block;margin:8px auto 0;max-width:280px;font-size:12px;line-height:1.5;color:var(--muted)}
 .trips-empty .en{font-family:"Isometra",cursive;font-size:30px;color:var(--accent-fg);margin-bottom:8px}
@@ -984,6 +1001,7 @@ const withCity = q => q + (tripCity() && !q.toLowerCase().includes(tripCity().to
 const myTrips = () => { try { return JSON.parse(localStorage.getItem(MINE_KEY)) || []; } catch { return []; } };
 function rememberTrip(t, role, key, code) {
   const old = myTrips().find(x => x.id === t.id);
+  if (!old || (code && code !== old.code) || key !== old.key) mineTouched(t.id);   // 新加的、或拿到編輯碼：登入時同步到帳號
   if (code === undefined) code = role === 'edit' ? old?.code || '' : '';
   const list = myTrips().filter(x => x.id !== t.id);
   list.unshift({ id: t.id, key, code, role, name: t.name, dest: t.dest, en: t.en, start: t.start, days: Number(t.days) || 0, cover: t.cover || old?.cover || '', members: t.members || [], ...(old?.owner ? { owner: old.owner } : {}),
@@ -992,8 +1010,97 @@ function rememberTrip(t, role, key, code) {
 }
 let TRIP_CODE = TRIP_ID ? myTrips().find(x => x.id === TRIP_ID)?.code || '' : '';
 // 擁有者鑰匙：建立旅程時雲端給的，只記在建立的人的手機（「帶到其他裝置」也會一起帶）；刪除旅程要用
-function setTripOwner(id, owner) { const list = myTrips(), t = list.find(x => x.id === id); if (!t || !owner) return; t.owner = owner; try { localStorage.setItem(MINE_KEY, JSON.stringify(list)); } catch {} }
-const tripRemoved = id => { try { localStorage.setItem(MINE_KEY, JSON.stringify(myTrips().filter(x => x.id !== id))); localStorage.removeItem('trip-cache-' + id + TEST_SUFFIX); } catch {} };
+function setTripOwner(id, owner) { const list = myTrips(), t = list.find(x => x.id === id); if (!t || !owner) return; t.owner = owner; try { localStorage.setItem(MINE_KEY, JSON.stringify(list)); } catch {} mineTouched(id); }
+const tripRemoved = id => { try { localStorage.setItem(MINE_KEY, JSON.stringify(myTrips().filter(x => x.id !== id))); localStorage.removeItem('trip-cache-' + id + TEST_SUFFIX); } catch {} mineTouched(id, true); };
+
+// ---------- Google 登入：「我的旅程」列表（連同編輯碼、擁有者鑰匙）存在帳號裡，手機、電腦登入同一個帳號就一樣 ----------
+// 名字、信箱只記在這個瀏覽器（顯示「已登入誰」），雲端只存 Google 帳號代號
+const GOOGLE_CLIENT_ID = '402295247189-dg23e3runti0o9ain66c1p6vnnbpnu1v.apps.googleusercontent.com';
+const ACCT_KEY = 'trip-account' + TEST_SUFFIX, SYNC_KEY = 'trips-sync' + TEST_SUFFIX;
+const getAccount = () => { try { return JSON.parse(localStorage.getItem(ACCT_KEY)) || null; } catch { return null; } };
+const syncLedger = () => { try { return JSON.parse(localStorage.getItem(SYNC_KEY)) || {}; } catch { return {}; } };
+// 記下這趟在這支手機改過的時間（gone＝從列表拿掉），同步時比較新的那邊為準
+function mineTouched(id, gone) {
+  const l = syncLedger(); l[id] = { at: Date.now(), ...(gone ? { gone: true } : {}) };
+  try { localStorage.setItem(SYNC_KEY, JSON.stringify(l)); } catch {}
+  if (getAccount()) { clearTimeout(mineTouched.t); mineTouched.t = setTimeout(syncMine, 1500); }
+}
+function mineItems() {
+  const l = syncLedger(), out = {};
+  for (const t of myTrips()) out[t.id] = { k: t.key, c: t.code || '', o: t.owner || '', at: l[t.id]?.at || 0 };
+  for (const [id, x] of Object.entries(l)) if (x.gone && !out[id]) out[id] = { gone: true, at: x.at };
+  return out;
+}
+// 雲端回來的列表套進這支手機：拿掉的拿掉、沒有的加上（名稱、日期之後跟雲端要）、補上編輯碼和擁有者鑰匙
+function applyMine(items) {
+  let list = myTrips(); const l = syncLedger(); let changed = false;
+  for (const [id, x] of Object.entries(items || {})) {
+    l[id] = { at: x.at || 0, ...(x.gone ? { gone: true } : {}) };
+    const t = list.find(y => y.id === id);
+    if (x.gone) { if (t) { list = list.filter(y => y.id !== id); changed = true; } continue; }
+    if (!t) { list.push({ id, key: x.k, code: x.c || '', role: x.c ? 'edit' : 'view', ...(x.o ? { owner: x.o } : {}) }); changed = true; continue; }
+    if (x.c && !t.code) { Object.assign(t, { code: x.c, role: 'edit' }); changed = true; }
+    if (x.o && !t.owner) { t.owner = x.o; changed = true; }
+  }
+  try { localStorage.setItem(MINE_KEY, JSON.stringify(list)); localStorage.setItem(SYNC_KEY, JSON.stringify(l)); } catch {}
+  if (changed) { tripsFetched = false; if (current === 'trips') renderTrips(); }
+}
+let mineSyncing = false;
+async function syncMine() {
+  const a = getAccount(); if (!a || mineSyncing) return;
+  mineSyncing = true;
+  try { applyMine((await api({ action: 'mine', sub: a.sub, akey: a.akey, items: mineItems() }, 30000)).items); }
+  catch (e) { if (e.code === 'bad_account') { try { localStorage.removeItem(ACCT_KEY); } catch {} if (current === 'trips') renderTrips(); toast(e.message); } }
+  finally { mineSyncing = false; }
+}
+const inLine = () => /\bLine\//i.test(navigator.userAgent);
+let gisReady = null;
+function loadGis() {
+  if (gisReady) return gisReady;
+  gisReady = new Promise((ok, bad) => {
+    const sc = document.createElement('script'); sc.src = 'https://accounts.google.com/gsi/client'; sc.async = true;
+    sc.onload = () => ok(); sc.onerror = () => { gisReady = null; bad(new Error('load')); };
+    document.head.appendChild(sc);
+  });
+  return gisReady;
+}
+function openLogin() {
+  openSheet(`
+    <div class="sh-head"><div style="flex:1;min-width:0"><div class="sh-title" id="shTitle">用 Google 登入</div>
+      <div class="sh-sub">登入後「我的旅程」存在你的 Google 帳號，手機、電腦登入同一個帳號就看得到一樣的旅程，換手機也不會不見</div></div>
+      <button class="sh-close" aria-label="關閉"><i class="ti ti-x"></i></button></div>
+    ${inLine() ? `<div class="ed-hint"><i class="ti ti-info-circle"></i> LINE 裡沒辦法用 Google 登入：請點右上角「⋯」或右下角的分享圖示，選「用預設瀏覽器開啟」（Safari），再登入一次</div>`
+      : '<div class="g-btn" id="gBtn"><span class="st-al-wait"><i class="ti ti-loader-2 spin"></i> 載入中…</span></div><div class="err" id="gErr" hidden></div>'}
+    <div class="g-note">只用來記住你的旅程列表，不會存你的名字和信箱。<a href="privacy.html" target="_blank" rel="noopener">隱私權說明</a></div>`);
+  if (inLine()) return;
+  const box = sheet.querySelector('#gBtn'), err = m => { const el = sheet.querySelector('#gErr'); if (el) { el.textContent = m; el.hidden = false; } };
+  loadGis().then(() => {
+    google.accounts.id.initialize({ client_id: GOOGLE_CLIENT_ID, callback: onGoogleLogin, use_fedcm_for_prompt: true });
+    box.innerHTML = '';
+    google.accounts.id.renderButton(box, { theme: 'outline', size: 'large', shape: 'pill', text: 'signin_with', locale: 'zh-TW', width: Math.min(320, box.clientWidth || 300) });
+  }).catch(() => { box.innerHTML = ''; err('Google 登入載入失敗，請檢查網路再試一次'); });
+  async function onGoogleLogin(resp) {
+    box.innerHTML = '<span class="st-al-wait"><i class="ti ti-loader-2 spin"></i> 登入中…</span>';
+    try {
+      const p = JSON.parse(decodeURIComponent(escape(atob(resp.credential.split('.')[1].replace(/-/g, '+').replace(/_/g, '/')))));
+      const r = await api({ action: 'login', token: resp.credential, items: mineItems() }, 30000);
+      try { localStorage.setItem(ACCT_KEY, JSON.stringify({ sub: r.sub, akey: r.akey, name: p.name || '', email: p.email || '', pic: p.picture || '' })); } catch {}
+      applyMine(r.items);
+      closeSheet(); tripsFetched = false; if (current === 'trips') renderTrips();
+      const n = Object.values(r.items).filter(x => !x.gone).length;
+      toast(`已登入${p.name ? ' ' + p.name : ''}，${n} 趟旅程已存到帳號`);
+    } catch (e) {
+      box.innerHTML = ''; google.accounts.id.renderButton(box, { theme: 'outline', size: 'large', shape: 'pill', text: 'signin_with', locale: 'zh-TW' });
+      err(e.code === 'network' ? '連不上雲端，請檢查網路' : e.message);
+    }
+  }
+}
+function logoutAccount() {
+  if (!confirm('登出 Google？這支手機的「我的旅程」會留著，只是不再跟帳號同步')) return;
+  try { localStorage.removeItem(ACCT_KEY); } catch {}
+  try { google.accounts.id.disableAutoSelect(); } catch {}
+  renderTrips(); toast('已登出');
+}
 // 能不能刪除這趟：手機裡有擁有者鑰匙；有鑰匙之前建立的舊旅程，暱稱跟建立的人一樣也可以
 const canDeleteTrip = () => TRIP_ROLE === 'edit' && !!(myTrips().find(x => x.id === TRIP_ID)?.owner || (TRIP && TRIP.has_owner === false && TRIP.created_by && TRIP.created_by === getNick()));
 // 「我的旅程」列表上的判斷（還沒打開過、不知道建立的人是誰時先當作可以，打開後再確認）
@@ -1999,9 +2106,10 @@ function openCover() {
   draw();
 }
 // 邀請連結：手機有分享選單就用（LINE 等），沒有就複製
-async function shareTrip(kind) {
-  const url = location.origin + tripUrl(TRIP.id, TRIP.view_key, '');
-  const text = (kind === 'edit' ? `一起來規劃「${TRIP.name}」！要修改時按 ✏️，編輯碼 ${TRIP.code}` : `「${TRIP.name}」的行程`) + ' ' + url;
+// t：要分享的旅程（預設正在看的這趟；「我的旅程」長按時是列表裡那一趟，鑰匙叫 key）
+async function shareTrip(kind, t = TRIP) {
+  const url = location.origin + tripUrl(t.id, t.view_key || t.key, '');
+  const text = (kind === 'edit' ? `一起來規劃「${t.name}」！要修改時按 ✏️，編輯碼 ${t.code}` : `「${t.name}」的行程`) + ' ' + url;
   // https 網址（正式版）有手機的分享選單；本機測試是 http，iPhone 不給用，改成自己的視窗
   if (navigator.share && window.isSecureContext) { try { await navigator.share({ text }); return; } catch (e) { if (e.name === 'AbortError') return; } }
   openCopySheet(kind === 'edit' ? '邀請一起規劃' : '分享給家人看', '複製後貼到 LINE 或訊息裡', text, kind === 'edit' ? '已複製連結和編輯碼' : '已複製連結');
@@ -2024,10 +2132,13 @@ function openCopySheet(title, sub, text, done, extra = '', cancel = '取消') {
 }
 // 1. 剛建好旅程：提醒把連結＋編輯碼存給自己（「我的旅程」只記在這支手機的這個瀏覽器）
 function openSaveTrip() {
+  if (getAccount()) return;   // 登入了：旅程已經存在帳號裡
   const url = location.origin + tripUrl(TRIP.id, TRIP.view_key, '');
   const text = `我的旅程「${TRIP.name}」 ${url} 編輯碼 ${TRIP.code}`;
   openCopySheet('旅程建好了！', '「我的旅程」只記在這支手機的這個瀏覽器。把連結和編輯碼傳給自己（LINE、備忘錄），換手機或從 LINE 換到 Safari 都找得回來', text, '已複製，記得貼到 LINE 或備忘錄存起來',
-    `<div class="inv-code" style="margin-top:16px"><span>編輯碼</span><b>${esc(TRIP.code)}</b><small>總覽最下面隨時看得到</small></div>`, '之後再說');
+    `<button type="button" class="acct-in" id="saveLogin" style="margin-top:14px"><i class="ti ti-brand-google"></i><span><b>用 Google 登入，永久保存</b><small>不用自己存連結，換手機也找得回來</small></span><i class="ti ti-chevron-right"></i></button>
+     <div class="inv-code" style="margin-top:16px"><span>編輯碼</span><b>${esc(TRIP.code)}</b><small>總覽最下面隨時看得到</small></div>`, '之後再說');
+  sheet.querySelector('#saveLogin')?.addEventListener('click', openLogin);
 }
 // 2. 帶到其他裝置：把這支手機記住的所有旅程（代號、鑰匙、編輯碼）打包在網址 # 後面（不會送到伺服器）
 function carryUrl() {
@@ -2618,6 +2729,13 @@ function tripState(start, days) {
     badge: left > 0 ? `還有 ${left} 天` : dayN <= days ? `進行中．第 ${dayN} 天` : '' };
 }
 let tripsFetched = false;
+// 「我的旅程」最下面：還沒登入＝登入卡片；登入了＝帳號、登出
+function acctHtml() {
+  const a = getAccount();
+  if (a) return `<div class="acct"><span class="acct-pic">${a.pic ? `<img src="${esc(a.pic)}" alt="" referrerpolicy="no-referrer">` : '<i class="ti ti-user"></i>'}</span>
+    <span class="acct-t"><b>${esc(a.name || 'Google 帳號')}</b><small>${esc(a.email || '')}．旅程已同步</small></span><button type="button" class="acct-out" id="acctOut">登出</button></div>`;
+  return `<button type="button" class="acct-in" id="acctIn"><i class="ti ti-brand-google"></i><span><b>用 Google 登入</b><small>手機、電腦看到一樣的旅程，換手機也不會不見</small></span><i class="ti ti-chevron-right"></i></button>`;
+}
 function renderTrips() {
   const all = myTrips(), list = all.filter(t => t.start).map(t => {
     // 正在看的這趟：封面沒設定就用筆記裡第一張照片
@@ -2635,9 +2753,11 @@ function renderTrips() {
   const waiting = all.length - list.length;
   tripsEl.innerHTML = (list.length ? groups.join('') : waiting ? '' : `<div class="trips-empty"><div class="en">Bon voyage.</div>還沒有旅程<br>按右下角「建立旅程」開始規劃，或打開朋友傳給你的旅程連結<br><small>在別的手機或 LINE 裡有旅程？在那邊的「我的旅程」按「帶到其他裝置」</small></div>`)
     + (waiting ? `<div class="ov-empty">正在載入 ${waiting} 趟旅程…</div>` : '')
-    + (all.length ? `<div class="trips-carry"><button type="button" id="tripsCarry"><i class="ti ti-device-mobile-share"></i> 帶到其他裝置</button>
-      <small>「我的旅程」只記在這支手機的這個瀏覽器，換手機、從 LINE 換到 Safari 時用這個一起帶過去</small></div>` : '');
+    + acctHtml()
+    + (all.length && !getAccount() ? `<div class="trips-carry"><button type="button" id="tripsCarry"><i class="ti ti-device-mobile-share"></i> 帶到其他裝置</button>
+      <small>沒登入時，「我的旅程」只記在這支手機的這個瀏覽器；不想登入的話，換手機、從 LINE 換到 Safari 時用這個一起帶過去</small></div>` : '');
   if (!tripsFetched && all.length) refreshTrips();
+  if (getAccount() && !syncMine.done) { syncMine.done = true; syncMine(); }   // 每次打開網站跟帳號同步一次
 }
 // 跟雲端要最新的名稱、日期、同行的人；連結已經失效的旅程從列表拿掉
 async function refreshTrips() {
@@ -2649,6 +2769,7 @@ async function refreshTrips() {
     const byId = Object.fromEntries(r.trips.map(t => [t.id, t]));
     const next = mine.filter(t => byId[t.id]?.ok !== false).map(t => byId[t.id] ? { ...t, ...byId[t.id], key: t.key, code: byId[t.id].role === 'edit' ? t.code : '', cover: byId[t.id].cover || t.cover } : t);
     try { localStorage.setItem(MINE_KEY, JSON.stringify(next)); } catch {}
+    mine.filter(t => byId[t.id]?.ok === false).forEach(t => mineTouched(t.id, true));   // 被刪掉、連結失效的旅程：帳號裡也拿掉
     if (current === 'trips') renderTrips();
   } catch {}
 }
@@ -2683,6 +2804,7 @@ function openTripMenu(id) {
     <div class="sh-head"><div style="flex:1;min-width:0"><div class="sh-title" id="shTitle">${esc(t.name || '旅程')}</div></div>
       <button class="sh-close" aria-label="關閉"><i class="ti ti-x"></i></button></div>
     <div class="tm-list">
+      ${opt('share', 'ti-share', '分享旅程', '傳連結給家人朋友看行程，不會附上編輯碼')}
       ${t.role === 'edit' ? opt('set', 'ti-settings', '旅程設定', '名稱、目的地、日期、交通方式、行程封面') : ''}
       ${listIsCreator(t) ? '' : opt('hide', 'ti-eye-off', '從列表拿掉', '只有創建旅程的人可以刪除旅程，從你的列表拿掉後，原本的旅程不受影響')}
       ${listCanDelete(t) ? opt('del', 'ti-trash', '刪除旅程', '確定不去了嗎？刪掉後大家都看不到這趟旅程囉', ' danger') : ''}
@@ -2690,6 +2812,7 @@ function openTripMenu(id) {
     ${t.role === 'edit' && t.has_owner === false && t.created_by && t.created_by !== getNick() ? `<div class="sh-empty">這趟是「${esc(t.created_by)}」建立的，你現在的暱稱是「${esc(getNick() || '還沒填')}」，暱稱一樣才能刪除</div>` : ''}`);
   sheet.querySelector('.tm-list').addEventListener('click', e => {
     const b = e.target.closest('[data-tm]'); if (!b) return;
+    if (b.dataset.tm === 'share') { closeSheet(); shareTrip('view', t); return; }
     if (b.dataset.tm === 'set' || b.dataset.tm === 'del') {
       const act = b.dataset.tm;
       if (id === TRIP_ID && TRIP && t.key === TRIP_KEY) { closeSheet(); location.hash = 'overview'; runTripAct(act); return; }
@@ -2703,6 +2826,8 @@ function openTripMenu(id) {
 tripsEl.addEventListener('click', e => {
   if (tripPressed) { tripPressed = false; e.preventDefault(); return; }   // 長按放開的那一下不要打開旅程
   if (e.target.closest('#tripsCarry')) { openCarry(); return; }
+  if (e.target.closest('#acctIn')) { openLogin(); return; }
+  if (e.target.closest('#acctOut')) { logoutAccount(); return; }
   const c = e.target.closest('[data-trip]'); if (!c) return;
   const t = myTrips().find(x => x.id === c.dataset.trip); if (!t) return;
   if (t.id === TRIP_ID && t.key === TRIP_KEY) location.hash = 'overview';
