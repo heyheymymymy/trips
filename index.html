@@ -246,6 +246,14 @@ html.sheet-lock body{position:fixed;left:0;right:0;bottom:0;overflow:hidden}
 .sh-empty{margin-top:14px;font-size:13px;color:var(--muted)}
 .sh-close{flex:none;width:30px;height:30px;border-radius:50%;border:0;background:var(--line);color:var(--text2);font-size:16px;
   display:flex;align-items:center;justify-content:center;cursor:pointer}
+/* 同一張面板裡往下一層：內容從右邊滑進來；返回：從左邊滑回來 */
+.sh-back{flex:none;width:30px;height:30px;margin:0 -4px 0 -6px;border:0;background:none;color:var(--text);font-size:22px;display:flex;align-items:center;justify-content:center;cursor:pointer}
+.sheet.sliding{overflow-x:hidden}
+.sl-out-l{animation:slOutL .14s ease-in forwards}.sl-out-r{animation:slOutR .14s ease-in forwards}
+.sl-in-r{animation:slInR .26s cubic-bezier(.2,.8,.3,1)}.sl-in-l{animation:slInL .26s cubic-bezier(.2,.8,.3,1)}
+@keyframes slOutL{to{transform:translateX(-30%);opacity:0}}@keyframes slOutR{to{transform:translateX(30%);opacity:0}}
+@keyframes slInR{from{transform:translateX(70%);opacity:0}}@keyframes slInL{from{transform:translateX(-70%);opacity:0}}
+@media (prefers-reduced-motion:reduce){.sl-out-l,.sl-out-r,.sl-in-r,.sl-in-l{animation-duration:.01s}}
 .sh-head .nav{border:1px solid var(--line);color:var(--text2);width:30px;height:30px}
 .mine{margin:14px 0 4px;padding:10px 12px;border-radius:10px;background:var(--eat-bg);color:var(--eat-fg);font-size:14px;line-height:1.6}
 .mine b{display:block;font-size:12px;font-weight:600;margin-bottom:2px}
@@ -735,14 +743,48 @@ button.ov-stay{width:100%;font:inherit;text-align:left;cursor:pointer}
 .pin-in.linked .pin-ok{display:block}
 .pin-in.linked input{padding-left:38px}
 .sheet .af-search input{padding-left:38px}
+/* 加入地點：搜尋框、方塊都是灰底，不要框線 */
+.sheet .af-search input{background:#F3EFEA;border-color:transparent}
+.sheet .af-search input:focus{background:#fff}
+.sheet .af-search:has(.af-candbtn) input{padding-right:42px}
+.sheet .af-search input::placeholder{font-size:14.5px}
+/* 搜尋框尾巴：從備選挑 */
+.af-candbtn{position:absolute;right:4px;top:50%;transform:translateY(-50%);z-index:1;width:34px;height:34px;border:0;border-radius:10px;background:none;color:var(--accent-fg);font-size:20px;display:flex;align-items:center;justify-content:center;cursor:pointer}
+.af-candbtn.on{background:var(--accent-bg)}
+/* 唯一獨立的按鈕：回飯店（長條） */
+.af-home{display:flex;align-items:center;gap:12px;width:100%;margin-top:16px;padding:10px 12px;border:0;border-radius:14px;background:#F3EFEA;font:inherit;text-align:left;color:var(--text);cursor:pointer}
+.af-home > i:first-child{flex:none;width:32px;height:32px;border-radius:50%;background:#fff;color:var(--accent-fg);font-size:17px;display:flex;align-items:center;justify-content:center}
+.af-home > span{flex:1;min-width:0;font-size:15px;font-weight:500}
+.af-home small{display:block;font-size:12px;font-weight:400;color:var(--text2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.af-home > i:last-child{flex:none;color:var(--muted);font-size:18px}
+.af-home + .af-home{margin-top:8px}
+/* 從備選挑：搜尋框下面往下展開的清單，蓋住地圖，拉到面板底 */
+.af-drop .cand-drop{position:absolute;left:0;right:0;top:calc(100% + 8px);z-index:5;margin:0;display:flex;flex-direction:column;background:#fff;box-shadow:0 10px 28px rgba(60,40,20,.14);animation:none}
+.af-drop .cand-drop[hidden]{display:none}
+.af-drop .cand-drop .cand-pick{flex:1;max-height:none;min-height:0}
+.af-drop .cp-filter{flex:none}
+.af-drop .cand-empty{padding:24px 12px;text-align:center;font-size:13px;color:var(--muted)}
 .af-plain[hidden]{display:none}
 .af-plain{display:flex;align-items:center;gap:12px;width:100%;margin-top:12px;padding:12px 14px;border:1px solid var(--border);border-radius:14px;background:#fff;font:inherit;text-align:left;color:var(--text);cursor:pointer}
 .af-plain > i{flex:none;width:32px;height:32px;border-radius:50%;background:#F3EFEA;color:var(--text2);font-size:17px;display:flex;align-items:center;justify-content:center}
 .af-plain small{display:block;font-size:12px;color:var(--text2)}
 .af-cands{display:flex;flex-wrap:wrap;gap:6px}
+.af-panel{margin-top:10px}
 .af-cands .chip{height:32px;padding:0 12px;font-size:13px;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .af-card{margin-top:14px;border:1px solid var(--border);border-radius:16px;overflow:hidden;background:#fff}
 .af-mapwrap{position:relative}
+/* 加入地點的大地圖：四邊淡出到白色 */
+.af-slot{height:280px;margin:12px -6px 0}
+.af-bigmap{position:absolute;z-index:1;height:280px;-webkit-mask-image:linear-gradient(to bottom,transparent 0,#000 14%,#000 86%,transparent 100%),linear-gradient(to right,transparent 0,#000 10%,#000 90%,transparent 100%);-webkit-mask-composite:source-in;mask-image:linear-gradient(to bottom,transparent 0,#000 14%,#000 86%,transparent 100%),linear-gradient(to right,transparent 0,#000 10%,#000 90%,transparent 100%);mask-composite:intersect}
+.af-map2{position:absolute;inset:0;background:#F6F1EA}
+.af-map2.nomap::after{content:"地圖載入不了";position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:12px;color:var(--muted)}
+.af-bigmap .af-recenter{right:12%;bottom:16%}
+.af-maphint{margin-top:10px;text-align:center;font-size:12px;color:var(--muted)}
+.af-dot{position:absolute;transform:translate(-6px,-6px);display:flex;align-items:center;gap:4px;pointer-events:none;white-space:nowrap}
+.af-dot i{flex:none;width:12px;height:12px;border-radius:50%;border:2px solid #fff;background:var(--accent-fg);box-shadow:0 1px 3px rgba(0,0,0,.3)}
+.af-dot span{font-size:11px;font-weight:600;color:var(--text);text-shadow:0 0 3px #fff,0 0 3px #fff,0 0 3px #fff}
+.af-dot.eat i{background:#C77C48}.af-dot.cafe i{background:#9A6B4F}.af-dot.spa i{background:#5E8A55}.af-dot.see i{background:#4E7590}.af-dot.shop i{background:#B0607A}.af-dot.bar i{background:#7A5E9A}.af-dot.other i{background:#8C8379}
+.af-me{position:absolute;width:16px;height:16px;margin:-8px 0 0 -8px;border-radius:50%;background:#2F7BF5;border:3px solid #fff;box-shadow:0 0 0 6px rgba(47,123,245,.18),0 1px 3px rgba(0,0,0,.3);pointer-events:none}
 .af-map{position:relative;height:170px;background:#EFEBE5}
 .af-map.nomap::after{content:"地圖載入不了，位置以 Google 的資料為準";position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:12px;color:var(--muted)}
 .af-pin{position:absolute;transform:translate(-50%,-100%);font-size:34px;line-height:1;color:var(--accent-fg);filter:drop-shadow(0 2px 2px rgba(0,0,0,.25));pointer-events:none}
@@ -838,12 +880,6 @@ button.ov-stay{width:100%;font:inherit;text-align:left;cursor:pointer}
 #edCls.fade-l,#sbCls.fade-l,#edDay.fade-l,#afCls.fade-l,#afDay.fade-l{--fl:24px}
 #edCls.fade-r,#sbCls.fade-r,#edDay.fade-r,#afCls.fade-r,#afDay.fade-r{--fr:24px}
 /* 加入行程的日期：跟頁首的天數一樣是正圓數字，「備選」是膠囊 */
-#afDay{gap:4px;align-items:flex-start}
-.af-dd{flex:none;display:flex;flex-direction:column;align-items:center;gap:3px;width:42px;padding:0;border:0;background:none;font:inherit;cursor:pointer}
-.af-dd .chip{width:34px;height:34px;padding:0;border-radius:50%;display:flex;align-items:center;justify-content:center;font-variant-numeric:tabular-nums}
-.af-dd.on .chip{border-color:transparent;background:var(--accent-bg);color:var(--accent-fg);font-weight:600}
-.af-dd small{font-size:11px;color:var(--muted);font-variant-numeric:tabular-nums}
-.af-dd.on small{color:var(--accent-fg)}
 #afDay .chip.cand{flex:none;height:34px;padding:0 12px;border-radius:999px;margin-left:4px}
 #edDay .chip{flex:1 0 auto;min-width:30px;padding:0 6px}   /* 天數少：平均排滿一行；天數多到放不下：不再縮小，改成左右滑 */
 .chips.sm.day-chips .chip{white-space:nowrap}
@@ -1831,6 +1867,10 @@ function updateHeader(page) {
   mapBtn.hidden = !(home || isDay(page) || page === 'cand');
   mapBtn.innerHTML = `<i class="ti ${home ? 'ti-home' : mapMode ? 'ti-list' : 'ti-map'}"></i>`;
   mapBtn.setAttribute('aria-label', home ? '回到我的旅程' : mapMode ? '回到清單' : '看地圖');
+  // 總覽沒有卡片可以編輯：右上角的鉛筆換成齒輪，點了打開旅程設定
+  const eb = document.getElementById('editBtn');
+  eb.innerHTML = `<i class="ti ${home ? 'ti-settings' : 'ti-pencil'}"></i>`;
+  eb.setAttribute('aria-label', home ? '旅程設定' : '編輯行程');
   applyHeaderEditable();
   document.getElementById('routeFab').classList.toggle('day', isDay(page));
   document.getElementById('ebDay').textContent = isDay(page) ? `第 ${dayNum(page)} 天` : page === 'cand' ? '備選' : '';
@@ -2050,11 +2090,11 @@ const markSetup = k => { const o = getSetup(); o[k] = true; try { localStorage.s
 function setupSteps() {
   const f = getSetup();
   return [
+    ['first', 'ti-calendar-plus', '加入第一個行程', '搜尋想去的店或景點，排進第 1 天', DAY_KEYS.some(k => (DATA[k] || []).length)],
+    ['import', 'ti-map-pin-plus', '匯入想去的地方', '貼 Google 地圖清單，放進備選', (DATA.cand || []).length > 0 || !!f.import],
     ['stay', 'ti-bed', '加入住處', '每天第一段交通從住處算', tripStays().length > 0],
     ['mode', 'ti-route', '選交通方式', `現在是「${modeName(tripMode())}」`, !!f.mode || tripMode() !== 'drive'],
-    ['import', 'ti-map-pin-plus', '匯入想去的地方', '貼 Google 地圖清單，放進備選', (DATA.cand || []).length > 0 || !!f.import],
     ['invite', 'ti-user-plus', '邀請旅伴', '分享連結和編輯碼', (TRIP.members || []).length > 1 || !!f.invite],
-    ['cover', 'ti-photo', '放一張封面', '顯示在「我的旅程」，之後在旅程設定可以換', !!TRIP.cover],
   ];
 }
 function setupHtml() {
@@ -2077,7 +2117,7 @@ function runSetup(k) {
   else if (k === 'mode') withAuth(openTripSettings);
   else if (k === 'import') { markSetup('import'); location.hash = 'cand'; setTimeout(() => withAuth(() => openAddFlow('cand')), 350); }
   else if (k === 'invite') { markSetup('invite'); shareTrip('edit'); setTimeout(renderOverview, 600); }
-  else if (k === 'cover') withAuth(openCover);
+  else if (k === 'first') withAuth(() => { showPage('d1'); openAddFlow('d1'); });   // 到第 1 天，打開「加入行程」
 }
 // 換封面：上傳照片，或從這趟筆記裡已有的照片挑一張；可以拖曳選要顯示的範圍
 function openCover() {
@@ -2501,7 +2541,8 @@ function parseLL(v) {
   const mm = /(-?\d{1,2}\.\d{3,})\s*[,，]\s*(-?\d{1,3}\.\d{3,})/.exec(v);
   return mm ? ok(+mm[1], +mm[2]) : '';
 }
-function openStayEditor(idx) {
+// opts.back：從別的面板點進來（例如加入行程的「回飯店」），左上角有返回；opts.done(住處)：存好後接著做
+function openStayEditor(idx, opts = {}) {
   const all = tripStays(), cur = idx == null ? null : all[idx], ds = tripDates();
   // 原本住的晚上 → 入住、退房日（中間有空的晚上就取頭尾）
   const ni = cur ? (cur.nights || []).map(n => ds.findIndex(x => x.md === n)).filter(i => i >= 0).sort((a, b) => a - b) : [];
@@ -2580,14 +2621,14 @@ function openStayEditor(idx) {
     nameEl.addEventListener('input', () => { es.name = nameEl.value.trim(); if (!es.name) { Object.assign(es, { map: '', loc: '', pid: '', addr: '' }); setPin(nameEl, false); } });
   };
   openSheet(`
-    <div class="sh-head"><div style="flex:1;min-width:0"><div class="sh-title" id="shTitle">${cur ? '編輯住處' : '加入住處'}</div>
+    <div class="sh-head">${opts.back ? '<button type="button" class="sh-back" id="stUp" aria-label="返回"><i class="ti ti-chevron-left"></i></button>' : ''}<div style="flex:1;min-width:0"><div class="sh-title" id="shTitle">${cur ? '編輯住處' : '加入住處'}</div>
       <div class="sh-sub">同一晚只能住一個地方</div></div>
       <button class="sh-close" aria-label="關閉"><i class="ti ti-x"></i></button></div>
     ${cur ? `<div class="st-photo">${photoField('stPhoto', cur.name, isManualStay(cur) ? '自己填位置的住處 Google 找不到照片，可以上傳房源照片' : '自動從 Google 地圖抓一張，也可以上傳換掉')}</div>` : ''}
     <div id="stBody"></div>
     <div class="ed-actions">
       ${cur ? '<button type="button" class="btn ghost danger" id="stDel"><i class="ti ti-trash"></i></button>' : ''}
-      <button type="button" class="btn ghost" id="stBack">取消</button>
+      <button type="button" class="btn ghost" id="stBack">${opts.back ? '返回' : '取消'}</button>
       <button type="button" class="btn primary" id="stSave">儲存</button>
     </div>`, cur ? null : '#stName');
   draw();
@@ -2615,7 +2656,8 @@ function openStayEditor(idx) {
     if (!es.ci || es.co || v <= es.ci) { if (v === lastYmd) return; es.ci = v; es.co = ''; } else es.co = v;
     draw();
   });
-  sheet.querySelector('#stBack').addEventListener('click', closeSheet);
+  sheet.querySelector('#stBack').addEventListener('click', () => opts.back ? opts.back() : closeSheet());
+  sheet.querySelector('#stUp')?.addEventListener('click', () => opts.back());
   sheet.querySelector('#stDel')?.addEventListener('click', async () => {
     if (!confirm(`刪除「${cur.name}」？`)) return;
     closeSheet(); saveStays(all.filter((_, i) => i !== idx), '已刪除住處');
@@ -2630,8 +2672,10 @@ function openStayEditor(idx) {
     // 其他住處讓出這幾晚；讓到一晚都不剩的就拿掉
     const rest = others.map(x => ({ ...x.h, nights: (x.h.nights || []).filter(n => !ns.includes(n)) })).filter(h => h.nights.length);
     const photo = savePhoto('stPhoto', me.name);
-    closeSheet(); markSetup('stay');
+    if (!opts.done) closeSheet();
+    markSetup('stay');
     saveStays([...rest, me], cur ? '已更新住處' : '已加入住處');
+    opts.done?.(me);
     if (photo) saveData('住處照片');
   });
 }
@@ -3075,6 +3119,8 @@ function showPage(page, animate = true) {
   else if (!['overview', 'cand', 'trips', 'new'].includes(page) && !isDay(page)) page = 'overview';
   if (page === current) return;
   const prev = current; current = page;
+  // 網址的 #頁面 跟著換：直接呼叫 showPage 跳頁（例如開始規劃、已訂位標籤）時網址沒變，之後點同一個分頁會因為網址一樣而沒反應
+  if (location.hash !== '#' + page) history.replaceState(null, '', location.pathname + location.search + '#' + page);
   updateHeader(page);
   if (animate && !reduceMotion && prev && isDay(prev) && isDay(page) && cardsEl && !busy && !mapOn(page)) {
     slideTo(page, dayNum(page) > dayNum(prev) ? 1 : -1);
@@ -3470,6 +3516,17 @@ function realign() {
 }
 sheet.addEventListener('focusout', () => setTimeout(realign, 60));
 if (window.visualViewport) visualViewport.addEventListener('resize', () => setTimeout(realign, 60));
+// 同一張面板換到下一層（dir 1）或回上一層（dir -1）：舊內容滑出去，再換上新內容滑進來
+function sheetSlide(dir, swap) {
+  const kids = () => [...sheet.children].filter(el => !el.classList.contains('grab'));
+  sheet.classList.add('sliding');
+  kids().forEach(el => el.classList.add(dir > 0 ? 'sl-out-l' : 'sl-out-r'));
+  setTimeout(() => {
+    swap();
+    const k = kids(); k.forEach(el => el.classList.add(dir > 0 ? 'sl-in-r' : 'sl-in-l'));
+    setTimeout(() => { sheet.classList.remove('sliding'); k.forEach(el => el.classList.remove('sl-in-r', 'sl-in-l')); if (af?.mapWrap) addMapPlace(); }, 280);
+  }, 140);
+}
 function closeSheet() {
   if (sheet.classList.contains('dlg')) setTimeout(() => { if (!sheet.classList.contains('on')) { sheet.classList.remove('dlg'); sheet.style.top = ''; } }, 200);
   sheet.classList.remove('on'); sheetBg.classList.remove('on');
@@ -3538,7 +3595,7 @@ sheet.addEventListener('touchstart', e => {
   if (sheet.classList.contains('dlg') || e.touches.length > 1) return;
   const onHead = e.target.closest('.grab, .sh-head');
   // 鍵盤打開時只能拉上方的拉桿或標題列關閉，免得想捲動內容卻把面板關掉
-  if (!onHead && (kbOpen() || sheet.scrollTop > 0 || e.target.closest('input, textarea, select, .chips, .full-txt, .ph-drag, .af-mapwrap, .cv-prev'))) return;
+  if (!onHead && (kbOpen() || sheet.scrollTop > 0 || e.target.closest('input, textarea, select, .chips, .full-txt, .ph-drag, .af-mapwrap, .af-bigmap, .cv-prev, .ts-cover, .cand-pick'))) return;
   pull = { y0: e.touches[0].clientY, dy: 0, t0: Date.now(), active: false };
 }, { passive: true });
 sheet.addEventListener('touchmove', e => {
@@ -3578,8 +3635,10 @@ function setEditing(on) {
   if (current) updateHeader(current); else applyHeaderEditable();   // 主題空白時，編輯中才出現可以點的主題欄
   if (current) renderPage(current);
 }
-document.getElementById('editBtn').addEventListener('click', () => {
+const editBtn = document.getElementById('editBtn');
+editBtn.addEventListener('click', () => {
   if (!loaded) { toast('行程還在載入，請稍等'); return; }
+  if (current === 'overview') { withAuth(openTripSettings); return; }
   if (getAuth()) { setEditing(true); pressTip(); } else openAuth();
 });
 // 第一次進編輯模式時，說一次「長按卡片也能直接改」
@@ -4047,7 +4106,7 @@ headerEl.addEventListener('focusout', e => {
 });
 
 // ---------- 從備選清單挑選（新增行程、新增一站／選項共用） ----------
-// 按鈕下面展開清單（不換面板），框內捲動；超過 5 個、而且有兩種以上類型，才出現類型標籤可以篩選
+// 按鈕下面展開清單（不換面板），框內捲動；有兩種以上類型，就出現類型標籤可以篩選
 const typeChips = (list, sel, cls) => {
   const kinds = TYPES.filter(([k]) => list.some(c => (c.cls || 'eat') === k));
   return kinds.length > 1 ? `<div class="chips sm ${cls}"><button type="button" class="chip${sel ? '' : ' on'}" data-v="">全部</button>${
@@ -4073,8 +4132,8 @@ function presetType(wrap, cls) {
 }
 const candListHtml = cands => `
   <div class="cand-drop" hidden>
-    ${cands.length > 5 ? typeChips(cands, '', 'cp-filter') : ''}
-    <div class="cand-pick">${cands.map(c => `<button type="button" class="cp-item ${c.cls || 'eat'}" data-id="${c.id}" data-cls="${c.cls || 'eat'}">
+    ${typeChips(cands, '', 'cp-filter')}
+    <div class="cand-pick">${cands.length ? '' : '<div class="cand-empty">還沒有備選，可以先在「備選」頁加入想去的地方</div>'}${cands.map(c => `<button type="button" class="cp-item ${c.cls || 'eat'}" data-id="${c.id}" data-cls="${c.cls || 'eat'}">
       <span class="cp-dot"></span><span class="cp-main"><span class="cp-name">${esc(c.t)}</span>${c.desc && c.desc !== PENDING ? `<span class="cp-desc">${esc(c.desc)}</span>` : ''}</span>
       <span class="cp-dur">${durLabel(m(c.e) - m(c.s))}</span></button>`).join('')}</div></div>`;
 function wireCandDrop(wrap, onPick, btn) {
@@ -4138,35 +4197,34 @@ function openAddFlow(day, startAt) {
 }
 function drawAdd() {
   const body = sheet.querySelector('#afBody'); if (!body || !af) return;
-  body.className = af.step === 1 ? 'af-s1' : '';   // 第一步面板拉高：搜尋框在上面，鍵盤跳出來時清單才有地方展開
+  body.className = af.step === 1 ? 'af-s1' : '';
+  if (af.mapWrap && af.step !== 1) af.mapWrap.style.visibility = 'hidden';   // 第二步（選時間）不用地圖   // 第一步面板拉高：搜尋框在上面，鍵盤跳出來時清單才有地方展開
   const d = isDay(af.day) ? dayInfo(af.day) : null;
   const head = (title, sub) => `<div class="sh-head"><div style="flex:1;min-width:0"><div class="sh-title" id="shTitle">${title}</div><div class="sh-sub">${sub}</div></div>
     <button class="sh-close" aria-label="關閉"><i class="ti ti-x"></i></button></div>`;
   if (af.step === 1) {
-    const cands = (DATA.cand || []).slice().reverse().slice(0, 12);
+    const cands = (DATA.cand || []).slice().reverse();
     const p = af.pick;
     const toCand = af.day === 'cand';   // 從備選頁進來：選好就直接加入備選（不用選時間）
-    body.innerHTML = head(toCand ? '想去哪裡？' : '要去哪裡？', toCand ? '加入備選．搜尋店名，或貼上 Google 地圖的店家、清單連結' : `第 ${dayNum(af.day)} 天．${d.date}`) + `
-      <div class="ed-field ps-field af-search${p ? ' linked' : ''}"><i class="ti ${p ? 'ti-map-pin-check' : 'ti-search'}"></i><input type="text" id="afQ" value="${esc(af.q)}" placeholder="搜尋店名、景點…" autocomplete="off" enterkeyhint="search"></div>
+    body.innerHTML = head(toCand ? '想去哪裡？' : '要去哪裡？', toCand ? '加入備選' : `第 ${dayNum(af.day)} 天．${d.date}`) + `
+      <div class="ed-field ps-field af-search${p ? ' linked' : ''}"><i class="ti ${p ? 'ti-map-pin-check' : 'ti-search'}"></i><input type="text" id="afQ" value="${esc(af.q)}" placeholder="輸入店名、景點、Google 地圖網址…" autocomplete="off" enterkeyhint="search">${p || toCand ? '' : `<button type="button" class="af-candbtn" aria-label="從備選挑" aria-expanded="false"><i class="ti ti-bookmark"></i></button>
+        <div class="af-drop">${candListHtml(cands)}</div>`}</div>
+      ${p ? '' : `
+        <button type="button" class="af-plain" id="afLink" hidden><i class="ti ti-link"></i><span><span id="afLinkH">查這個 Google 地圖連結</span><small id="afLinkT">店家會直接帶入；清單會列出裡面的地點讓你勾選，放進備選</small></span></button>
+        <button type="button" class="af-plain" id="afPlain"${af.q.trim() && !/https?:\/\//.test(af.q) ? '' : ' hidden'}><i class="ti ti-pencil-plus"></i><span><span id="afPlainT">不用地點，直接用「${esc(af.q.trim())}」</span><small>例如自由活動、回住處休息</small></span></button>`}
+      <div class="af-slot" id="afMapSlot"></div>
+      ${p ? '' : '<div class="af-maphint">也可以直接點地圖上的店家、景點</div>'}
+      ${p || toCand ? '' : `<button type="button" class="af-home" id="afHome"><i class="ti ti-bed"></i><span>回飯店<small>${homeFor(af.day) ? esc(homeFor(af.day).name) : '還沒設定住處，點這裡加入'}</small></span><i class="ti ti-chevron-right"></i></button>
+      <button type="button" class="af-home" id="afManual"><i class="ti ti-pencil"></i><span>手動輸入行程<small>沒有固定地點，例如自由活動、機場接送</small></span><i class="ti ti-chevron-right"></i></button>`}
       ${p ? `<div class="af-card">
-          <div class="af-mapwrap"><div class="af-map" id="afMap"></div><button type="button" class="af-recenter" id="afRecenter" aria-label="回到這個地點" hidden><i class="ti ti-current-location"></i></button></div>
           <div class="af-info"><b>${esc(p.name)}</b>${p.rating ? `<span class="af-rate"><i class="ti ti-star-filled"></i> ${p.rating}${p.count ? `（${p.count}）` : ''}</span>` : ''}<small>${esc(p.addr || '')}</small></div>
           <div class="af-acts"><button type="button" class="btn ghost" id="afRetry">不是這家</button><button type="button" class="btn primary" id="afNext">${toCand ? '加入備選' : '下一步'}</button></div></div>`
-      : `<button type="button" class="af-plain" id="afLink" hidden><i class="ti ti-link"></i><span><span id="afLinkH">查這個 Google 地圖連結</span><small id="afLinkT">店家會直接帶入；清單會列出裡面的地點讓你勾選，放進備選</small></span></button>
-        <button type="button" class="af-plain" id="afPlain"${af.q.trim() && !/https?:\/\//.test(af.q) ? '' : ' hidden'}><i class="ti ti-pencil-plus"></i><span><span id="afPlainT">不用地點，直接用「${esc(af.q.trim())}」</span><small>例如自由活動、回住處休息</small></span></button>
-        ${cands.length && !toCand ? `<div class="ed-field"><span class="ed-lab">從備選挑</span><div class="af-cands">${cands.map(c => `<button type="button" class="chip ${c.cls || 'eat'}" data-cand="${c.id}">${esc(shortName(c.t))}</button>`).join('')}</div></div>` : ''}
-        ${isDay(af.day) ? `<button type="button" class="af-plain" id="afHome"><i class="ti ti-bed"></i><span>回住處<small>${homeFor(af.day) ? esc(homeFor(af.day).name) : '還沒設定住處，點這裡加入'}</small></span></button>` : ''}`}`;
+      : ''}`;
     const q = body.querySelector('#afQ'), region = TRIP?.region;
     tripBias();   // 先在背景準備好搜尋中心
     attachPlaceSuggest(q, pick => { af.pick = pick; af.q = pick.name; drawAdd(); }, () => { af.q = q.value; },
       { request: () => ({ ...(biasAt ? { locationBias: { center: biasAt, radius: 30000 } } : {}), ...(region ? { includedRegionCodes: [region] } : {}) }),
-        resolve: async (pr, name) => {
-          const place = pr.toPlace();
-          try { await place.fetchFields({ fields: ['displayName', 'formattedAddress', 'location', 'rating', 'userRatingCount', 'primaryType', 'types', 'googleMapsURI'] }); } catch {}
-          const loc = place.location;
-          return { name: place.displayName || name, addr: place.formattedAddress || pr.secondaryText?.text || '', rating: place.rating || 0, count: place.userRatingCount || 0,
-            loc: loc ? `${loc.lat().toFixed(6)},${loc.lng().toFixed(6)}` : '', pid: place.id || '', gmap: place.googleMapsURI || '', types: [place.primaryType, ...(place.types || [])].filter(Boolean) };
-        } });
+        resolve: async (pr, name) => { const r = await placePick(pr.toPlace(), name); if (!r.addr) r.addr = pr.secondaryText?.text || ''; return r; } });
     // 打字中不重畫面板（會打斷正在查的地點建議）：只更新「不用地點」那顆按鈕
     // 貼上的是 Google 地圖連結（手機分享會多「清單名 · 帳號名」、店名地址）：改成「查這個連結」
     q.addEventListener('input', () => {
@@ -4192,44 +4250,79 @@ function drawAdd() {
       } catch (err) { btn.disabled = false; body.querySelector('#afLinkT').textContent = '查不到：' + (err.code === 'network' ? '請檢查網路' : err.message); }
     });
     if (!p) setTimeout(() => q.focus(), 50);
-    if (p?.loc) showAddMap(p.loc);
+    addMapMount();   // 大地圖：一打開就有，選了地點會移過去
     body.querySelector('#afRetry')?.addEventListener('click', () => { af.pick = null; drawAdd(); });
     body.querySelector('#afNext')?.addEventListener('click', () => {
       const cls = af.pick.cls || guessCls(af.pick.types); Object.assign(af, { name: af.pick.name, cls, dur: CLS_DUR[cls] || 60 });
       if (toCand) saveAdd(); else { af.step = 2; drawAdd(); }
     });
     body.querySelector('#afPlain')?.addEventListener('click', () => { Object.assign(af, { step: 2, pick: null, name: af.q.trim(), cls: 'other', dur: 60 }); if (toCand) saveAdd(); else drawAdd(); });
+    // 搜尋框尾巴的書籤：從備選挑（在搜尋框下面展開、蓋掉地圖，再按一次收起來）；回飯店直接到選時間
+    // 搜尋框尾巴的書籤：從備選挑——跟編輯卡片的「從備選替換」同一種清單，往下展開蓋住地圖，拉到面板底
+    const cb = body.querySelector('.af-candbtn'), drop = body.querySelector('.af-drop .cand-drop');
+    if (cb) {
+      const fit = () => { const top = drop.getBoundingClientRect().top, bot = Math.max(body.getBoundingClientRect().bottom, (body.querySelector('#afHome') || body).getBoundingClientRect().bottom); drop.style.height = Math.max(240, bot - top) + 'px'; };
+      wireCandDrop(body.querySelector('.af-drop'), id => {
+        const [, it] = findItem(id); if (!it) return;
+        Object.assign(af, { step: 2, cand: it.id, pick: null, name: it.t, cls: it.cls || 'eat', dur: m(it.e) - m(it.s) || 60 }); drawAdd();
+      }, { addEventListener() {} });
+      // 展開：從搜尋框底下往下拉開（裁切範圍從 0 拉到整個高度），裡面的清單跟著往下滑進來；收起：反過來
+      const ease = 'cubic-bezier(.2,.8,.3,1)', reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+      const shut = 'inset(0 0 100% 0 round 12px)', full = 'inset(0 0 0 0 round 12px)';
+      let anim = null;
+      cb.addEventListener('click', () => {
+        const open = drop.hidden || drop.dataset.closing;
+        anim?.cancel(); delete drop.dataset.closing;
+        cb.classList.toggle('on', !!open); cb.setAttribute('aria-expanded', !!open); cb.querySelector('i').className = 'ti ti-bookmark' + (open ? '-filled' : '');
+        if (open) {
+          drop.hidden = false; q.blur(); body.querySelector('.ps-list')?.setAttribute('hidden', ''); fit();
+          if (reduce) return;
+          anim = drop.animate([{ clipPath: shut, opacity: .6 }, { clipPath: full, opacity: 1 }], { duration: 380, easing: ease });
+          [...drop.children].forEach((el, i) => el.animate([{ transform: 'translateY(-24px)', opacity: 0 }, { transform: 'none', opacity: 1 }], { duration: 380, delay: i * 50, easing: ease, fill: 'backwards' }));
+        } else {
+          if (reduce) { drop.hidden = true; return; }
+          drop.dataset.closing = '1';
+          anim = drop.animate([{ clipPath: full, opacity: 1 }, { clipPath: shut, opacity: .4 }], { duration: 220, easing: 'ease-in' });
+          const done = () => { if (drop.dataset.closing) { drop.hidden = true; delete drop.dataset.closing; } };
+          anim.onfinish = done; setTimeout(done, 260);   // 動畫被瀏覽器暫停（例如切到背景）也一定會收起來
+        }
+      });
+      q.addEventListener('focus', () => { if (!drop.hidden && !drop.dataset.closing) cb.click(); });   // 回去打字就收起來
+    }
+    body.querySelector('#afManual')?.addEventListener('click', () => {
+      Object.assign(af, { step: 2, pick: null, cand: null, home: null, name: af.q.trim() && !/https?:\/\//.test(af.q) ? af.q.trim() : '', cls: 'other', dur: 60 });
+      drawAdd(); sheet.querySelector('#afName')?.focus();
+    });
     body.querySelector('#afHome')?.addEventListener('click', () => {
       const h = homeFor(af.day);
-      if (!h) { af = null; openStayEditor(null); return; }   // 還沒設定住處：先加一間
+      if (!h) {   // 還沒設定住處：同一張面板往右點進去加一間，存好滑回來接著選時間；按返回就回到原本的樣子
+        const flow = af; af = null;
+        const back = then => sheetSlide(-1, () => { af = flow; then?.(); af.mapWrap = null; af.map = null; openSheet('<div id="afBody"></div>', null); drawAdd(); });
+        sheetSlide(1, () => openStayEditor(null, { back: () => back(), done: () => back(() => { const nh = homeFor(af.day); if (nh) Object.assign(af, { step: 2, home: nh, pick: null, name: '回住處休息', cls: 'other', dur: 60 }); }) }));
+        return;
+      }
       Object.assign(af, { step: 2, home: h, pick: null, name: '回住處休息', cls: 'other', dur: 60 }); drawAdd();
     });
-    body.querySelectorAll('[data-cand]').forEach(b => b.addEventListener('click', () => {
-      const [, it] = findItem(b.dataset.cand); if (!it) return;
-      Object.assign(af, { step: 2, cand: it.id, pick: null, name: it.t, cls: it.cls || 'eat', dur: m(it.e) - m(it.s) || 60 }); drawAdd();
-    }));
     return;
   }
   // 第二步：什麼時候
   const where = af.pick ? `<i class="ti ti-map-pin-check"></i> ${esc(af.pick.name)}` : af.cand ? '<i class="ti ti-bookmark"></i> 從備選' : af.home ? `<i class="ti ti-bed"></i> ${esc(af.home.name)}` : '不用地點';
   const durs = [30, 60, 90, 120, 180];
+  // 從某一天點進來的，不用再選第幾天；Google 地圖、備選、回飯店都已經分好類，只有自己打的名稱要選類型；回飯店不用訂位
+  const fixedCls = !!(af.pick || af.cand || af.home);
   body.innerHTML = head('什麼時候？', where) + `
-    <label class="ed-field"><span class="ed-lab">名稱</span><input type="text" id="afName" value="${esc(af.name)}" autocomplete="off" maxlength="60"></label>
-    <div class="ed-field"><span class="ed-lab">類型</span><div class="chips" id="afCls">${TYPES.map(([k, n]) => `<button type="button" class="chip ${k}${k === af.cls ? ' on' : ''}" data-v="${k}">${n}</button>`).join('')}</div></div>
-    <div class="ed-field"><span class="ed-lab">第幾天</span><div class="chips day-chips" id="afDay">${ALL_KEYS.map(k => k === 'cand'
-      ? `<button type="button" class="chip cand${k === af.day ? ' on' : ''}" data-v="cand">備選</button>`
-      : `<button type="button" class="af-dd${k === af.day ? ' on' : ''}" data-v="${k}" aria-label="第 ${dayNum(k)} 天 ${dayInfo(k).date}"><span class="chip">${dayNum(k)}</span><small>${dayInfo(k).date}</small></button>`).join('')}</div></div>
+    <label class="ed-field"><span class="ed-lab">名稱</span><input type="text" id="afName" value="${esc(af.name)}" placeholder="例如：自由活動、機場接送、整理行李" autocomplete="off" maxlength="60"></label>
+    ${fixedCls ? '' : `<div class="ed-field"><span class="ed-lab">類型</span><div class="chips" id="afCls">${TYPES.map(([k, n]) => `<button type="button" class="chip ${k}${k === af.cls ? ' on' : ''}" data-v="${k}">${n}</button>`).join('')}</div></div>`}
     ${af.day === 'cand' ? '' : `<div class="ed-field"><span class="ed-lab">時間</span>
       <div class="af-time"><input type="time" id="afS" step="300" value="${T(hhmm(af.s))}" aria-label="開始時間"><span class="ed-arrow">→</span><span class="af-end">${T(hhmm(Math.min(af.s + af.dur, DAY_END)))}</span></div>
       <div class="chips sm" id="afDur">${durs.map(x => `<button type="button" class="chip${x === af.dur ? ' on' : ''}" data-v="${x}">${durLabel(x)}</button>`).join('')}</div></div>
-    <label class="ed-switch"><input type="checkbox" class="sw" id="afBooked"${af.booked ? ' checked' : ''}><span>已訂位</span></label>`}
+    ${af.home ? '' : `<label class="ed-switch"><input type="checkbox" class="sw" id="afBooked"${af.booked ? ' checked' : ''}><span>已訂位</span></label>`}`}
     <div class="err" id="afErr" hidden></div>
     <div class="ed-actions"><button type="button" class="btn ghost" id="afBack">上一步</button><button type="button" class="btn primary" id="afSave">加入</button></div>`;
   const $ = id => body.querySelector('#' + id);
-  chipScroller($('afCls')); chipScroller($('afDay'));   // 一行，排不下就左右滑、邊緣淡出
+  if ($('afCls')) chipScroller($('afCls'));   // 一行，排不下就左右滑、邊緣淡出
   $('afName').addEventListener('input', e => { af.name = e.target.value; });
-  $('afCls').addEventListener('click', e => { const c = e.target.closest('.chip'); if (!c) return; af.cls = c.dataset.v; if (!af.durTouched) af.dur = CLS_DUR[af.cls]; drawAdd(); });
-  $('afDay').addEventListener('click', e => { const c = e.target.closest('[data-v]'); if (!c) return; af.day = c.dataset.v; if (!af.sTouched && isDay(af.day)) af.s = nextStart(af.day); drawAdd(); });   // 沒自己改過時間：照新的那天重算
+  $('afCls')?.addEventListener('click', e => { const c = e.target.closest('.chip'); if (!c) return; af.cls = c.dataset.v; if (!af.durTouched) af.dur = CLS_DUR[af.cls]; drawAdd(); });
   $('afS')?.addEventListener('change', e => { if (e.target.value) { af.s = fromInput(e.target.value); af.sTouched = true; drawAdd(); } });
   $('afDur')?.addEventListener('click', e => { const c = e.target.closest('.chip'); if (!c) return; af.dur = +c.dataset.v; af.durTouched = true; drawAdd(); });
   $('afBooked')?.addEventListener('change', e => { af.booked = e.target.checked; });
@@ -4237,24 +4330,107 @@ function drawAdd() {
   $('afSave').addEventListener('click', saveAdd);
 }
 // 地圖確認：以那個地點為中心的小地圖，可以滑動、雙指縮放看看周圍；圖釘釘在那個地點上，滑開了按右下角回到原位
-async function showAddMap(loc) {
-  const el = sheet.querySelector('#afMap'); if (!el) return;
-  const [lat, lng] = loc.split(',').map(Number), at = { lat, lng };
+// ---------- 加入地點的大地圖：一打開就顯示，四邊淡出；選了地點移過去放釘子；地圖上的店家點一下就能選；這天排好的行程用小圓點標出來 ----------
+// 地圖只建立一次（同一個加入流程裡重畫面板時搬過去用），省地圖載入次數
+const ADD_MAP_STYLE = [
+  { elementType: 'geometry', stylers: [{ color: '#f6f1ea' }] },
+  { elementType: 'labels.text.fill', stylers: [{ color: '#6e665e' }] },
+  { elementType: 'labels.text.stroke', stylers: [{ color: '#ffffff' }, { weight: 3 }] },
+  { featureType: 'road', elementType: 'geometry', stylers: [{ color: '#ffffff' }] },
+  { featureType: 'road.arterial', elementType: 'geometry', stylers: [{ color: '#fbe6d6' }] },
+  { featureType: 'road.highway', elementType: 'geometry', stylers: [{ color: '#f7d6be' }] },
+  { featureType: 'road', elementType: 'geometry.stroke', stylers: [{ visibility: 'off' }] },
+  { featureType: 'water', elementType: 'geometry', stylers: [{ color: '#d5e3e8' }] },
+  { featureType: 'poi.park', elementType: 'geometry', stylers: [{ color: '#e1ead6' }] },
+  { featureType: 'transit.line', stylers: [{ visibility: 'simplified' }, { color: '#e5ddd2' }] },
+];
+const llOf = v => { const mm = /^\s*(-?\d+(?:\.\d+)?),\s*(-?\d+(?:\.\d+)?)/.exec(v || ''); return mm ? { lat: +mm[1], lng: +mm[2] } : null; };
+// 預設中心：這天前一個行程 → 這天住的地方 → 旅程目的地（旅行當天另外用自己的位置）
+async function addMapCenter(day) {
+  const before = (DATA[day] || []).filter(it => it.loc && m(it.s) <= af.s).sort((a, b) => m(a.s) - m(b.s)).pop();
+  const ll = llOf(before?.loc) || llOf(homeFor(day)?.loc);
+  return ll ? { at: ll, zoom: 15 } : { at: await tripBias() || tripCenter(), zoom: 13 };
+}
+// 地圖上放一個 HTML 小東西（釘子、圓點、自己的位置）
+function mapThing(map, ll, el) {
+  const o = new google.maps.OverlayView();
+  o.onAdd = function () { this.getPanes().overlayMouseTarget.appendChild(el); };
+  o.draw = function () { const q = this.getProjection()?.fromLatLngToDivPixel(new google.maps.LatLng(o.ll)); if (q) { el.style.left = q.x + 'px'; el.style.top = q.y + 'px'; } };
+  o.onRemove = function () { el.remove(); };
+  o.ll = ll; o.setMap(map); o.move = v => { o.ll = v; o.draw(); };
+  return o;
+}
+// Google 地點 → 加入流程要的資料（搜尋建議、地圖上點店家都用這個）
+async function placePick(place, fallback) {
+  try { await place.fetchFields({ fields: ['displayName', 'formattedAddress', 'location', 'rating', 'userRatingCount', 'primaryType', 'types', 'googleMapsURI'] }); } catch {}
+  const loc = place.location;
+  return { name: place.displayName || fallback || '', addr: place.formattedAddress || '', rating: place.rating || 0, count: place.userRatingCount || 0,
+    loc: loc ? `${loc.lat().toFixed(6)},${loc.lng().toFixed(6)}` : '', pid: place.id || '', gmap: place.googleMapsURI || '', types: [place.primaryType, ...(place.types || [])].filter(Boolean) };
+}
+// 地圖放在面板裡、面板內容外面（重畫面板時不會被拿掉；Google 地圖從畫面拿下來再放回去會變灰），位置對齊到搜尋框下面那一格
+function addMapMount() {
+  if (!af) return;
+  const slot = sheet.querySelector('#afMapSlot');
+  if (!af.mapWrap) {
+    af.mapWrap = div('af-bigmap', '<div class="af-map2"></div><button type="button" class="af-recenter" aria-label="回到中心"><i class="ti ti-current-location"></i></button>');
+    af.mapWrap.querySelector('.af-recenter').addEventListener('click', () => addMapFocus(true));
+    sheet.appendChild(af.mapWrap);
+    addMapInit(af);
+  }
+  af.mapWrap.style.visibility = slot ? '' : 'hidden';
+  if (slot) addMapPlace();
+  if (af.map) addMapFocus();
+}
+function addMapPlace() {
+  const slot = sheet.querySelector('#afMapSlot'), w = af?.mapWrap; if (!slot || !w) return;
+  const a = slot.getBoundingClientRect(), b = sheet.getBoundingClientRect();
+  Object.assign(w.style, { top: a.top - b.top + sheet.scrollTop + 'px', left: a.left - b.left + 'px', width: a.width + 'px' });
+}
+addEventListener('resize', () => { if (af?.mapWrap) addMapPlace(); });
+async function addMapInit(flow) {
+  const el = flow.mapWrap.querySelector('.af-map2');
   try {
     const key = await getMapsKey(); if (!key) throw 0;
     await loadMaps(key);
-    if (!sheet.contains(el)) return;
-    // 用 Google 原本的樣式（地圖頁的淡色樣式把店名、地標藏起來了，這裡要看得出周圍是哪裡）
-    const map = new google.maps.Map(el, { center: at, zoom: 17, disableDefaultUI: true, gestureHandling: 'greedy', clickableIcons: false, keyboardShortcuts: false });
-    const pin = new google.maps.OverlayView();
-    pin.onAdd = function () { this.el = div('af-pin', '<i class="ti ti-map-pin-filled"></i>'); this.getPanes().overlayMouseTarget.appendChild(this.el); };
-    pin.draw = function () { const q = this.getProjection().fromLatLngToDivPixel(new google.maps.LatLng(at)); if (q) { this.el.style.left = q.x + 'px'; this.el.style.top = q.y + 'px'; } };
-    pin.onRemove = function () { this.el?.remove(); };
-    pin.setMap(map);
-    const back = sheet.querySelector('#afRecenter');
-    map.addListener('idle', () => { const c = map.getCenter(); back.hidden = Math.abs(c.lat() - lat) < 1e-5 && Math.abs(c.lng() - lng) < 1e-5 && map.getZoom() === 17; });
-    back.addEventListener('click', () => { map.panTo(at); map.setZoom(17); });
+    const c = await addMapCenter(flow.day);
+    if (af !== flow) return;
+    flow.mapHome = c;
+    const map = flow.map = new google.maps.Map(el, { center: c.at, zoom: c.zoom, disableDefaultUI: true, gestureHandling: 'greedy', clickableIcons: true, keyboardShortcuts: false, styles: ADD_MAP_STYLE });
+    // 這天排好的行程：小圓點＋名字
+    (DATA[flow.day] || []).filter(it => llOf(it.loc)).sort((a, b) => m(a.s) - m(b.s)).forEach(it =>
+      mapThing(map, llOf(it.loc), div('af-dot ' + (it.cls || 'eat'), `<i></i><span>${esc(shortName(it.t))}</span>`)));
+    // 點地圖上的店家、景點：直接選這一家
+    map.addListener('click', async e => {
+      if (!e.placeId || !af || af !== flow) return;
+      e.stop();
+      const { Place } = await google.maps.importLibrary('places');
+      const pick = await placePick(new Place({ id: e.placeId }));
+      if (af !== flow || !pick.loc) return;
+      af.pick = pick; af.q = pick.name; drawAdd();
+    });
+    // 旅行當天：顯示自己的位置（藍點），還沒選地點時以自己為中心
+    if (tripNow()?.day === flow.day && navigator.geolocation && window.isSecureContext) {
+      let me = null; const wrap = flow.mapWrap;   // 地圖重建過（例如點進去加住處再回來）：舊的這個停掉
+      const watch = navigator.geolocation.watchPosition(p => {
+        if (af !== flow || flow.mapWrap !== wrap || !sheet.contains(wrap)) { navigator.geolocation.clearWatch(watch); return; }
+        const ll = { lat: p.coords.latitude, lng: p.coords.longitude };
+        if (!me) { me = mapThing(map, ll, div('af-me')); flow.mapHome = { at: ll, zoom: 16 }; if (!af.pick) addMapFocus(true); } else me.move(ll);
+      }, () => {}, { enableHighAccuracy: true, maximumAge: 30000 });
+    }
+    addMapFocus();
   } catch { el.classList.add('nomap'); }
+}
+// 有選地點：移過去放釘子；沒有：回到預設中心
+function addMapFocus(force) {
+  const map = af?.map; if (!map) return;
+  const p = af.pick && llOf(af.pick.loc);
+  if (p) {
+    if (!af.pin) af.pin = mapThing(map, p, div('af-pin', '<i class="ti ti-map-pin-filled"></i>')); else { af.pin.setMap(map); af.pin.move(p); }
+    if (force || af.pinAt !== af.pick.loc) { map.setZoom(17); map.setCenter(p); af.pinAt = af.pick.loc; }
+  } else {
+    if (af.pin) { af.pin.setMap(null); af.pinAt = null; }
+    if (force) { map.setZoom(af.mapHome.zoom); map.setCenter(af.mapHome.at); }
+  }
 }
 function saveAdd() {
   const name = af.name.trim();
