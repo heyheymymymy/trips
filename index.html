@@ -276,8 +276,8 @@ html.sheet-lock body{position:fixed;left:0;right:0;bottom:0;overflow:hidden}
 .day-title.inline-edit{display:table;margin:0 auto;min-width:2em;background-size:8px 2px;padding-bottom:2px}   /* 虛線只畫在文字底下 */
 .inline-edit:focus{background-image:none;background-color:var(--accent-bg)}
 /* ---------- 編輯模式 ---------- */
-.edit-btn{position:absolute;right:16px;bottom:10px;width:30px;height:30px;border-radius:50%;border:1px solid var(--line);background:#fff;
-  color:var(--text2);font-size:15px;display:flex;align-items:center;justify-content:center;cursor:pointer}
+.edit-btn{position:absolute;right:16px;bottom:6px;width:38px;height:38px;border-radius:50%;border:1px solid var(--line);background:#fff;
+  color:var(--text2);font-size:19px;display:flex;align-items:center;justify-content:center;cursor:pointer}
 .edit-btn i{display:block;line-height:1}
 .editing .edit-btn{display:none}
 /* ---------- 地圖 ---------- */
@@ -289,8 +289,8 @@ html.sheet-lock body{position:fixed;left:0;right:0;bottom:0;overflow:hidden}
 .seg button{position:relative;z-index:1;flex:1;min-width:0;padding:0;border:0;border-radius:8px;background:none;font:inherit;font-size:14px;color:var(--text2);cursor:pointer;transition:color .2s}
 .seg button.on{color:var(--text);font-weight:600}
 @media (prefers-reduced-motion:reduce){.seg-thumb{transition:none}}
-.map-btn{position:absolute;left:16px;bottom:10px;width:30px;height:30px;border-radius:50%;border:1px solid var(--line);background:#fff;
-  color:var(--text2);font-size:15px;display:flex;align-items:center;justify-content:center;cursor:pointer;padding:0}
+.map-btn{position:absolute;left:16px;bottom:6px;width:38px;height:38px;border-radius:50%;border:1px solid var(--line);background:#fff;
+  color:var(--text2);font-size:19px;display:flex;align-items:center;justify-content:center;cursor:pointer;padding:0}
 .map-btn i{display:block;line-height:1}
 .map-btn[hidden],.editing .map-btn{display:none}
 .map-view{position:relative;height:calc(100dvh - var(--hd, 160px));min-height:320px;background:#F3EFE8}
@@ -650,11 +650,20 @@ button.ov-stay{width:100%;font:inherit;text-align:left;cursor:pointer}
 .ov-foot{margin-top:28px;padding-top:2px;border-top:1px solid var(--line)}
 .inv-btn.trip-set{margin-top:12px}
 .inv-btn.trip-set > i:first-child{background:#F3EFEA;color:var(--text2)}
-.inv-code{display:flex;flex-wrap:wrap;align-items:baseline;gap:4px 10px;padding:14px 16px;border-radius:14px;background:#FAF7F3}
-.inv-code span{font-size:13px;color:var(--text2)}
-.inv-code b{font-size:26px;font-weight:700;letter-spacing:.18em;color:var(--accent-fg);font-variant-numeric:tabular-nums}
-.inv-code small{flex-basis:100%;font-size:12px;color:var(--text2)}
-.sheet input.code-input{font-size:24px;letter-spacing:.4em;text-align:center;font-variant-numeric:tabular-nums}
+/* 分享編輯碼：大卡片，數字一格一格；下面兩顆並排的按鈕 */
+.inv-code{display:flex;flex-direction:column;align-items:center;gap:14px;padding:24px 16px 26px;border-radius:20px;background:#F6F3EF;text-align:center}
+.inv-code > span{font-size:14px;font-weight:600;color:var(--text2)}
+.inv-digits{display:flex;gap:10px}
+.inv-digits b{width:46px;height:54px;border-radius:12px;background:#EBE5DE;display:flex;align-items:center;justify-content:center;font-size:28px;font-weight:700;color:var(--accent-fg);font-variant-numeric:tabular-nums}
+.inv-code small{font-size:13px;font-weight:500;color:var(--text2)}
+.inv-pair{display:flex;gap:8px}
+.inv-tile{flex:1;min-width:0;height:64px;border:0;border-radius:18px;background:#F6F3EF;font:inherit;font-size:16px;color:var(--text);cursor:pointer}
+.inv-tile:active{background:#EBE5DE}
+/* 編輯碼四格輸入：透明輸入框蓋在四個格子上 */
+.code-boxes{position:relative;display:flex;justify-content:center;gap:10px;margin-top:2px}
+.code-boxes i{width:52px;height:58px;border-radius:12px;background:#F3EFEA;border:1.5px solid transparent;display:flex;align-items:center;justify-content:center;font-style:normal;font-size:28px;font-weight:700;color:var(--accent-fg);font-variant-numeric:tabular-nums}
+.code-boxes i.cur{border-color:var(--accent-fg);background:#fff}
+.sheet .code-boxes input.code-input{position:absolute;inset:0;width:100%;height:100%;padding:0;border:0;background:transparent;color:transparent;caret-color:transparent;font-size:16px;opacity:.01;outline:none}
 .share-text{margin-top:16px;padding:12px 14px;border-radius:12px;background:#FAF7F3;font-size:14px;line-height:1.6;color:var(--text);word-break:break-all;-webkit-user-select:text;user-select:text}
 .inv-reset{align-self:center;margin-top:2px;padding:6px;border:0;background:none;font:inherit;font-size:12px;color:var(--muted);text-decoration:underline;cursor:pointer}
 .trips-empty{padding:60px 16px;text-align:center;font-size:14px;color:var(--text2);line-height:1.7}
@@ -2062,9 +2071,8 @@ function renderOverview() {
     html += `<div class="ov-sec">同行的人</div><div class="ov-members">${TRIP.members?.length ? TRIP.members.map(n => `<span>${esc(n)}</span>`).join('') : '<span class="ov-empty">還沒有人改過行程</span>'}</div>`;
     html += `<button type="button" class="inv-btn trip-set" id="tripSet"><i class="ti ti-settings"></i><span><b>旅程設定</b><small>名稱、目的地、日期、交通方式、行程封面</small></span><i class="ti ti-chevron-right"></i></button>`;
     if (TRIP_ROLE === 'edit' && TRIP.code) html += `<div class="inv">
-      <div class="inv-code"><span>編輯碼</span><b>${esc(TRIP.code)}</b><small>拿到連結的人都能看，輸入編輯碼才能修改</small></div>
-      <button type="button" class="inv-btn" data-invite="edit"><i class="ti ti-user-plus"></i><span><b>邀請一起規劃</b><small>分享連結，訊息附上編輯碼</small></span><i class="ti ti-share-2"></i></button>
-      <button type="button" class="inv-btn" data-invite="view"><i class="ti ti-eye"></i><span><b>分享給家人看</b><small>只分享連結，不附編輯碼</small></span><i class="ti ti-share-2"></i></button>
+      ${codeCardHtml('分享編輯碼', TRIP.code, '拿到連結的人都能看，輸入編輯碼才能編輯')}
+      <div class="inv-pair"><button type="button" class="inv-tile" data-invite="edit">邀請一起規劃</button><button type="button" class="inv-tile" data-invite="view">分享行程</button></div>
       <button type="button" class="inv-reset" id="invReset">傳錯人了？換一組編輯碼或連結</button></div>`;
     // 還沒輸入編輯碼的人：本來就有連結，可以轉傳給別人看；要一起編輯就輸入編輯碼
     else html += `<div class="inv">
@@ -2198,15 +2206,15 @@ function openCopySheet(title, sub, text, done, extra = '', cancel = '取消') {
     else { const r = document.createRange(); r.selectNodeContents(sheet.querySelector('#shareText')); getSelection().removeAllRanges(); getSelection().addRange(r); toast('沒辦法自動複製，文字已選取，請長按複製'); }
   });
 }
+// 編輯碼卡片：數字一格一格（總覽最下面、剛建好旅程的提醒共用）
+const codeCardHtml = (title, code, note, style = '') => `<div class="inv-code"${style ? ` style="${style}"` : ''}><span>${title}</span><div class="inv-digits" aria-label="編輯碼 ${esc(code)}">${[...String(code)].map(c => `<b>${esc(c)}</b>`).join('')}</div><small>${note}</small></div>`;
 // 1. 剛建好旅程：提醒把連結＋編輯碼存給自己（「我的旅程」只記在這支手機的這個瀏覽器）
 function openSaveTrip() {
   if (getAccount()) return;   // 登入了：旅程已經存在帳號裡
   const url = location.origin + tripUrl(TRIP.id, TRIP.view_key, '');
   const text = `我的旅程「${TRIP.name}」 ${url} 編輯碼 ${TRIP.code}`;
   openCopySheet('旅程建好了！', '「我的旅程」只記在這支手機的這個瀏覽器。把連結和編輯碼傳給自己（LINE、備忘錄），換手機或從 LINE 換到 Safari 都找得回來', text, '已複製，記得貼到 LINE 或備忘錄存起來',
-    `<button type="button" class="acct-in" id="saveLogin" style="margin-top:14px"><i class="ti ti-brand-google"></i><span><b>用 Google 登入，永久保存</b><small>不用自己存連結，換手機也找得回來</small></span><i class="ti ti-chevron-right"></i></button>
-     <div class="inv-code" style="margin-top:16px"><span>編輯碼</span><b>${esc(TRIP.code)}</b><small>總覽最下面隨時看得到</small></div>`, '之後再說');
-  sheet.querySelector('#saveLogin')?.addEventListener('click', openLogin);
+    codeCardHtml('編輯碼', TRIP.code, '總覽最下面隨時看得到', 'margin-top:14px'), '之後再說');
 }
 // 2. 帶到其他裝置：把這支手機記住的所有旅程（代號、鑰匙、編輯碼）打包在網址 # 後面（不會送到伺服器）
 function carryUrl() {
@@ -3678,7 +3686,7 @@ function openAuth(then) {
     <label class="ed-field"><span class="ed-lab">暱稱 <span class="ed-lab-hint">修改紀錄會顯示是誰改的</span></span>
       <input id="auNick" type="text" value="${esc(getNick())}" placeholder="例如：小明" autocomplete="nickname" maxlength="20" enterkeyhint="${needCode ? 'next' : 'done'}"></label>
     ${needCode ? `<label class="ed-field"><span class="ed-lab">編輯碼 <span class="ed-lab-hint">4 位數字</span></span>
-      <input id="auCode" type="text" inputmode="numeric" pattern="[0-9]*" maxlength="4" autocomplete="one-time-code" placeholder="0000" class="code-input" enterkeyhint="done"></label>` : ''}
+      <span class="code-boxes"><input id="auCode" type="text" inputmode="numeric" pattern="[0-9]*" maxlength="4" autocomplete="one-time-code" class="code-input" enterkeyhint="done" aria-label="編輯碼">${'<i></i>'.repeat(4)}</span></label>` : ''}
     <div class="err" id="auErr" hidden></div>
     <div class="ed-actions">
       <button type="button" class="btn ghost ed-cancel">取消</button>
@@ -3712,7 +3720,15 @@ function openAuth(then) {
     if (e.key !== 'Enter' || e.isComposing) return;
     if (el.id === 'auNick' && needCode) $('auCode').focus(); else go();
   }));
-  if (needCode) $('auCode').addEventListener('input', e => { e.target.value = e.target.value.replace(/\D/g, '').slice(0, 4); if (e.target.value.length === 4 && $('auNick').value.trim()) go(); });
+  if (needCode) {
+    // 四格：真正的輸入框透明蓋在上面（貼上、簡訊自動填入都照常），格子顯示數字；正在打的那格框起來
+    const boxes = [...sheet.querySelectorAll('.code-boxes i')], inp = $('auCode');
+    const paint = () => { const v = inp.value, f = document.activeElement === inp; boxes.forEach((b, i) => { b.textContent = v[i] || ''; b.classList.toggle('cur', f && i === Math.min(v.length, 3)); }); };
+    inp.addEventListener('input', e => { e.target.value = e.target.value.replace(/\D/g, '').slice(0, 4); paint(); if (e.target.value.length === 4 && $('auNick').value.trim()) go(); });
+    inp.addEventListener('focus', () => { const n = inp.value.length; inp.setSelectionRange(n, n); paint(); });
+    inp.addEventListener('blur', paint);
+    paint();
+  }
 }
 
 // 編輯模式下：點卡片＝編輯，點空白處＝在那個時間新增
