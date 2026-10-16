@@ -796,9 +796,7 @@ button.ov-stay{width:100%;font:inherit;text-align:left;cursor:pointer}
 .af-info small{display:block;margin-top:2px;font-size:13px;color:var(--text2);line-height:1.45}
 .af-acts{display:flex;gap:8px;padding:10px 14px 14px}
 .af-acts .btn{flex:1;height:42px;font-size:15px}
-.af-time{display:flex;align-items:center;gap:10px;margin-bottom:8px}
-.sheet .af-time input[type=time]{width:auto;min-width:120px}
-.af-end{font-size:16px;color:var(--text2);font-variant-numeric:tabular-nums}
+.af-time{margin-bottom:8px}
 .ps-list{position:absolute;left:0;right:0;top:100%;z-index:30;margin-top:4px;padding:4px;border:1px solid var(--border);border-radius:12px;background:#fff;box-shadow:0 8px 24px rgba(60,40,20,.14)}
 .ps-list[hidden]{display:none}
 .ps-list button{display:flex;align-items:center;gap:10px;width:100%;padding:9px 10px;border:0;border-radius:8px;background:none;font:inherit;text-align:left;color:var(--text);cursor:pointer}
@@ -4291,7 +4289,7 @@ function drawAdd() {
     }
     body.querySelector('#afManual')?.addEventListener('click', () => {
       Object.assign(af, { step: 2, pick: null, cand: null, home: null, name: af.q.trim() && !/https?:\/\//.test(af.q) ? af.q.trim() : '', cls: 'other', dur: 60 });
-      drawAdd(); sheet.querySelector('#afName')?.focus();
+      drawAdd();   // 不自動跳鍵盤，讓人先看到整張（名稱、類型、時間）
     });
     body.querySelector('#afHome')?.addEventListener('click', () => {
       const h = homeFor(af.day);
@@ -4314,7 +4312,8 @@ function drawAdd() {
     <label class="ed-field"><span class="ed-lab">名稱</span><input type="text" id="afName" value="${esc(af.name)}" placeholder="例如：自由活動、機場接送、整理行李" autocomplete="off" maxlength="60"></label>
     ${fixedCls ? '' : `<div class="ed-field"><span class="ed-lab">類型</span><div class="chips" id="afCls">${TYPES.map(([k, n]) => `<button type="button" class="chip ${k}${k === af.cls ? ' on' : ''}" data-v="${k}">${n}</button>`).join('')}</div></div>`}
     ${af.day === 'cand' ? '' : `<div class="ed-field"><span class="ed-lab">時間</span>
-      <div class="af-time"><input type="time" id="afS" step="300" value="${T(hhmm(af.s))}" aria-label="開始時間"><span class="ed-arrow">→</span><span class="af-end">${T(hhmm(Math.min(af.s + af.dur, DAY_END)))}</span></div>
+      <div class="ed-time af-time"><input type="time" id="afS" step="300" value="${T(hhmm(af.s))}" aria-label="開始時間"><span class="ed-arrow">→</span><span class="ed-endbox" aria-label="結束時間（自動算）">${T(hhmm(Math.min(af.s + af.dur, DAY_END)))}</span>
+        <span class="ed-len"><button type="button" class="step" data-d="-15" aria-label="少 15 分鐘"><i class="ti ti-minus"></i></button><span class="ed-dur">${durLabel(af.dur)}</span><button type="button" class="step" data-d="15" aria-label="多 15 分鐘"><i class="ti ti-plus"></i></button></span></div>
       <div class="chips sm" id="afDur">${durs.map(x => `<button type="button" class="chip${x === af.dur ? ' on' : ''}" data-v="${x}">${durLabel(x)}</button>`).join('')}</div></div>
     ${af.home ? '' : `<label class="ed-switch"><input type="checkbox" class="sw" id="afBooked"${af.booked ? ' checked' : ''}><span>已訂位</span></label>`}`}
     <div class="err" id="afErr" hidden></div>
@@ -4325,6 +4324,7 @@ function drawAdd() {
   $('afCls')?.addEventListener('click', e => { const c = e.target.closest('.chip'); if (!c) return; af.cls = c.dataset.v; if (!af.durTouched) af.dur = CLS_DUR[af.cls]; drawAdd(); });
   $('afS')?.addEventListener('change', e => { if (e.target.value) { af.s = fromInput(e.target.value); af.sTouched = true; drawAdd(); } });
   $('afDur')?.addEventListener('click', e => { const c = e.target.closest('.chip'); if (!c) return; af.dur = +c.dataset.v; af.durTouched = true; drawAdd(); });
+  body.querySelectorAll('.af-time .step').forEach(b => b.addEventListener('click', () => { af.dur = Math.max(15, af.dur + +b.dataset.d); af.durTouched = true; drawAdd(); }));
   $('afBooked')?.addEventListener('change', e => { af.booked = e.target.checked; });
   $('afBack').addEventListener('click', () => { af.step = 1; af.cand = null; af.home = null; drawAdd(); });
   $('afSave').addEventListener('click', saveAdd);
