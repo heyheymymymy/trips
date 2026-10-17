@@ -808,7 +808,7 @@ button.ov-stay{width:100%;font:inherit;text-align:left;cursor:pointer}
 /* 加入地點的大地圖：四邊淡出到白色 */
 .af-slot{height:280px;margin:12px -6px 0}
 .af-bigmap{position:absolute;z-index:1;height:280px;-webkit-mask-image:linear-gradient(to bottom,transparent 0,#000 14%,#000 86%,transparent 100%),linear-gradient(to right,transparent 0,#000 10%,#000 90%,transparent 100%);-webkit-mask-composite:source-in;mask-image:linear-gradient(to bottom,transparent 0,#000 14%,#000 86%,transparent 100%),linear-gradient(to right,transparent 0,#000 10%,#000 90%,transparent 100%);mask-composite:intersect}
-.af-map2{position:absolute;inset:0;background:#F6F1EA}
+.af-map2{position:absolute;inset:-40px -28px;background:#F6F1EA}   /* 地圖比看得到的框大一圈：四邊淡出蓋掉的是地圖外圍，中心不變 */
 .af-map2.nomap::after{content:"地圖載入不了";position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:12px;color:var(--muted)}
 .af-bigmap .af-recenter{right:12%;bottom:16%}
 .af-maphint{margin-top:10px;text-align:center;font-size:12px;color:var(--muted)}
@@ -2216,21 +2216,24 @@ function openCover() {
 async function shareTrip(kind, t = TRIP) {
   const url = location.origin + tripUrl(t.id, t.view_key || t.key, '');
   const text = (kind === 'edit' ? `一起來規劃「${t.name}」！要修改時按 ✏️，編輯碼 ${t.code}` : `「${t.name}」的行程`) + ' ' + url;
-  // https 網址（正式版）有手機的分享選單；本機測試是 http，iPhone 不給用，改成自己的視窗
-  if (navigator.share && window.isSecureContext) { try { await navigator.share({ text }); return; } catch (e) { if (e.name === 'AbortError') return; } }
-  openCopySheet(kind === 'edit' ? '邀請一起規劃' : '分享給家人看', '複製後貼到 LINE 或訊息裡', text, kind === 'edit' ? '已複製連結和編輯碼' : '已複製連結');
+  // 先顯示要傳出去的文字（系統分享選單看不到完整內容）；https（正式版）多一顆「分享…」叫出手機的分享選單，本機測試是 http 只能複製
+  openCopySheet(kind === 'edit' ? '邀請一起規劃' : '分享行程', kind === 'edit' ? '會附上編輯碼，收到的人可以一起改行程' : '只能看行程，不會附上編輯碼', text, kind === 'edit' ? '已複製連結和編輯碼' : '已複製連結', '', '取消', true);
 }
 // 顯示一段要傳出去的文字：「取消／複製」；extra：放在文字上面的內容（例如大字編輯碼）
-function openCopySheet(title, sub, text, done, extra = '', cancel = '取消') {
+function openCopySheet(title, sub, text, done, extra = '', cancel = '取消', share = false) {
+  const canShare = share && !!navigator.share && window.isSecureContext;   // 要不要多一顆「分享…」（手機的分享選單，只有 https 才能用）
   openSheet(`
     <div class="sh-head"><div style="flex:1;min-width:0"><div class="sh-title" id="shTitle">${title}</div>
       <div class="sh-sub">${sub}</div></div>
       <button class="sh-close" aria-label="關閉"><i class="ti ti-x"></i></button></div>
     ${extra}<div class="share-text" id="shareText">${esc(text)}</div>
     <div class="ed-actions">
-      <button type="button" class="btn ghost ed-cancel">${cancel}</button>
-      <button type="button" class="btn primary" id="shareCopy">複製</button>
-    </div>`, '#shareCopy', true);
+      ${canShare ? '<button type="button" class="btn ghost" id="shareCopy"><i class="ti ti-copy"></i> 複製</button><button type="button" class="btn primary" id="shareGo"><i class="ti ti-share"></i> 分享…</button>'
+        : `<button type="button" class="btn ghost ed-cancel">${cancel}</button><button type="button" class="btn primary" id="shareCopy">複製</button>`}
+    </div>`, canShare ? '#shareGo' : '#shareCopy', true);
+  sheet.querySelector('#shareGo')?.addEventListener('click', async () => {
+    try { await navigator.share({ text }); closeSheet(); } catch (e) { if (e.name !== 'AbortError') toast('沒辦法打開分享選單，請按「複製」'); }
+  });
   sheet.querySelector('#shareCopy').addEventListener('click', async () => {
     if (await copyText(text)) { closeSheet(); toast(done); }
     else { const r = document.createRange(); r.selectNodeContents(sheet.querySelector('#shareText')); getSelection().removeAllRanges(); getSelection().addRange(r); toast('沒辦法自動複製，文字已選取，請長按複製'); }
@@ -3017,7 +3020,7 @@ function openTripMenu(id) {
     <div class="sh-head"><div style="flex:1;min-width:0"><div class="sh-title" id="shTitle">${esc(t.name || '旅程')}</div></div>
       <button class="sh-close" aria-label="關閉"><i class="ti ti-x"></i></button></div>
     <div class="tm-list">
-      ${opt('share', 'ti-share', '分享旅程', '傳連結給家人朋友看行程，不會附上編輯碼')}
+      ${opt('share', 'ti-share', '分享旅程', '傳連結給朋友看行程，不會附上編輯碼')}
       ${t.role === 'edit' ? opt('set', 'ti-settings', '旅程設定', '名稱、目的地、日期、交通方式、行程封面') : ''}
       ${listIsCreator(t) ? '' : opt('hide', 'ti-eye-off', '從列表拿掉', '只有創建旅程的人可以刪除旅程，從你的列表拿掉後，原本的旅程不受影響')}
       ${listCanDelete(t) ? opt('del', 'ti-trash', '刪除旅程', '確定不去了嗎？刪掉後大家都看不到這趟旅程囉', ' danger') : ''}
