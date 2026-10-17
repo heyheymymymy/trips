@@ -4856,11 +4856,10 @@ function openEditor(id, startAt, toDay, replaceId) {
       <button type="button" class="btn primary" id="edSave">${ed.isNew ? '新增' : old ? '替換' : ed.fromCand ? '排入' : '儲存'}</button>
     </div>`, ed.isNew ? '#edT' : '.sh-close');
   sheet.classList.add('soft');   // 淺色底、沒有框線的輸入框，圓角統一 12px
-  // 區域、類型預設收起來（大多是自動填的）：點標題列才展開；區域展開時游標直接放進去，類型展開時把選中的那顆捲到看得見
+  // 區域、類型預設收起來（大多是自動填的）：點標題列才展開（區域不自動跳鍵盤，要改再點輸入框）；類型展開時把選中的那顆捲到看得見
   sheet.querySelectorAll('.ed-fold-h').forEach(h => h.addEventListener('click', () => {
     const box = h.nextElementSibling, open = box.hidden; box.hidden = !open;
     h.setAttribute('aria-expanded', open); h.classList.toggle('open', open);
-    if (open && box.tagName === 'INPUT') box.focus();
     if (open && box.classList.contains('chips') && !box.dataset.sc) { box.dataset.sc = 1; chipScroller(box); }
   }));
   wireEditor();
