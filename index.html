@@ -781,6 +781,18 @@ button.ov-stay{width:100%;font:inherit;text-align:left;cursor:pointer}
 .sheet .af-search:has(.af-candbtn) input{padding-right:42px}
 .sheet .af-search input::placeholder{font-size:14.5px}
 /* 搜尋框尾巴：從備選挑 */
+/* 貼上的 Google 地圖連結：搜尋框裡換成小標籤，下面一行狀態（讀取中、讀不到、是清單） */
+.af-search.has-link > i{color:var(--accent-fg)}
+.af-linkchip{display:flex;align-items:center;gap:6px;height:41px;padding:0 6px 0 38px;border-radius:10px;background:#F3EFEA;font-size:15px;color:var(--text)}
+.af-linkchip span{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.af-linkx{flex:none;width:32px;height:32px;border:0;border-radius:50%;background:none;color:var(--muted);font-size:16px;display:flex;align-items:center;justify-content:center;cursor:pointer}
+.af-linkst{display:flex;align-items:center;gap:10px;margin-top:10px;padding:10px 12px;border-radius:12px;background:#FAF7F3;font-size:14px;color:var(--text)}
+.af-linkst > i{flex:none;font-size:18px;color:var(--accent-fg)}
+.af-linkst > span{flex:1;min-width:0}
+.af-linkst small{display:block;font-size:12px;color:var(--text2)}
+.af-linkst .btn{flex:none;height:34px;padding:0 12px;font-size:13px}
+.af-linkst.err{color:var(--danger,#B3261E)}
+.af-linkst.err > i{color:inherit}
 .af-candbtn{position:absolute;right:4px;top:50%;transform:translateY(-50%);z-index:1;width:34px;height:34px;border:0;border-radius:10px;background:none;color:var(--accent-fg);font-size:20px;display:flex;align-items:center;justify-content:center;cursor:pointer}
 .af-candbtn.on{background:var(--accent-bg)}
 /* 唯一獨立的按鈕：回飯店（長條） */
@@ -807,7 +819,7 @@ button.ov-stay{width:100%;font:inherit;text-align:left;cursor:pointer}
 .af-mapwrap{position:relative}
 /* 加入地點的大地圖：四邊淡出到白色 */
 .af-slot{height:280px;margin:12px -6px 0}
-.af-bigmap{position:absolute;z-index:1;height:280px;-webkit-mask-image:linear-gradient(to bottom,transparent 0,#000 14%,#000 86%,transparent 100%),linear-gradient(to right,transparent 0,#000 10%,#000 90%,transparent 100%);-webkit-mask-composite:source-in;mask-image:linear-gradient(to bottom,transparent 0,#000 14%,#000 86%,transparent 100%),linear-gradient(to right,transparent 0,#000 10%,#000 90%,transparent 100%);mask-composite:intersect}
+.af-bigmap{position:absolute;z-index:1;height:280px;overflow:hidden;-webkit-mask-image:linear-gradient(to bottom,transparent 0,#000 14%,#000 86%,transparent 100%),linear-gradient(to right,transparent 0,#000 10%,#000 90%,transparent 100%);-webkit-mask-composite:source-in;mask-image:linear-gradient(to bottom,transparent 0,#000 14%,#000 86%,transparent 100%),linear-gradient(to right,transparent 0,#000 10%,#000 90%,transparent 100%);mask-composite:intersect}
 .af-map2{position:absolute;inset:-40px -28px;background:#F6F1EA}   /* 地圖比看得到的框大一圈：四邊淡出蓋掉的是地圖外圍，中心不變 */
 .af-map2.nomap::after{content:"地圖載入不了";position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:12px;color:var(--muted)}
 .af-bigmap .af-recenter{right:12%;bottom:16%}
@@ -4286,7 +4298,7 @@ let af = null;
 // 預設開始時間：接在這天最後一張後面（取整到 15 分），這天還沒行程就 10:00
 const nextStart = day => { const last = (DATA[day] || []).reduce((mx, it) => Math.max(mx, m(it.e)), 0); return last ? Math.min(Math.ceil((last + 15) / 15) * 15, DAY_END - 30) : 10 * 60; };
 // sub：{ cardId, kind: 'stop'|'alt' }——在合併區塊加一站、在多選一加一個選項（同一套挑地點的畫面，第二步只問時間）
-function openAddFlow(day, startAt, sub) {
+function openAddFlow(day, startAt, sub, link) {
   af = { day, step: 1, q: '', pick: null, cand: null, name: '', cls: 'eat', s: startAt ? m(startAt) : nextStart(day), sTouched: !!startAt, dur: 60, booked: false };
   if (sub) {
     const [, card] = findItem(sub.cardId); if (!card) return;
@@ -4297,6 +4309,34 @@ function openAddFlow(day, startAt, sub) {
   }
   openSheet(`<div id="afBody"></div>`, null);
   drawAdd();
+  if (link) addLinkStart(link);   // 從某一天轉過來的清單連結：直接開始讀
+}
+// 貼上的 Google 地圖連結：自動讀。單一店家＝跟搜尋選到一樣（地圖插釘子、下面店家卡片）；
+// 清單、好幾個連結＝在備選頁往右推進去勾選；從某一天進來的不能匯入清單，請他到備選
+function addLinkStart(raw) {
+  const links = parseLinks(raw).filter(u => /^https?:\/\//.test(u)); if (!af || !links.length) return;
+  const L = af.link = { raw, links, st: 'loading' }, toCand = af.day === 'cand' && !af.sub;
+  clearTimeout(af.linkT); drawAdd();
+  if (links.length > 1) { if (toCand) addToBatch(raw); else { L.st = 'list'; drawAdd(); } return; }
+  api({ ...getAuth(), action: 'lookupPlace', link: links[0] }, 90000).then(r => {
+    if (!af || af.link !== L) return;   // 讀的途中按了 × 或關掉了
+    if (r.list) { if (toCand) addToBatch(raw, { link: links[0], r }); else { L.st = 'list'; drawAdd(); } return; }
+    const p = r.place || {};
+    if (!p.loc) throw new Error(p.name ? `找不到「${p.name}」的位置` : '讀不到這個連結');
+    af.pick = { name: p.name, addr: p.short || p.addr || '', rating: p.rating || 0, count: p.count || 0, loc: p.loc, pid: p.pid || '', gmap: p.gmap || links[0], cls: p.cls };
+    af.q = p.name; af.link = null; drawAdd();
+  }).catch(err => {
+    if (!af || af.link !== L) return;
+    Object.assign(L, { st: 'err', msg: err.code === 'network' ? '連不上，請檢查網路' : err.message || '讀不到這個連結' }); drawAdd();
+  });
+}
+// 備選頁的清單：同一張面板往右推進去勾選（已經讀好的清單直接用，不用再等一次），按返回滑回來
+function addToBatch(raw, pre) {
+  const flow = af; af = null;
+  sheetSlide(1, () => openBatch(raw, { pre, back: () => sheetSlide(-1, () => {
+    af = flow; Object.assign(af, { link: null, q: '', mapWrap: null, map: null });
+    openSheet('<div id="afBody"></div>', null); drawAdd();
+  }) }));
 }
 function drawAdd() {
   const body = sheet.querySelector('#afBody'); if (!body || !af) return;
@@ -4309,12 +4349,14 @@ function drawAdd() {
     const cands = (DATA.cand || []).slice().reverse();
     const p = af.pick;
     const toCand = af.day === 'cand';   // 從備選頁進來：選好就直接加入備選（不用選時間）
-    const subCard = af.sub ? findItem(af.sub.cardId)[1] : null;
+    const subCard = af.sub ? findItem(af.sub.cardId)[1] : null, L = af.link;   // L：貼上的 Google 地圖連結（讀取中／讀不到／是清單）
     body.innerHTML = head(subCard ? (af.sub.kind === 'stop' ? '新增一站' : '新增選項') : toCand ? '想去哪裡？' : '要去哪裡？', subCard ? esc(subCard.t) : toCand ? '加入備選' : `第 ${dayNum(af.day)} 天．${d.date}`) + `
-      <div class="ed-field ps-field af-search${p ? ' linked' : ''}"><i class="ti ${p ? 'ti-map-pin-check' : 'ti-search'}"></i><input type="text" id="afQ" value="${esc(af.q)}" placeholder="輸入店名、景點、Google 地圖網址…" autocomplete="off" enterkeyhint="search">${p || toCand ? '' : `<button type="button" class="af-candbtn" aria-label="從備選挑" aria-expanded="false"><i class="ti ti-bookmark"></i></button>
+      <div class="ed-field ps-field af-search${p ? ' linked' : ''}${L ? ' has-link' : ''}"><i class="ti ${p ? 'ti-map-pin-check' : L ? (L.st === 'loading' ? 'ti-loader-2 spin' : 'ti-link') : 'ti-search'}"></i><input type="text" id="afQ" value="${esc(af.q)}" placeholder="輸入店名、景點、Google 地圖網址…" autocomplete="off" enterkeyhint="search"${L ? ' hidden' : ''}>${L ? `<div class="af-linkchip"><span>Google 地圖連結${L.links.length > 1 ? `（${L.links.length} 個）` : ''}</span><button type="button" class="af-linkx" id="afLinkX" aria-label="清掉連結"><i class="ti ti-x"></i></button></div>` : ''}${p || toCand || L ? '' : `<button type="button" class="af-candbtn" aria-label="從備選挑" aria-expanded="false"><i class="ti ti-bookmark"></i></button>
         <div class="af-drop">${candListHtml(cands)}</div>`}</div>
-      ${p ? '' : `
-        <button type="button" class="af-plain" id="afLink" hidden><i class="ti ti-link"></i><span><span id="afLinkH">查這個 Google 地圖連結</span><small id="afLinkT">店家會直接帶入；清單會列出裡面的地點讓你勾選，放進備選</small></span></button>
+      ${!L ? '' : L.st === 'loading' ? '<div class="af-linkst"><span>正在讀取 Google 地圖…<small>有時要等幾秒</small></span></div>'
+        : L.st === 'err' ? `<div class="af-linkst err"><i class="ti ti-alert-circle"></i><span>${esc(L.msg)}</span><button type="button" class="btn ghost" id="afLinkRetry">再試一次</button></div>`
+        : `<div class="af-linkst"><i class="ti ti-list-details"></i><span>${L.links.length > 1 ? '這是好幾個連結' : '這是 Google 地圖清單'}<small>清單和好幾個地點請到「備選」匯入</small></span><button type="button" class="btn primary" id="afToCand">到備選匯入</button></div>`}
+      ${p || L ? '' : `
         <button type="button" class="af-plain" id="afPlain"${af.q.trim() && !/https?:\/\//.test(af.q) ? '' : ' hidden'}><i class="ti ti-pencil-plus"></i><span><span id="afPlainT">不用地點，直接用「${esc(af.q.trim())}」</span><small>例如自由活動、回住處休息</small></span></button>`}
       <div class="af-slot" id="afMapSlot"></div>
       ${p ? '' : '<div class="af-maphint">也可以直接點地圖上的店家、景點</div>'}
@@ -4331,30 +4373,25 @@ function drawAdd() {
         resolve: async (pr, name) => { const r = await placePick(pr.toPlace(), name); if (!r.addr) r.addr = pr.secondaryText?.text || ''; return r; } });
     // 打字中不重畫面板（會打斷正在查的地點建議）：只更新「不用地點」那顆按鈕
     // 貼上的是 Google 地圖連結（手機分享會多「清單名 · 帳號名」、店名地址）：改成「查這個連結」
+    // 貼上 Google 地圖連結（手機分享會多「清單名 · 帳號名」、店名地址）：停一下就自動開始讀，不用再按按鈕
     q.addEventListener('input', () => {
-      af.q = q.value; const pl = body.querySelector('#afPlain'); if (!pl) return;
-      const links = parseLinks(q.value).filter(u => /^https?:\/\//.test(u)), link = links[0];
-      body.querySelector('#afLink').hidden = !link;
-      body.querySelector('#afLinkH').textContent = links.length > 1 ? `查這 ${links.length} 個 Google 地圖連結` : '查這個 Google 地圖連結';
-      pl.hidden = !q.value.trim() || !!link; body.querySelector('#afPlainT').textContent = `不用地點，直接用「${q.value.trim()}」`;
-      if (link) body.querySelector('.ps-list')?.setAttribute('hidden', '');
+      af.q = q.value; const pl = body.querySelector('#afPlain');
+      const link = parseLinks(q.value).some(u => /^https?:\/\/\S{8,}/.test(u));
+      clearTimeout(af.linkT);
+      if (link) { body.querySelector('.ps-list')?.setAttribute('hidden', ''); af.linkT = setTimeout(() => { if (af && q.isConnected) addLinkStart(q.value); }, 400); }
+      if (pl) { pl.hidden = !q.value.trim() || link; body.querySelector('#afPlainT').textContent = `不用地點，直接用「${q.value.trim()}」`; }
+      addMapPlace();   // 上面的按鈕出現、收起來：地圖跟著移
     });
-    body.querySelector('#afLink')?.addEventListener('click', async e => {
-      const links = parseLinks(q.value).filter(u => /^https?:\/\//.test(u)), link = links[0], btn = e.currentTarget; if (!link) return;
-      if (links.length > 1) { af = null; openBatch(links.join('\n')); return; }   // 好幾個連結：一次列出來，各自查
-      btn.disabled = true; body.querySelector('#afLinkT').textContent = '查詢中…（Google 有時要等幾秒）';
-      try {
-        const r = await api({ ...getAuth(), action: 'lookupPlace', link }, 90000);
-        if (!af || !sheet.contains(btn)) return;
-        if (r.list) { af = null; openBatch(link); return; }   // 清單：列出裡面的地點勾選，放進備選
-        const p = r.place || {};
-        if (!p.loc) throw new Error(p.name ? `找不到「${p.name}」的位置` : '讀不到這個連結');
-        af.pick = { name: p.name, addr: p.short || p.addr || '', rating: p.rating || 0, count: p.count || 0, loc: p.loc, pid: p.pid || '', gmap: p.gmap || link, cls: p.cls };
-        af.q = p.name; drawAdd();
-      } catch (err) { btn.disabled = false; body.querySelector('#afLinkT').textContent = '查不到：' + (err.code === 'network' ? '請檢查網路' : err.message); }
+    body.querySelector('#afLinkX')?.addEventListener('click', () => { af.link = null; af.q = ''; drawAdd(); setTimeout(() => sheet.querySelector('#afQ')?.focus(), 50); });
+    body.querySelector('#afLinkRetry')?.addEventListener('click', () => addLinkStart(af.link.raw));
+    body.querySelector('#afToCand')?.addEventListener('click', () => {   // 從某一天貼了清單：到備選頁打開加入新地點，帶著這個連結接著讀
+      const raw = af.link.raw; af = null; closeSheet(); showPage('cand');
+      setTimeout(() => openAddFlow('cand', null, null, raw), 350);
     });
-    if (!p) setTimeout(() => q.focus(), 50);
+    if (!p && !L) setTimeout(() => q.focus(), 50);
     addMapMount();   // 大地圖：一打開就有，選了地點會移過去
+    // 地圖是另外疊在面板上的：上面多出「查這個 Google 地圖連結」這類按鈕、面板內容變高變矮時，地圖要跟著搬到新的位置
+    if (window.ResizeObserver && af.roBody !== body) { af.ro?.disconnect(); af.roBody = body; af.ro = new ResizeObserver(() => { if (af?.mapWrap && af.step === 1) addMapPlace(); }); af.ro.observe(body); }
     body.querySelector('#afRetry')?.addEventListener('click', () => { af.pick = null; drawAdd(); });
     body.querySelector('#afNext')?.addEventListener('click', () => {
       const cls = af.pick.cls || guessCls(af.pick.types); Object.assign(af, { name: af.pick.name, cls, dur: CLS_DUR[cls] || 60 });
@@ -5004,24 +5041,25 @@ function saveEditor() {
 // ---------- 從 Google 地圖導入（備選頁） ----------
 // 貼上一個或多個分享連結 → 雲端解開連結拿店名，再請 Gemini 查描述／類型／提醒 → 預覽可以改 → 加入備選
 // 一次加好幾個（貼了清單連結、好幾個連結）：用原本的匯入畫面列出來勾選，放進備選
-function openBatch(text) {
-  openImport();
-  sheet.querySelector('#shTitle').textContent = '加入好幾個地點';
+function openBatch(text, opts = {}) {
+  openImport(opts);
+  sheet.querySelector('#shTitle').textContent = opts.pre ? '匯入清單' : '加入好幾個地點';
   const ta = sheet.querySelector('#imLinks'); ta.value = text; ta.dispatchEvent(new Event('input')); ta.dispatchEvent(new Event('paste'));
 }
-function openImport() {
+function openImport(opts = {}) {
   openSheet(`
-    <div class="sh-head"><div style="flex:1;min-width:0"><div class="sh-title" id="shTitle">從 Google 地圖導入</div>
+    <div class="sh-head">${opts.back ? '<button type="button" class="sh-back" id="imUp" aria-label="返回"><i class="ti ti-chevron-left"></i></button>' : ''}<div style="flex:1;min-width:0"><div class="sh-title" id="shTitle">從 Google 地圖導入</div>
       <div class="sh-sub">在 Google 地圖按「分享」→「複製連結」，貼在下面，一行一個（最多 10 個）；也可以貼整個清單的連結</div></div>
       <button class="sh-close" aria-label="關閉"><i class="ti ti-x"></i></button></div>
     <label class="ed-field"><span class="ed-lab">Google 地圖連結 <span class="ed-lab-hint">貼上就會開始查，打店名按 Enter</span></span>
       <textarea id="imLinks" rows="3" placeholder="https://maps.app.goo.gl/…" autocomplete="off" spellcheck="false"></textarea></label>
     <div class="im-list" id="imList"></div>
     <div class="ed-actions">
-      <button type="button" class="btn ghost ed-cancel">取消</button>
+      <button type="button" class="btn ghost${opts.back ? '' : ' ed-cancel'}" id="imBack">${opts.back ? '返回' : '取消'}</button>
       <button type="button" class="btn primary" id="imAdd" disabled>加入備選</button>
     </div>`);   // 不自動跳出鍵盤，不然會把面板擋住
   const $ = id => sheet.querySelector('#' + id), list = $('imList');
+  if (opts.back) { $('imUp').addEventListener('click', opts.back); $('imBack').addEventListener('click', opts.back); }
   // 「加入備選」可以直接按：已經查好的照預覽加入；還沒查、查詢中的先加入，背景繼續查
   // 貼上的連結留在輸入框裡（看得出有貼成功），已經開始查的不會再查一次、也不會重複加入
   const done = new Set();
@@ -5048,15 +5086,15 @@ function openImport() {
       const row = div('im-row loading', `<div class="im-wait"><b><i class="ti ti-loader-2 spin"></i>查詢中…</b><span>${esc(link)}</span></div>`);
       row.dataset.link = link;
       list.appendChild(row);
-      lookupOne(row, link);
+      lookupOne(row, link, opts.pre?.link === link ? opts.pre.r : null);
     });
     if (links.length > 10) toast('一次最多 10 個，多的請再貼一次');
     refresh();
     return true;
   };
-  async function lookupOne(row, link) {
+  async function lookupOne(row, link, pre) {
     try {
-      const r = await api({ ...getAuth(), action: 'lookupPlace', link }, 90000);   // 沒有 Places 時要等搜尋＋AI，給久一點
+      const r = pre || await api({ ...getAuth(), action: 'lookupPlace', link }, 90000);   // 沒有 Places 時要等搜尋＋AI，給久一點；加入地點那邊讀好的清單直接用
       if (!row.isConnected) return;
       if (r.list) { fillList(row, r.list); refresh(); return; }
       fillRow(row, r.place, r.note);
