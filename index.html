@@ -602,6 +602,13 @@ button.ov-stay{width:100%;font:inherit;text-align:left;cursor:pointer}
 .ss-arrow{flex:none;font-size:22px;color:var(--text)}
 .ss-bar{flex:none;width:1px;align-self:stretch;margin:4px 4px;background:var(--line)}
 .ss-n{flex:.8}
+/* 旅程設定的日期列：整條可以點，展開／收起月曆 */
+.ts-strip{position:relative;width:100%;margin-top:4px;padding:16px 8px;font:inherit;color:inherit;text-align:center;cursor:pointer}
+.ts-strip.on{border-color:var(--accent-fg)}
+.ts-strip .ss-d{gap:6px}
+.ts-strip .ss-d b{font-size:18px}
+.ts-strip .ss-n b{font-size:17px}
+.ts-cal{animation:dropIn .2s ease}
 .st-photo .clr-wrap{display:none}   /* 住處照片只留「上傳」，不用貼網址 */
 .st-photo .ph-row{display:none}
 /* 編輯住處：地址放大放明顯，點了開 Google 地圖 */
@@ -672,7 +679,23 @@ button.ov-stay{width:100%;font:inherit;text-align:left;cursor:pointer}
 .cv-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
 .cv-grid button{aspect-ratio:1;border:0;border-radius:10px;background:#EFEBE5 center/cover no-repeat;cursor:pointer}
 .ov-foot{margin-top:28px;padding-top:2px;border-top:1px solid var(--line)}
+.sheet input.ts-time{display:block;width:100%;min-width:0;text-align:left;-webkit-appearance:none;appearance:none;box-sizing:border-box}   /* 每天幾點出門：跟其他輸入框一樣占滿 */
 .ts-more{display:flex;flex-direction:column;margin-top:4px}
+/* 淺色表單（旅程設定、編輯卡片，面板加 .soft）：圓角統一 12px（圓形、膠囊除外）；輸入框、日期條、月曆、選項都是淺灰底、沒有框線，正在打字的輸入框變白底加咖啡色框 */
+.sheet.soft input[type=text],.sheet.soft input[type=time],.sheet.soft textarea,.sheet.soft .ts-strip,.sheet.soft .cal,.sheet.soft .wiz-opt,.sheet.soft .ts-cover,.sheet.soft .btn,.sheet.soft .ed-endbox,.sheet.soft .seg,.sheet.soft .ph-frame,.sheet.soft .cand-drop{border-radius:12px}
+.sheet.soft .seg button,.sheet.soft .seg-thumb{border-radius:9px}
+.sheet.soft .seg{background:#F2F2F2}   /* 分段切換的底色跟著換成灰 */
+.sheet.soft input[type=text],.sheet.soft input[type=time]{height:44px;background:#F7F7F7;border-color:transparent}
+.sheet.soft textarea,.sheet.soft .ed-endbox{background:#F7F7F7;border-color:transparent}
+.sheet.soft input:focus,.sheet.soft textarea:focus{background:#fff;border-color:var(--accent-fg)}
+.sheet.soft .ts-strip{background:#F7F7F7;border-color:transparent}
+.sheet.soft .ts-strip.on{background:#fff;border-color:var(--accent-fg)}
+.sheet.soft .cal{background:#F7F7F7;border-color:transparent}
+.sheet.soft .wiz-opt{background:#F7F7F7;border-color:transparent}
+.sheet.soft .wiz-opt.on{background:var(--accent-bg);border-color:var(--accent-fg)}
+.sheet.soft .wiz-opt > i{width:auto;height:auto;background:none;font-size:20px}   /* 交通方式的圖示不要圓圈 */
+.sheet.soft .ts-mem-add .btn{background:#F7F7F7;border-color:transparent}
+.sheet.soft .ts-mem span:not(.ov-empty){background:#F7F7F7}   /* 同行的人名字：跟輸入框同一個淺灰 */
 .ts-more .inv-btn.trip-set{margin-top:0}
 /* 修改紀錄 */
 .hs-list{display:flex;flex-direction:column}
@@ -759,6 +782,14 @@ button.ov-stay{width:100%;font:inherit;text-align:left;cursor:pointer}
 .chips.nights{flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none;margin:0 -14px;padding:0 14px}
 .chips.nights::-webkit-scrollbar{display:none}
 .chips.nights .chip{flex:none;height:32px;padding:0 12px;font-size:13px;font-variant-numeric:tabular-nums}
+.ov-stay-add{width:fit-content;margin-left:auto}
+/* 編輯卡片裡收起來的欄位（區域）：一行「區域　📍古城　⌄」，點了展開輸入框 */
+.ed-fold-h{display:flex;align-items:center;gap:8px;width:100%;padding:0;border:0;background:none;font:inherit;color:inherit;text-align:left;cursor:pointer}
+.ed-fold-h .ed-lab{margin:0}
+.ed-fold-v{flex:1;min-width:0;font-size:14px;color:var(--text2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ed-fold-h > .ti{flex:none;color:var(--muted);transition:transform .2s}
+.ed-fold-h.open > .ti{transform:rotate(180deg)}
+.ed-fold input{margin-top:8px}   /* 住宿列表下面的「＋ 加入住處」靠右 */
 .wiz-add{display:flex;align-items:center;gap:6px;margin-top:12px;padding:0;border:0;background:none;font:inherit;font-size:15px;color:var(--accent-fg);cursor:pointer}
 .wiz-opts{display:flex;flex-direction:column;gap:8px;margin-top:16px}
 .wiz-opt{display:flex;align-items:center;gap:12px;width:100%;padding:13px 14px;border:1px solid var(--border);border-radius:14px;background:#fff;font:inherit;text-align:left;color:var(--text);cursor:pointer}
@@ -1324,13 +1355,20 @@ const prevOf = (day, id, start) => [...(DATA[day] || [])].filter(x => x.id !== i
 // 交通方式：名稱、圖示（要加新的方式，在這裡和 Code.gs 的 ROUTE_MODES 各加一項）
 const ROUTE_MODES = { drive: ['開車', 'car'], walk: ['步行', 'walk'], transit: ['大眾運輸', 'bus'], moto: ['機車', 'motorbike'] };
 // 這趟旅程會用到的交通方式（建立旅程時選的主要方式＋步行，不是開車的再加開車當備案）；跟 Code.gs 的 modesFor 一樣
-const tripMode = () => TRIP?.mode in ROUTE_MODES ? TRIP.mode : 'drive';
+// 交通方式可以複選（存成 "transit,drive"）：tripModeList＝勾的全部，tripMode＝第一個（舊的地方用）
+const tripModeList = () => { const out = String(TRIP?.mode || '').split(',').map(x => x.trim()).filter((x, i, a) => x in ROUTE_MODES && a.indexOf(x) === i); return out.length ? out : ['drive']; };
+const tripMode = () => tripModeList()[0];
+// 編輯卡片可以切換的方式：勾的（步行以外）＋步行＋開車（查不到時的備案）；只勾步行＝步行、大眾運輸、開車
 function tripModes() {
-  const main = tripMode();
-  return main === 'walk' ? ['walk', 'transit', 'drive'] : main === 'drive' ? ['drive', 'walk'] : [main, 'walk', 'drive'];
+  const list = tripModeList(), far = list.filter(x => x !== 'walk');
+  return [...new Set([...(far.length ? far : ['walk', 'transit']), 'walk', 'drive'])];
 }
-const routeRule = () => ({ drive: '800 公尺內算步行，其他算開車（不含塞車）', transit: '800 公尺內算步行，其他算大眾運輸，查不到就算開車',
-  moto: '800 公尺內算步行，其他算機車，查不到就算開車', walk: '走 25 分鐘內算步行，其他算大眾運輸，查不到就算開車' })[tripMode()];
+const routeRule = () => {
+  const list = tripModeList(), far = list.filter(x => x !== 'walk');
+  if (!far.length) return '走 25 分鐘內算步行，其他算大眾運輸，查不到就算開車';
+  if (far.length === 1) return far[0] === 'drive' ? '800 公尺內算步行，其他算開車（不含塞車）' : `800 公尺內算步行，其他算${modeName(far[0])}，查不到就算開車`;
+  return `800 公尺內算步行，其他在${far.map(modeName).join('、')}裡挑：差不多快（10 分鐘內）就選便宜的`;
+};
 // ---------- 住處 ----------
 // 建立旅程時填的住處：{ name, nights: ['11/7', …], map, loc, pid, addr }。早上從前一晚的住處出發，晚上回當晚的住處
 const tripStays = () => TRIP?.stays || [];
@@ -2109,7 +2147,7 @@ function renderOverview() {
   if (!tripStays().length && !canEdit) html += '<div class="ov-empty">還沒有住處</div>';
   if (!tripStays().length && canEdit) html += '<button type="button" class="ov-stay add" id="staysAdd"><i class="ti ti-bed"></i><span><b>加入住處</b><small>每天第一段交通從住處算，加入行程可以一鍵回住處</small></span><i class="ti ti-plus"></i></button>';
   if (tripStays().length) html += stayListHtml()
-    + (canEdit ? '<button type="button" class="wiz-add" id="staysAdd"><i class="ti ti-plus"></i>加入住處</button>' : '');
+    + (canEdit ? '<button type="button" class="wiz-add ov-stay-add" id="staysAdd"><i class="ti ti-plus"></i>加入住處</button>' : '');
   } else {
   // 待辦、注意事項都照新增的順序；做完的待辦留在原位，劃線變淡
   const addRow = (kind, ph) => `<label class="ck-add"><i class="ti ti-plus"></i><input type="text" class="ck-new" data-kind="${kind}" placeholder="${ph}" enterkeyhint="done" autocomplete="off"></label>`;
@@ -2151,7 +2189,7 @@ function setupSteps() {
     ['first', 'ti-calendar-plus', '加入第一個行程', '搜尋想去的店或景點，排進第 1 天', DAY_KEYS.some(k => (DATA[k] || []).length)],
     ['import', 'ti-map-pin-plus', '匯入想去的地方', '貼 Google 地圖清單，放進備選', (DATA.cand || []).length > 0 || !!f.import],
     ['stay', 'ti-bed', '加入住處', '每天第一段交通從住處算', tripStays().length > 0],
-    ['mode', 'ti-route', '選交通方式', `現在是「${modeName(tripMode())}」`, !!f.mode || tripMode() !== 'drive'],
+    ['mode', 'ti-route', '選交通方式', `現在是「${tripModeList().map(modeName).join('、')}」`, !!f.mode || tripMode() !== 'drive'],
     ['invite', 'ti-user-plus', '邀請旅伴', '分享連結和編輯碼', (TRIP.members || []).length > 1 || !!f.invite],
   ];
 }
@@ -2315,7 +2353,7 @@ function openTripSettings(keep) {
   const n0 = DAY_KEYS.length, end0 = (() => { const d = new Date(TRIP.start + 'T00:00'); d.setDate(d.getDate() + n0 - 1); return ymd(d); })();
   // 交通方式：還沒自己選過（開始規劃的「選交通方式」還沒完成）就先不選，選開車才算完成那一步
   const cv0 = splitPhoto(TRIP.cover);
-  const st = keep || { dayStart: TRIP.day_start || '10:00', cover: { src: cv0.src, x: cv0.x, y: cv0.y, busy: false }, name: TRIP.name, dest: TRIP.dest, mode: getSetup().mode || tripMode() !== 'drive' ? tripMode() : '', start: TRIP.start, end: end0, cal: TRIP.start.slice(0, 7), members: [...(TRIP.members || [])], memDraft: '' };
+  const st = keep || { dayStart: TRIP.day_start || '10:00', cover: { src: cv0.src, x: cv0.x, y: cv0.y, busy: false }, name: TRIP.name, dest: TRIP.dest, modes: getSetup().mode || tripMode() !== 'drive' || tripModeList().length > 1 ? tripModeList() : [], start: TRIP.start, end: end0, cal: TRIP.start.slice(0, 7), members: [...(TRIP.members || [])], memDraft: '' };
   const canMem = canDeleteTrip();   // 建立的人才能新增、移除同行的人   // 住處另外在總覽的「住宿」管理
   const nDays = () => { const a = parseD(st.start), b = parseD(st.end); return a && b && b >= a ? Math.round((b - a) / 864e5) + 1 : 0; };
   // 改日期的提醒：少掉的那幾天的行程會移到備選；改出發日時行程跟著「第幾天」走
@@ -2333,12 +2371,12 @@ function openTripSettings(keep) {
     sheet.querySelector('#tsBody').innerHTML = `
       <label class="ed-field"><span class="ed-lab">旅程名稱</span><input id="tsName" type="text" value="${esc(st.name)}" maxlength="40" autocomplete="off"></label>
       <div class="ed-field ps-field"><span class="ed-lab">目的地 <span class="ed-lab-hint" id="tsDestHint">${st.geo ? esc(st.geo.label) : '查地點、地圖會以這裡為中心'}</span></span>${pinIn(`<input id="tsDest" type="text" value="${esc(st.dest)}" maxlength="60" autocomplete="off">`, !!st.geo || (st.dest === TRIP.dest && !!TRIP.center))}</div>
-      <div class="ed-field"><span class="ed-lab">日期 <span class="ed-lab-hint">${!st.start ? '先點出發日' : !st.end ? '再點最後一天' : ''}</span></span>
-        ${calHtml(st)}
-        <div class="wiz-note">${nDays() ? `${dLabel(st.start)}–${dLabel(st.end)}．${nDays()} 天` : st.start ? `出發 ${dLabel(st.start)}` : ''}</div>
+      <div class="ed-field"><span class="ed-lab">日期 <span class="ed-lab-hint">${!st.calOpen ? '點一下修改' : !st.start ? '先點出發日' : !st.end ? '再點最後一天' : ''}</span></span>
+        <button type="button" class="stay-strip ts-strip${st.calOpen ? ' on' : ''}" id="tsDates" aria-expanded="${!!st.calOpen}">${tripStrip(st.start, st.end, nDays())}</button>
+        ${st.calOpen ? `<div class="ts-cal">${calHtml(st)}</div>` : ''}
         ${nDays() && dateNote() && (nDays() !== n0 || st.start !== TRIP.start) ? `<div class="ed-hint"><i class="ti ti-info-circle"></i> ${esc(dateNote())}</div>` : ''}</div>
       <div class="ed-field"><span class="ed-lab">主要交通方式 <span class="ed-lab-hint">系統會優先以你選擇的交通方式進行交通時間預估</span></span>
-        <div class="wiz-opts grid">${WIZ_MODES.map(([k, ic, nm]) => `<button type="button" class="wiz-opt${st.mode === k ? ' on' : ''}" data-mode="${k}"><i class="ti ti-${ic}"></i><span><b>${nm}</b></span></button>`).join('')}</div></div>
+        <div class="wiz-opts grid">${WIZ_MODES.map(([k, ic, nm]) => `<button type="button" class="wiz-opt${st.modes.includes(k) ? ' on' : ''}" data-mode="${k}" aria-pressed="${st.modes.includes(k)}"><i class="ti ti-${ic}"></i><span><b>${nm}</b></span></button>`).join('')}</div></div>
       <div class="ed-field"><span class="ed-lab">封面照片 <span class="ed-lab-hint">顯示在「我的旅程」</span></span>
         <div class="ts-cover${st.cover.src ? '' : ' empty'}" id="tsCoverBox">${st.cover.src
           ? `<img src="${esc(st.cover.src)}" alt="" draggable="false" style="object-position:${st.cover.x}% ${st.cover.y}%"><span class="ph-hand" aria-hidden="true"><i class="ti ti-hand-move"></i></span>${st.cover.busy ? '<span class="ph-badge">上傳中…</span>' : PH_CAM}`
@@ -2348,7 +2386,7 @@ function openTripSettings(keep) {
         <div class="ov-members ts-mem">${st.members.map((n, i) => `<span>${esc(n)}${canMem ? `<button type="button" class="ts-mem-x" data-mrm="${i}" aria-label="移除 ${esc(n)}"><i class="ti ti-x"></i></button>` : ''}</span>`).join('') || '<span class="ov-empty">還沒有人</span>'}</div>
         ${canMem ? `<div class="ts-mem-add"><input id="tsMemIn" type="text" value="${esc(st.memDraft)}" placeholder="輸入暱稱，例如：小明" maxlength="20" autocomplete="off" enterkeyhint="done"><button type="button" class="btn ghost" id="tsMemAdd">加入</button></div>` : ''}</div>
       <div class="ed-field"><span class="ed-lab">每天通常幾點出門 <span class="ed-lab-hint">空白的那天從這個時間開始排</span></span>
-        <input id="tsDayStart" type="time" step="900" value="${st.dayStart}"></div>
+        <input id="tsDayStart" class="ts-time" type="time" step="900" value="${st.dayStart}"></div>
       <div class="ts-more">
         <button type="button" class="inv-btn trip-set" id="tsHistory"><i class="ti ti-history"></i><span><b>修改紀錄</b><small>誰改了什麼，救回刪掉的行程</small></span><i class="ti ti-chevron-right"></i></button>
         ${canMem ? '<button type="button" class="inv-btn trip-set" id="tsReset"><i class="ti ti-key"></i><span><b>換編輯碼或連結</b><small>傳錯人了？舊的會馬上失效</small></span><i class="ti ti-chevron-right"></i></button>' : ''}</div>
@@ -2367,6 +2405,7 @@ function openTripSettings(keep) {
       <button type="button" class="btn ghost ed-cancel">取消</button>
       <button type="button" class="btn primary" id="tsSave">儲存</button>
     </div>`, '#tsName');
+  sheet.classList.add('soft');   // 淺色底、沒有框線的輸入框，圓角統一 12px
   draw();
   const body = sheet.querySelector('#tsBody');
   body.addEventListener('input', e => {
@@ -2420,10 +2459,11 @@ function openTripSettings(keep) {
     if (b.dataset.cal) { const [y, mo] = st.cal.split('-').map(Number); st.cal = ymd(new Date(y, mo - 1 + +b.dataset.cal, 1)).slice(0, 7); draw(); return; }
     if (b.dataset.day) {   // 第一下＝出發日、第二下＝最後一天（點到出發日之前就重選出發）；都選好再點＝重來
       const v = b.dataset.day;
-      if (!st.start || st.end || v < st.start) { st.start = v; st.end = ''; } else st.end = v;
+      if (!st.start || st.end || v < st.start) { st.start = v; st.end = ''; } else { st.end = v; st.calOpen = false; }   // 選好最後一天就收起來
       draw(); return;
     }
-    if (b.dataset.mode) { st.mode = b.dataset.mode; draw(); }
+    if (b.id === 'tsDates') { st.calOpen = !st.calOpen; draw(); return; }
+    if (b.dataset.mode) { const k = b.dataset.mode; st.modes = st.modes.includes(k) ? st.modes.filter(x => x !== k) : WIZ_MODES.map(x => x[0]).filter(x => x === k || st.modes.includes(x)); draw(); }   // 可以複選，照固定順序存
   });
   sheet.querySelector('#tsSave').addEventListener('click', async e => {
     const err = msg => { const el = body.querySelector('#tsErr'); el.textContent = msg; el.hidden = false; el.scrollIntoView({ block: 'nearest' }); };
@@ -2432,7 +2472,8 @@ function openTripSettings(keep) {
     const changes = {};
     if (st.name.trim() !== TRIP.name) changes.name = st.name.trim();
     if (st.dest.trim() !== TRIP.dest) { changes.dest = st.dest.trim(); if (st.geo) Object.assign(changes, { region: st.geo.region, center: st.geo.center, en: st.geo.en ? st.geo.en + '.' : '' }); }
-    if (st.mode && st.mode !== tripMode()) changes.mode = st.mode;
+    if (!st.modes.length && (getSetup().mode || TRIP.mode !== 'drive')) return err('交通方式至少選一種');
+    if (st.modes.length && st.modes.join(',') !== tripModeList().join(',')) changes.mode = st.modes.join(',');
     if (st.cover.busy) return err('封面照片還在上傳，等一下再按儲存');
     const cover = st.cover.src ? joinPhoto(st.cover.src, st.cover.x, st.cover.y) : '';
     if (cover !== (TRIP.cover || '')) changes.cover = cover;
@@ -2443,7 +2484,7 @@ function openTripSettings(keep) {
     if (canMem && st.memDraft.trim() && !st.members.includes(st.memDraft.trim())) st.members.push(st.memDraft.replace(/,/g, ' ').trim());   // 打了名字忘了按加入
     if (st.dayStart !== (TRIP.day_start || '10:00')) changes.day_start = st.dayStart;
     if (canMem && st.members.join(',') !== (TRIP.members || []).join(',')) Object.assign(changes, { members: st.members, owner: myTrips().find(x => x.id === TRIP_ID)?.owner || '' });
-    if (!Object.keys(changes).length) { if (st.mode && !getSetup().mode) { markSetup('mode'); renderPage(current); } closeSheet(); return; }   // 選了跟原本一樣的開車：也算選好了
+    if (!Object.keys(changes).length) { if (st.modes.length && !getSetup().mode) { markSetup('mode'); renderPage(current); } closeSheet(); return; }   // 選了跟原本一樣的開車：也算選好了
     if (changes.days && n < n0 && DAY_KEYS.slice(n).some(k => (DATA[k] || []).length) && !confirm(dateNote() + '，確定要改嗎？')) return;
     if (changes.days && (syncing || pendingOps().count)) return err('剛剛的修改還在存到雲端，等幾秒再改日期');
     const btn = e.currentTarget; btn.disabled = true; btn.textContent = changes.dest ? '儲存中，查位置…' : '儲存中…';
@@ -2456,7 +2497,7 @@ function openTripSettings(keep) {
         setTrip({ ...TRIP, ...r.trip }); rememberTrip(TRIP, 'edit', TRIP_KEY, TRIP_CODE); cache();
         closeSheet(); updateHeader(current); if (current) renderPage(current);
       }
-      if (st.mode) markSetup('mode');
+      if (st.modes.length) markSetup('mode');
       const notes = [changes.mode && '之前算好的交通時間不會自動改，可以在編輯模式按交通按鈕重算', r.moved && `${r.moved} 個行程移到備選`].filter(Boolean);
       toast(notes.length ? `已儲存。${notes.join('；')}` : '已儲存旅程設定', notes.length ? '知道了' : '', () => {}, notes.length ? 8000 : 2000);
     } catch (x) { btn.disabled = false; btn.textContent = '儲存'; err(x.code === 'network' ? '連不上雲端，請檢查網路' : x.message); }
@@ -2504,6 +2545,13 @@ function stayRange(h) {
   return `${ds[idx[0]].md}–${mdOfYmd(ymd(out))}．${idx.length} 晚`;
 }
 // 入住 → 退房｜幾晚：一條橫的卡片（住處資訊、編輯住處的月曆下面）；還沒選退房日時退房那格留空
+// 旅程設定的日期：「11/05 週六 → 11/14 週三｜8 天 7 夜」，點了展開月曆
+function tripStrip(a, b, n) {
+  const day = v => { const d = new Date(v + 'T00:00'); return `<b>${String(d.getMonth() + 1).padStart(2, '0')}/${String(d.getDate()).padStart(2, '0')}</b><span class="ss-wd">週<br>${'日一二三四五六'[d.getDay()]}</span>`; };
+  return `<div class="ss-c"><div class="ss-d">${a ? day(a) : '<b class="ss-none">選出發日</b>'}</div></div><i class="ti ti-arrow-right ss-arrow"></i>
+    <div class="ss-c"><div class="ss-d">${b ? day(b) : '<b class="ss-none">選最後一天</b>'}</div></div><span class="ss-bar"></span>
+    <div class="ss-c ss-n"><div class="ss-d"><b>${n ? `${n}天${n - 1}夜` : '—'}</b></div></div>`;
+}
 function stayStrip(ci, co, n) {
   const day = v => { const d = new Date(v + 'T00:00'); return `<b>${String(d.getMonth() + 1).padStart(2, '0')}/${String(d.getDate()).padStart(2, '0')}</b><span class="ss-wd">週<br>${'日一二三四五六'[d.getDay()]}</span>`; };
   return `<div class="stay-strip"><div class="ss-c"><small>入住</small><div class="ss-d">${day(ci)}</div></div><i class="ti ti-arrow-right ss-arrow"></i>
@@ -3602,6 +3650,7 @@ const sheet = document.getElementById('sheet'), sheetBg = document.getElementByI
 let lastFocus = null;
 function openSheet(html, focusSel, dialog) {
   sheet.innerHTML = '<div class="grab"></div>' + html;
+  sheet.classList.remove('soft');   // 要淺色表單樣式的面板（旅程設定、編輯卡片）打開後自己加
   sheet._infoId = null;   // 換成別的面板：背景查好時不要蓋掉
   sheet._photoJob = null;
   lastFocus = document.activeElement;
@@ -4753,8 +4802,8 @@ function openEditor(id, startAt, toDay, replaceId) {
     ${ed.group || ed.pick ? '' : `
     <label class="ed-field"><span class="ed-lab">描述 <span class="ed-lab-hint">顯示在卡片上，半小時左右的小卡片不顯示</span></span>
       <input id="edDesc" type="text" value="${esc(ed.desc)}" placeholder="例如：當地最大的傳統市場，可吃可買" autocomplete="off" maxlength="80"></label>
-    <label class="ed-field"><span class="ed-lab">區域 <span class="ed-lab-hint">顯示在卡片的時間後面</span></span>
-      <input id="edArea" type="text" value="${esc(ed.area || '')}" placeholder="例如：寧曼、古城、塔佩門" autocomplete="off" maxlength="20"></label>`}
+    <div class="ed-field ed-fold"><button type="button" class="ed-fold-h" id="edAreaH" aria-expanded="false"><span class="ed-lab">區域</span><span class="ed-fold-v">${esc(ed.area || '')}</span><i class="ti ti-chevron-down"></i></button>
+      <input id="edArea" type="text" value="${esc(ed.area || '')}" placeholder="例如：寧曼、古城、塔佩門" autocomplete="off" maxlength="20" hidden></div>`}
     ${ed.group ? '<div class="ed-hint"><i class="ti ti-info-circle"></i> 這是合併區塊。要改裡面的店家，請展開後直接點那一家</div>' : `
     <div class="ed-field"><span class="ed-lab">類型</span><div class="chips" id="edCls">
       ${TYPES.map(([k, n]) => `<button type="button" class="chip ${k}${k === ed.cls ? ' on' : ''}" data-v="${k}">${n}</button>`).join('')}</div></div>`}
@@ -4805,6 +4854,9 @@ function openEditor(id, startAt, toDay, replaceId) {
       <button type="button" class="btn ghost ed-cancel">取消</button>
       <button type="button" class="btn primary" id="edSave">${ed.isNew ? '新增' : old ? '替換' : ed.fromCand ? '排入' : '儲存'}</button>
     </div>`, ed.isNew ? '#edT' : '.sh-close');
+  sheet.classList.add('soft');   // 淺色底、沒有框線的輸入框，圓角統一 12px
+  // 區域預設收起來（大多是自動填的）：點標題列才展開輸入框
+  sheet.querySelector('#edAreaH')?.addEventListener('click', e => { const h = e.currentTarget, inp = sheet.querySelector('#edArea'), open = inp.hidden; inp.hidden = !open; h.setAttribute('aria-expanded', open); h.classList.toggle('open', open); if (open) inp.focus(); });
   wireEditor();
 }
 
@@ -5654,6 +5706,7 @@ function openSubEditor(cardId, kind, idx, fromCand, replace) {
       <button type="button" class="btn ghost ed-cancel">取消</button>
       <button type="button" class="btn primary" id="sbSave">${old ? '替換' : c ? '加入' : isNew ? '新增' : '儲存'}</button>
     </div>`, isNew && !cands.length && !c ? '#sbName' : '.sh-close');
+  sheet.classList.add('soft');   // 淺色底、沒有框線的輸入框，圓角統一 12px
   wireCandDrop(sheet.querySelector('#sbCandWrap'), id => openSubEditor(cardId, kind, null, id));
   const $ = id => sheet.querySelector('#' + id);
   chipScroller($('sbCls'));
