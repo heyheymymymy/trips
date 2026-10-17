@@ -672,7 +672,18 @@ button.ov-stay{width:100%;font:inherit;text-align:left;cursor:pointer}
 .cv-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
 .cv-grid button{aspect-ratio:1;border:0;border-radius:10px;background:#EFEBE5 center/cover no-repeat;cursor:pointer}
 .ov-foot{margin-top:28px;padding-top:2px;border-top:1px solid var(--line)}
-.inv-btn.trip-set{margin-top:12px}
+.ts-more{display:flex;flex-direction:column;margin-top:4px}
+.ts-more .inv-btn.trip-set{margin-top:0}
+/* 修改紀錄 */
+.hs-list{display:flex;flex-direction:column}
+.hs-row{display:flex;align-items:center;gap:10px;padding:10px 0;border-top:1px solid var(--line)}
+.hs-row:first-child{border-top:0}
+.hs-main{flex:1;min-width:0}
+.hs-main b{display:block;font-size:14px;font-weight:600}
+.hs-main small{display:block;margin-top:1px;font-size:12px;color:var(--text2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.hs-time{flex:none;font-size:12px;color:var(--muted);font-variant-numeric:tabular-nums}
+.hs-row .btn{flex:none;height:34px;padding:0 14px;font-size:13px}
+.inv-btn.trip-set{margin-top:12px;border-color:transparent;padding-left:0;padding-right:4px}   /* 沒有外框：跟上面的內容對齊左邊 */
 .inv-btn.trip-set > i:first-child{background:#F3EFEA;color:var(--text2)}
 /* 分享編輯碼：大卡片，數字一格一格；下面兩顆並排的按鈕 */
 .inv-code{display:flex;flex-direction:column;align-items:center;gap:14px;padding:24px 16px 26px;border-radius:20px;background:#F6F3EF;text-align:center}
@@ -2111,11 +2122,10 @@ function renderOverview() {
   // 整個總覽的最下面（三頁都有）：同行的人、旅程設定、編輯碼和邀請（可以編輯的人才看得到編輯碼）
   if (TRIP) {
     html += '<div class="ov-foot">';
-    html += `<button type="button" class="inv-btn trip-set" id="tripSet"><i class="ti ti-settings"></i><span><b>旅程設定</b><small>名稱、目的地、日期、交通方式、封面、同行的人</small></span><i class="ti ti-chevron-right"></i></button>`;
+    html += `<button type="button" class="inv-btn trip-set" id="tripSet"><i class="ti ti-settings"></i><span><b>旅程設定</b><small>名稱、目的地、日期、交通、封面、同行的人</small></span><i class="ti ti-chevron-right"></i></button>`;
     if (TRIP_ROLE === 'edit' && TRIP.code) html += `<div class="inv">
       ${codeCardHtml('分享編輯碼', TRIP.code, '拿到連結的人都能看，輸入編輯碼才能編輯')}
-      <div class="inv-pair"><button type="button" class="inv-tile" data-invite="edit">邀請一起規劃</button><button type="button" class="inv-tile" data-invite="view">分享行程</button></div>
-      <button type="button" class="inv-reset" id="invReset">傳錯人了？換一組編輯碼或連結</button></div>`;
+      <div class="inv-pair"><button type="button" class="inv-tile" data-invite="edit">邀請一起規劃</button><button type="button" class="inv-tile" data-invite="view">分享行程</button></div></div>`;
     // 還沒輸入編輯碼的人：本來就有連結，可以轉傳給別人看；要一起編輯就輸入編輯碼
     else html += `<div class="inv">
       <button type="button" class="inv-btn" data-invite="view"><i class="ti ti-link"></i><span><b>分享這趟旅程</b><small>只能看，不能修改</small></span><i class="ti ti-share-2"></i></button>
@@ -2300,11 +2310,12 @@ async function copyText(text) {
   return ok;
 }
 // 旅程設定：名稱、目的地、主要交通方式、住處（日期和天數之後再做：要搬動每天的卡片）
-function openTripSettings() {
+// keep：從「修改紀錄」「換編輯碼」滑回來時，剛剛改到一半的設定還在
+function openTripSettings(keep) {
   const n0 = DAY_KEYS.length, end0 = (() => { const d = new Date(TRIP.start + 'T00:00'); d.setDate(d.getDate() + n0 - 1); return ymd(d); })();
   // 交通方式：還沒自己選過（開始規劃的「選交通方式」還沒完成）就先不選，選開車才算完成那一步
   const cv0 = splitPhoto(TRIP.cover);
-  const st = { cover: { src: cv0.src, x: cv0.x, y: cv0.y, busy: false }, name: TRIP.name, dest: TRIP.dest, mode: getSetup().mode || tripMode() !== 'drive' ? tripMode() : '', start: TRIP.start, end: end0, cal: TRIP.start.slice(0, 7), members: [...(TRIP.members || [])], memDraft: '' };
+  const st = keep || { dayStart: TRIP.day_start || '10:00', cover: { src: cv0.src, x: cv0.x, y: cv0.y, busy: false }, name: TRIP.name, dest: TRIP.dest, mode: getSetup().mode || tripMode() !== 'drive' ? tripMode() : '', start: TRIP.start, end: end0, cal: TRIP.start.slice(0, 7), members: [...(TRIP.members || [])], memDraft: '' };
   const canMem = canDeleteTrip();   // 建立的人才能新增、移除同行的人   // 住處另外在總覽的「住宿」管理
   const nDays = () => { const a = parseD(st.start), b = parseD(st.end); return a && b && b >= a ? Math.round((b - a) / 864e5) + 1 : 0; };
   // 改日期的提醒：少掉的那幾天的行程會移到備選；改出發日時行程跟著「第幾天」走
@@ -2336,6 +2347,11 @@ function openTripSettings() {
       <div class="ed-field"><span class="ed-lab">同行的人 <span class="ed-lab-hint">${canMem ? '有人改過行程也會自動加進來' : '只有建立旅程的人可以新增、移除'}</span></span>
         <div class="ov-members ts-mem">${st.members.map((n, i) => `<span>${esc(n)}${canMem ? `<button type="button" class="ts-mem-x" data-mrm="${i}" aria-label="移除 ${esc(n)}"><i class="ti ti-x"></i></button>` : ''}</span>`).join('') || '<span class="ov-empty">還沒有人</span>'}</div>
         ${canMem ? `<div class="ts-mem-add"><input id="tsMemIn" type="text" value="${esc(st.memDraft)}" placeholder="輸入暱稱，例如：小明" maxlength="20" autocomplete="off" enterkeyhint="done"><button type="button" class="btn ghost" id="tsMemAdd">加入</button></div>` : ''}</div>
+      <div class="ed-field"><span class="ed-lab">每天通常幾點出門 <span class="ed-lab-hint">空白的那天從這個時間開始排</span></span>
+        <input id="tsDayStart" type="time" step="900" value="${st.dayStart}"></div>
+      <div class="ts-more">
+        <button type="button" class="inv-btn trip-set" id="tsHistory"><i class="ti ti-history"></i><span><b>修改紀錄</b><small>誰改了什麼，救回刪掉的行程</small></span><i class="ti ti-chevron-right"></i></button>
+        ${canMem ? '<button type="button" class="inv-btn trip-set" id="tsReset"><i class="ti ti-key"></i><span><b>換編輯碼或連結</b><small>傳錯人了？舊的會馬上失效</small></span><i class="ti ti-chevron-right"></i></button>' : ''}</div>
       <div class="err" id="tsErr" hidden></div>
       ${canDeleteTrip() ? '<button type="button" class="ts-del" id="tsDel"><i class="ti ti-trash"></i> 刪除旅程</button>' : ''}`;
     sheet.scrollTop = open;
@@ -2356,6 +2372,7 @@ function openTripSettings() {
   body.addEventListener('input', e => {
     if (e.target.id === 'tsName') st.name = e.target.value;
     else if (e.target.id === 'tsMemIn') st.memDraft = e.target.value;
+    else if (e.target.id === 'tsDayStart' && e.target.value) st.dayStart = e.target.value;
     else if (e.target.id === 'tsDest') st.dest = e.target.value;
   });
   // 封面照片：跟其他照片一樣，空的點框框上傳、有照片點右下角相機換；可以拖曳選要顯示的範圍
@@ -2395,6 +2412,10 @@ function openTripSettings() {
     if (b.id === 'tsCoverOff') { st.cover = { src: '', x: 50, y: 50, busy: false }; draw(); return; }
     if (b.id === 'tsDel') { openDeleteTrip(); return; }
     if (b.id === 'tsMemAdd') { addMem(); return; }
+    // 修改紀錄、換編輯碼：同一張面板往右推進去，返回時設定改到一半的還在
+    const back = () => sheetSlide(-1, () => openTripSettings(st));
+    if (b.id === 'tsHistory') { sheetSlide(1, () => openHistory({ back })); return; }
+    if (b.id === 'tsReset') { sheetSlide(1, () => openResetLinks({ back })); return; }
     if (b.dataset.mrm) { st.members.splice(+b.dataset.mrm, 1); draw(); return; }
     if (b.dataset.cal) { const [y, mo] = st.cal.split('-').map(Number); st.cal = ymd(new Date(y, mo - 1 + +b.dataset.cal, 1)).slice(0, 7); draw(); return; }
     if (b.dataset.day) {   // 第一下＝出發日、第二下＝最後一天（點到出發日之前就重選出發）；都選好再點＝重來
@@ -2420,6 +2441,7 @@ function openTripSettings() {
     if (n > 30) return err('最多 30 天');
     if (st.start !== TRIP.start || n !== n0) Object.assign(changes, { start: st.start, days: n });
     if (canMem && st.memDraft.trim() && !st.members.includes(st.memDraft.trim())) st.members.push(st.memDraft.replace(/,/g, ' ').trim());   // 打了名字忘了按加入
+    if (st.dayStart !== (TRIP.day_start || '10:00')) changes.day_start = st.dayStart;
     if (canMem && st.members.join(',') !== (TRIP.members || []).join(',')) Object.assign(changes, { members: st.members, owner: myTrips().find(x => x.id === TRIP_ID)?.owner || '' });
     if (!Object.keys(changes).length) { if (st.mode && !getSetup().mode) { markSetup('mode'); renderPage(current); } closeSheet(); return; }   // 選了跟原本一樣的開車：也算選好了
     if (changes.days && n < n0 && DAY_KEYS.slice(n).some(k => (DATA[k] || []).length) && !confirm(dateNote() + '，確定要改嗎？')) return;
@@ -2745,19 +2767,59 @@ function openStayEditor(idx, opts = {}) {
     if (photo) saveData('住處照片');
   });
 }
-function openResetLinks() {
+// 修改紀錄：最上面是最近刪掉、還能救回的行程，下面是誰在什麼時候改了什麼（同一次存檔的同一種動作併成一行）
+async function openHistory(opts = {}) {
   openSheet(`
-    <div class="sh-head"><div style="flex:1;min-width:0"><div class="sh-title" id="shTitle">換一組新的</div>
+    <div class="sh-head">${opts.back ? '<button type="button" class="sh-back" id="hsUp" aria-label="返回"><i class="ti ti-chevron-left"></i></button>' : ''}<div style="flex:1;min-width:0"><div class="sh-title" id="shTitle">修改紀錄</div>
+      <div class="sh-sub">最近 150 筆修改，刪掉的行程可以救回</div></div>
+      <button class="sh-close" aria-label="關閉"><i class="ti ti-x"></i></button></div>
+    <div id="hsBody"><div class="ov-empty"><i class="ti ti-loader-2 spin"></i> 讀取中…</div></div>`, null);
+  sheet.querySelector('#hsUp')?.addEventListener('click', opts.back);
+  const box = sheet.querySelector('#hsBody');
+  const when = t => { const mm = /^\d{4}-(\d{2})-(\d{2}) (\d{2}:\d{2})/.exec(t || ''); return mm ? `${+mm[1]}/${+mm[2]} ${mm[3]}` : ''; };
+  const dayName = d => d === 'cand' ? '備選' : /^d\d+$/.test(d || '') ? `第 ${d.slice(1)} 天` : '';
+  let h;
+  try { h = await api({ ...getAuth(), action: 'history' }, 30000); }
+  catch (e) { if (box.isConnected) box.innerHTML = `<div class="ov-empty">讀不到修改紀錄：${esc(e.code === 'network' ? '請檢查網路' : e.message)}</div>`; return; }
+  if (!box.isConnected) return;
+  const groups = [];
+  for (const x of h.log) {   // 同一分鐘、同一個人、同一種動作：併成一行（例如一次排好好幾張）
+    const g = groups[groups.length - 1], key = `${x.time.slice(0, 16)}|${x.nick}|${x.action}`;
+    if (g && g.key === key) { g.items.push(x); continue; }
+    groups.push({ key, items: [x] });
+  }
+  box.innerHTML = `${h.trash.length ? `<div class="ov-sec">最近刪掉的行程</div><div class="hs-list">${h.trash.map(t => `<div class="hs-row">
+      <span class="hs-main"><b>${esc(t.title || '（沒有名稱）')}</b><small>${[dayName(t.day), `${esc(t.by)} ${when(t.at)} 刪掉`].filter(Boolean).join('．')}</small></span>
+      <button type="button" class="btn ghost" data-restore="${esc(t.id)}">救回</button></div>`).join('')}</div>` : ''}
+    <div class="ov-sec">修改紀錄</div>
+    ${groups.length ? `<div class="hs-list">${groups.map(g => { const x = g.items[0], n = g.items.length, names = [...new Set(g.items.map(i => i.title).filter(Boolean))];
+      return `<div class="hs-row"><span class="hs-main"><b>${esc(x.nick || '有人')}　${esc(x.action)}${n > 1 ? ` ${n} 項` : ''}</b>
+        <small>${esc(names.slice(0, 3).join('、') + (names.length > 3 ? ` 等 ${names.length} 個` : ''))}${n === 1 && dayName(x.day) ? `．${dayName(x.day)}` : ''}</small></span>
+        <span class="hs-time">${when(x.time)}</span></div>`; }).join('')}</div>` : '<div class="ov-empty">還沒有修改紀錄</div>'}`;
+  box.querySelectorAll('[data-restore]').forEach(b => b.addEventListener('click', async () => {
+    b.disabled = true; b.textContent = '救回中…';
+    try {
+      await api({ ...getAuth(), action: 'restoreItem', id: b.dataset.restore });
+      b.closest('.hs-row').remove(); toast('已救回，放回原本那一天');
+      await load(true);
+    } catch (e) { b.disabled = false; b.textContent = '救回'; toast(e.code === 'network' ? '連不上，請檢查網路' : e.message); }
+  }));
+}
+function openResetLinks(opts = {}) {
+  openSheet(`
+    <div class="sh-head">${opts.back ? '<button type="button" class="sh-back" id="rsUp" aria-label="返回"><i class="ti ti-chevron-left"></i></button>' : ''}<div style="flex:1;min-width:0"><div class="sh-title" id="shTitle">換一組新的</div>
       <div class="sh-sub">舊的會馬上失效，拿到舊的人要重新跟你要</div></div>
       <button class="sh-close" aria-label="關閉"><i class="ti ti-x"></i></button></div>
     <div class="inv" style="margin-top:16px">
       <button type="button" class="inv-btn" data-reset="code"><i class="ti ti-lock"></i><span><b>換編輯碼</b><small>連結不變；大家下次修改時要輸入新的編輯碼</small></span></button>
       <button type="button" class="inv-btn" data-reset="view"><i class="ti ti-link"></i><span><b>換連結</b><small>舊連結打不開；所有人（包括你）都要用新連結</small></span></button>
-    </div>`, null, true);
+    </div>`, null, !opts.back);
+  sheet.querySelector('#rsUp')?.addEventListener('click', opts.back);
   sheet.querySelectorAll('[data-reset]').forEach(b => b.addEventListener('click', async () => {
     const kind = b.dataset.reset; b.disabled = true;
     try {
-      const r = await api({ ...getAuth(), action: 'saveTrip', reset: kind });
+      if (!confirm(kind === 'code' ? '換一組新的編輯碼？舊的馬上失效' : '換一個新的連結？舊連結馬上打不開')) { b.disabled = false; return; }
+      const r = await api({ ...getAuth(), action: 'saveTrip', reset: kind, owner: myTrips().find(x => x.id === TRIP_ID)?.owner || '' });   // 只有建立的人可以換
       closeSheet();
       TRIP = { ...TRIP, ...r.trip };
       if (kind === 'view') {   // 連結換了：網址、我的旅程一起換成新的
@@ -2791,7 +2853,6 @@ addEventListener('scroll', stayPressEnd, { passive: true });
 ovEl.addEventListener('contextmenu', e => { if (e.target.closest('.st-row')) e.preventDefault(); });
 ovEl.addEventListener('click', e => {
   const inv = e.target.closest('[data-invite]'); if (inv) { shareTrip(inv.dataset.invite); return; }
-  if (e.target.closest('#invReset')) { withAuth(openResetLinks); return; }
   if (e.target.closest('#invCode')) { openAuth(); return; }
   if (e.target.closest('#tripSet')) { withAuth(openTripSettings); return; }
   if (stayPressed) { stayPressed = false; e.preventDefault(); return; }   // 長按放開的那一下不要再打開資訊
@@ -4296,7 +4357,7 @@ async function tripBias() {
 }
 let af = null;
 // 預設開始時間：接在這天最後一張後面（取整到 15 分），這天還沒行程就 10:00
-const nextStart = day => { const last = (DATA[day] || []).reduce((mx, it) => Math.max(mx, m(it.e)), 0); return last ? Math.min(Math.ceil((last + 15) / 15) * 15, DAY_END - 30) : 10 * 60; };
+const nextStart = day => { const last = (DATA[day] || []).reduce((mx, it) => Math.max(mx, m(it.e)), 0); return last ? Math.min(Math.ceil((last + 15) / 15) * 15, DAY_END - 30) : TRIP?.day_start ? m(TRIP.day_start) : 10 * 60; };   // 這天還沒行程：從旅程設定的「每天通常幾點出門」開始
 // sub：{ cardId, kind: 'stop'|'alt' }——在合併區塊加一站、在多選一加一個選項（同一套挑地點的畫面，第二步只問時間）
 function openAddFlow(day, startAt, sub, link) {
   af = { day, step: 1, q: '', pick: null, cand: null, name: '', cls: 'eat', s: startAt ? m(startAt) : nextStart(day), sTouched: !!startAt, dur: 60, booked: false };
