@@ -786,10 +786,11 @@ button.ov-stay{width:100%;font:inherit;text-align:left;cursor:pointer}
 /* 編輯卡片裡收起來的欄位（區域）：一行「區域　📍古城　⌄」，點了展開輸入框 */
 .ed-fold-h{display:flex;align-items:center;gap:8px;width:100%;padding:0;border:0;background:none;font:inherit;color:inherit;text-align:left;cursor:pointer}
 .ed-fold-h .ed-lab{margin:0}
-.ed-fold-v{flex:1;min-width:0;font-size:14px;color:var(--text2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ed-fold-v{flex:1;min-width:0;font-size:12px;font-weight:400;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .ed-fold-h > .ti{flex:none;color:var(--muted);transition:transform .2s}
 .ed-fold-h.open > .ti{transform:rotate(180deg)}
-.ed-fold input{margin-top:8px}   /* 住宿列表下面的「＋ 加入住處」靠右 */
+.ed-fold input,.ed-fold .chips{margin-top:8px}
+.ed-fold [hidden]{display:none!important}   /* 住宿列表下面的「＋ 加入住處」靠右 */
 .wiz-add{display:flex;align-items:center;gap:6px;margin-top:12px;padding:0;border:0;background:none;font:inherit;font-size:15px;color:var(--accent-fg);cursor:pointer}
 .wiz-opts{display:flex;flex-direction:column;gap:8px;margin-top:16px}
 .wiz-opt{display:flex;align-items:center;gap:12px;width:100%;padding:13px 14px;border:1px solid var(--border);border-radius:14px;background:#fff;font:inherit;text-align:left;color:var(--text);cursor:pointer}
@@ -4802,10 +4803,11 @@ function openEditor(id, startAt, toDay, replaceId) {
     ${ed.group || ed.pick ? '' : `
     <label class="ed-field"><span class="ed-lab">描述 <span class="ed-lab-hint">顯示在卡片上，半小時左右的小卡片不顯示</span></span>
       <input id="edDesc" type="text" value="${esc(ed.desc)}" placeholder="例如：當地最大的傳統市場，可吃可買" autocomplete="off" maxlength="80"></label>
-    <div class="ed-field ed-fold"><button type="button" class="ed-fold-h" id="edAreaH" aria-expanded="false"><span class="ed-lab">區域</span><span class="ed-fold-v">${esc(ed.area || '')}</span><i class="ti ti-chevron-down"></i></button>
+    <div class="ed-field ed-fold"><button type="button" class="ed-fold-h" aria-expanded="false"><span class="ed-lab">區域</span><span class="ed-fold-v">${esc(ed.area || '未填寫')}</span><i class="ti ti-chevron-down"></i></button>
       <input id="edArea" type="text" value="${esc(ed.area || '')}" placeholder="例如：寧曼、古城、塔佩門" autocomplete="off" maxlength="20" hidden></div>`}
     ${ed.group ? '<div class="ed-hint"><i class="ti ti-info-circle"></i> 這是合併區塊。要改裡面的店家，請展開後直接點那一家</div>' : `
-    <div class="ed-field"><span class="ed-lab">類型</span><div class="chips" id="edCls">
+    <div class="ed-field ed-fold"><button type="button" class="ed-fold-h" aria-expanded="false"><span class="ed-lab">類型</span><span class="ed-fold-v" id="edClsV">${esc((TYPES.find(([k]) => k === ed.cls) || [, ''])[1])}</span><i class="ti ti-chevron-down"></i></button>
+      <div class="chips" id="edCls" hidden>
       ${TYPES.map(([k, n]) => `<button type="button" class="chip ${k}${k === ed.cls ? ' on' : ''}" data-v="${k}">${n}</button>`).join('')}</div></div>`}
     <div class="ed-field"${old ? ' hidden' : ''}><span class="ed-lab">日期 <span class="ed-lab-hint">選別天就搬過去，時間不變</span></span>
       <div class="chips sm day-chips" id="edDay">${ALL_KEYS.map(k => `<button type="button" class="chip${k === ed.day ? ' on' : ''}${k === 'cand' ? ' cand' : ''}" data-v="${k}">${k === 'cand' ? '備選' : dayNum(k)}</button>`).join('')}</div></div>
@@ -4828,8 +4830,7 @@ function openEditor(id, startAt, toDay, replaceId) {
     <hr class="ed-sep">
     ${ed.pick ? '<div class="ed-hint"><i class="ti ti-info-circle"></i> 這是多選一的行程，名稱可以取像「早餐二選一」。要改裡面的店家，請展開後直接點那一家</div>' : ''}
     ${ed.group || ed.pick ? '' : `
-    <label class="ed-field"><span class="ed-lab-row"><span class="ed-lab">地圖 <span class="ed-lab-hint">貼上 Google 地圖的分享連結最準確</span></span>
-      ${homeFor(ed.day) ? `<button type="button" class="swap-btn" id="edHome"><i class="ti ti-bed"></i> 回住處</button>` : ''}</span>
+    <label class="ed-field"><span class="ed-lab">地圖 <span class="ed-lab-hint">貼上 Google 地圖的分享連結最準確</span></span>
       ${pinIn(`<span class="clr-wrap"><input id="edMap" type="text" value="${esc(ed.map)}" placeholder="貼上分享連結，或輸入店名" autocomplete="off" inputmode="url"><button type="button" class="clr-btn" aria-label="清除" tabindex="-1"><i class="ti ti-x"></i></button></span>`, isGMap(ed.map))}</label>
     <div class="map-status" id="edMapStatus"></div>
     <div class="map-status" id="edMates"${placeMates(ed.id && !ed.group && !ed.pick ? findItem(ed.id)[1] : null, ed.id ? findItem(ed.id)[1] : null).length ? '' : ' hidden'}>${mateHint(placeMates(ed.id && !ed.group && !ed.pick ? findItem(ed.id)[1] : null, ed.id ? findItem(ed.id)[1] : null).length)}</div>`}
@@ -4855,14 +4856,19 @@ function openEditor(id, startAt, toDay, replaceId) {
       <button type="button" class="btn primary" id="edSave">${ed.isNew ? '新增' : old ? '替換' : ed.fromCand ? '排入' : '儲存'}</button>
     </div>`, ed.isNew ? '#edT' : '.sh-close');
   sheet.classList.add('soft');   // 淺色底、沒有框線的輸入框，圓角統一 12px
-  // 區域預設收起來（大多是自動填的）：點標題列才展開輸入框
-  sheet.querySelector('#edAreaH')?.addEventListener('click', e => { const h = e.currentTarget, inp = sheet.querySelector('#edArea'), open = inp.hidden; inp.hidden = !open; h.setAttribute('aria-expanded', open); h.classList.toggle('open', open); if (open) inp.focus(); });
+  // 區域、類型預設收起來（大多是自動填的）：點標題列才展開；區域展開時游標直接放進去，類型展開時把選中的那顆捲到看得見
+  sheet.querySelectorAll('.ed-fold-h').forEach(h => h.addEventListener('click', () => {
+    const box = h.nextElementSibling, open = box.hidden; box.hidden = !open;
+    h.setAttribute('aria-expanded', open); h.classList.toggle('open', open);
+    if (open && box.tagName === 'INPUT') box.focus();
+    if (open && box.classList.contains('chips') && !box.dataset.sc) { box.dataset.sc = 1; chipScroller(box); }
+  }));
   wireEditor();
 }
 
 function wireEditor() {
   const $ = id => sheet.querySelector('#' + id);
-  chipScroller($('edCls')); chipScroller($('edDay'));
+  chipScroller($('edDay'));   // 類型收起來時量不到寬度，展開時才算
   const refresh = () => {
     const sMin = $('edS').value ? fromInput($('edS').value) : m(ed.s), eMin = sMin + ed.dur;
     $('edEnd').textContent = clock(eMin); $('edMid').hidden = eMin <= 24 * 60;
@@ -4880,6 +4886,7 @@ function wireEditor() {
     const c = e.target.closest('.chip'); if (!c) return;
     ed.cls = c.dataset.v;
     sheet.querySelectorAll('#edCls .chip').forEach(x => x.classList.toggle('on', x === c));
+    if ($('edClsV')) $('edClsV').textContent = c.textContent;
   });
   // 卡片樣式：改成「多個地點」或「多選一」時，上面的名稱變成第一站／第一個選項，另外取一個卡片標題
   const segPick = (box, c) => { const bs = [...box.querySelectorAll('[data-v]')]; bs.forEach(x => x.classList.toggle('on', x === c)); box.dataset.i = bs.indexOf(c); };
@@ -4949,15 +4956,6 @@ function wireEditor() {
   };
   $('edMap')?.addEventListener('input', updateMapStatus);
   updateMapStatus();
-  // 回住處：地點填當晚的住處（座標、地點代號一起帶入，不用再查）；名稱空白就叫「回住處休息」
-  $('edHome')?.addEventListener('click', e => {
-    e.preventDefault();
-    const h = homeFor(ed.day); if (!h) return;
-    $('edMap').value = h.map || h.name; ed.home = h;
-    if (!$('edT').value.trim()) $('edT').value = '回住處休息';
-    sheet.querySelector('#edCls .chip.other')?.click();
-    updateMapStatus();
-  });
   wirePhoto('edPhoto', ed.noteKey || $('edT').value.trim());
   $('edSave').addEventListener('click', saveEditor);
   $('edDel')?.addEventListener('click', deleteItem);
