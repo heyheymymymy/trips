@@ -67,6 +67,9 @@ header{position:sticky;top:0;z-index:10;background:var(--page);padding:calc(12px
 .tl.sliding .now{opacity:0}
 .mv{transition:top .25s ease}
 .tl.no-anim,.tl.no-anim *{transition:none!important}
+/* 備選卡片的資訊列：一段一段（營業時間、區域、提醒），換行只在段和段之間 */
+.cs-line{display:flex;flex-wrap:wrap;gap:2px 12px}
+.cs-seg{white-space:nowrap}
 /* 總覽：全部從每天的行程算出來，改了行程這裡自動跟著變 */
 .ov{padding:16px 16px 48px;touch-action:pan-y pinch-zoom}
 /* 第 1 天和總覽之間滑動換頁：新的那頁從滑過來的方向淡入 */
@@ -1852,7 +1855,7 @@ function renderCards(items, day) {
     const b = div('blk ' + it.cls + (showNav ? ' has-nav' : '') + (compact ? ' compact' : '') + extra,
       compact
         ? `<div class="t">${esc(it.t)}<span class="tm">· ${T(it.s)}–${T(it.e)}${it.desc === PENDING ? ' <i class="ti ti-loader-2 spin"></i>' : ''}</span></div>${showNav ? navBtn(it.map, it.t) : ''}${editIc}`
-        : `<div class="t">${esc(it.t)}</div>${descLines(it, h)}<div class="s">${T(it.s)}–${T(it.e)} · ${durLabel(mins)}${tags}</div>${showNav ? navBtn(it.map, it.t) : ''}${editIc}`);
+        : `<div class="t">${esc(it.t)}</div>${descLines(it, h)}<div class="s">${T(it.s)}–${T(it.e)} · ${durLabel(mins)}${it.area ? `　<i class="ti ti-map-pin"></i> ${esc(it.area)}` : ''}${tags}</div>${showNav ? navBtn(it.map, it.t) : ''}${editIc}`);
     b.dataset.id = it.id;
     setCol(b, it.id);
     b.style.height = h + 'px'; place(b, top);
@@ -1960,13 +1963,18 @@ function renderCand() {
   if (candView.f && !all.some(c => (c.cls || 'eat') === candView.f)) candView.f = '';   // 那一類都排走了，回到全部
   const shown = all.filter(c => !candView.f || (c.cls || 'eat') === candView.f).reverse();   // 後加入的在後面，反過來＝最新的在上面
   const card = it => {
-    const mins = m(it.e) - m(it.s), multi = it.group || it.alts?.length;
+    const multi = it.group || it.alts?.length;
     const names = it.group ? it.stops.map(x => x.short || x.name).join(' → ') : it.alts?.length ? it.alts.map(a => a.name).join('／') : '';
-    const tags = (it.booked ? ' · <i class="ti ti-circle-check"></i> 已訂位' : '') + (it.alert ? ` · <i class="ti ti-alert-triangle"></i> ${esc(it.alert)}` : '');
+    // 外層只放營業時間（時鐘）、區域、其他提醒；預計時段不顯示（排進某一天時才用到，點開看得到）
+    const parts = String(it.alert || '').split(/\s*[・·]\s*/).filter(Boolean), isHr = x => /營業|公休|休息|\d{1,2}:\d{2}/.test(x);
+    const hrs = parts.filter(isHr), rest = parts.filter(x => !isHr(x));
+    const area = it.area || (/^位置：(.+)$/m.exec(it.mine || '') || [])[1]?.trim() || '';   // 舊的備選：區域寫在筆記的「位置：」
+    const seg = (ic, txt) => `<span class="cs-seg"><i class="ti ${ic}"></i> ${esc(txt)}</span>`;
+    const line = [hrs.length && seg('ti-clock', hrs.join('・')), area && seg('ti-map-pin', area), rest.length && seg('ti-alert-triangle', rest.join('・')), it.booked && seg('ti-circle-check', '已訂位')].filter(Boolean).join('');
     return `<div class="blk ${it.cls || 'eat'}${it.map && !multi ? ' has-nav' : ''}" data-id="${it.id}">
       <div class="t">${multi ? `<i class="ti ${it.group ? 'ti-stack-2' : 'ti-arrows-split-2'}"></i> ` : ''}${esc(it.t)}</div>
       ${names ? `<div class="d">${esc(names)}</div>` : it.desc === PENDING ? '<div class="d"><i class="ti ti-loader-2 spin"></i> 查詢中，查好會自動填上</div>' : it.desc ? `<div class="d">${esc(it.desc)}</div>` : ''}
-      <div class="s">預計 ${T(it.s)}–${T(it.e)} · ${durLabel(mins)}${tags}</div>
+      ${line ? `<div class="s cs-line">${line}</div>` : ''}
       ${it.map && !multi ? navBtn(it.map, it.t) : ''}${editIc}</div>`;
   };
   let body;
@@ -4596,7 +4604,7 @@ function openEditor(id, startAt, toDay, replaceId) {
   const [, it] = id ? findItem(id) : [null, null];
   ed = it
     ? { id, isNew: false, noteKey: it.note || it.t, t: it.t, desc: it.desc || '', cls: it.cls, s: it.s, dur: m(it.e) - m(it.s), map: it.map || '', travel: it.travel || '',
-        booked: !!it.booked, alert: it.alert || '', mine: it.mine || '', group: !!it.group, pick: !it.group && !!it.alts?.length, kind: 'one', orig: { s: it.s, e: it.e },
+        booked: !!it.booked, alert: it.alert || '', mine: it.mine || '', area: it.area || '', group: !!it.group, pick: !it.group && !!it.alts?.length, kind: 'one', orig: { s: it.s, e: it.e },
         day: findItem(id)[0], fromDay: findItem(id)[0] }
     : { id: null, isNew: true, noteKey: '', t: '', desc: '', cls: 'eat', s: startAt, dur: 60, map: '', travel: '', booked: false, alert: '', mine: '', group: false, pick: false, kind: 'one', day: current, fromDay: current };
   // 從備選排進某一天：帶入備選的資料，時間換成新增時點的那個時間
@@ -4641,7 +4649,9 @@ function openEditor(id, startAt, toDay, replaceId) {
     <div class="err" id="edTErr" hidden>請輸入名稱</div>
     ${ed.group || ed.pick ? '' : `
     <label class="ed-field"><span class="ed-lab">描述 <span class="ed-lab-hint">顯示在卡片上，半小時左右的小卡片不顯示</span></span>
-      <input id="edDesc" type="text" value="${esc(ed.desc)}" placeholder="例如：當地最大的傳統市場，可吃可買" autocomplete="off" maxlength="80"></label>`}
+      <input id="edDesc" type="text" value="${esc(ed.desc)}" placeholder="例如：當地最大的傳統市場，可吃可買" autocomplete="off" maxlength="80"></label>
+    <label class="ed-field"><span class="ed-lab">區域 <span class="ed-lab-hint">顯示在卡片的時間後面</span></span>
+      <input id="edArea" type="text" value="${esc(ed.area || '')}" placeholder="例如：寧曼、古城、塔佩門" autocomplete="off" maxlength="20"></label>`}
     ${ed.group ? '<div class="ed-hint"><i class="ti ti-info-circle"></i> 這是合併區塊。要改裡面的店家，請展開後直接點那一家</div>' : `
     <div class="ed-field"><span class="ed-lab">類型</span><div class="chips" id="edCls">
       ${TYPES.map(([k, n]) => `<button type="button" class="chip ${k}${k === ed.cls ? ' on' : ''}" data-v="${k}">${n}</button>`).join('')}</div></div>`}
@@ -4941,7 +4951,7 @@ function saveEditor() {
   else if (ed.tsel === 'manual' || ed.tchanged) fields.troute = ed.tval ? `manual|${ed.tmode}|${ed.tsel === 'manual' ? nowKey() : parseRoute(ed.troute).key || nowKey()}` : '';
   else if (ed.fromCand) fields.troute = '';
   if (!ed.group) Object.assign(fields, {
-    cls: ed.cls, ...(ed.pick ? {} : { map: $('edMap').value.trim(), desc: $('edDesc').value.trim() }),
+    cls: ed.cls, ...(ed.pick ? {} : { map: $('edMap').value.trim(), desc: $('edDesc').value.trim(), area: $('edArea')?.value.trim() || '' }),
     ...(fullEl && (NOTES[noteKey] || photoTouched) ? { note: noteKey } : {}), booked: $('edBooked').checked,
     alert: $('edAlert').value.trim(), mine: $('edMine').value.trim(),
   });
@@ -5121,7 +5131,7 @@ function openImport() {
       const t = q('.im-name'); if (!t) continue;
       const start = p.start ? m(p.start) : 12 * 60, area = (d && d.area) || r.dataset.area;
       const it = { id: uid(), t, desc: q('.im-desc'), cls: q('.im-cls'), s: hhmm(start), e: hhmm(Math.min(start + dur, DAY_END)), map: r.dataset.map || t,
-        travel: '', booked: false, alert: q('.im-alert'), mine: [area ? `位置：${area}` : '', d && d.alert ? `提醒：${d.alert}` : ''].filter(Boolean).join('\n'), note: '', hours: p.hours || '',
+        travel: '', booked: false, alert: q('.im-alert'), mine: d && d.alert ? `提醒：${d.alert}` : '', area: area || '', note: '', hours: p.hours || '',
         loc: p.loc || '', pid: p.pid || '' };
       // 有 Google 地圖的資料但 AI 描述還沒好：先加入，描述留給背景查詢補
       if (p.places && !it.desc && !d) it.desc = PENDING;
@@ -5236,7 +5246,8 @@ async function bgLookup({ id, link }) {
     it.desc = d ? d.desc || '' : '';
     if (d) {
       if (it.t === p.name && betterName(p.name, d.name)) it.t = d.name;
-      const extra = [d.area && !/位置：/.test(it.mine || '') ? `位置：${d.area}` : '', d.alert ? `提醒：${d.alert}` : ''].filter(Boolean);
+      if (d.area && !it.area) it.area = d.area;   // 區域存在卡片上（顯示在時間後面），不再寫進筆記
+      const extra = [d.alert ? `提醒：${d.alert}` : ''].filter(Boolean);
       if (extra.length) it.mine = [it.mine, ...extra].filter(Boolean).join('\n');
       reviewNote(it, d);
     }
@@ -5247,7 +5258,7 @@ async function bgLookup({ id, link }) {
       it.desc = p.desc || '';
       if (it.cls === 'other' && p.cls) it.cls = p.cls;
       if (!it.alert) it.alert = p.alert || '';
-      if (!it.mine && p.area) it.mine = `位置：${p.area}`;
+      if (!it.area && p.area) it.area = p.area;
       if (day === 'cand' && m(it.e) - m(it.s) === 60 && p.dur) it.e = hhmm(Math.min(m(it.s) + p.dur, DAY_END));
     } else {
       it.desc = '';
@@ -5478,7 +5489,7 @@ function openSubEditor(cardId, kind, idx, fromCand, replace) {
   const last = card.stops?.[card.stops.length - 1];
   const at = last ? hhmm(m(last.s) + last.dur) : card.s;
   const c = fromCand && (DATA.cand || []).find(x => x.id === fromCand);
-  const area = c && kind === 'stop' ? /^位置：(.+)$/m.exec(c.mine || '') : null;   // 導入時寫的「位置：寧曼」→ 一站的區域欄位
+  const area = c && kind === 'stop' && !c.area ? /^位置：(.+)$/m.exec(c.mine || '') : null;   // 舊資料：導入時寫在筆記的「位置：寧曼」→ 一站的區域欄位（新的直接存在 area）
   const sub = c
     ? { ...placeOf(c), s: old ? old.s : at, dur: old ? old.dur : m(c.e) - m(c.s),
         ...(area ? { area: area[1].trim(), mine: (c.mine || '').replace(/^位置：.+$\n?/m, '').trim() } : {}) }
