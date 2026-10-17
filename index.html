@@ -784,6 +784,22 @@ button.ov-stay{width:100%;font:inherit;text-align:left;cursor:pointer}
 .chips.nights .chip{flex:none;height:32px;padding:0 12px;font-size:13px;font-variant-numeric:tabular-nums}
 .ov-stay-add{width:fit-content;margin-left:auto}
 /* 編輯卡片裡收起來的欄位（區域）：一行「區域　📍古城　⌄」，點了展開輸入框 */
+/* 停留多久的刻度尺 */
+.dr{margin-top:14px}
+.dr-head{position:relative;display:flex;align-items:baseline;min-height:20px}
+.dr-head .ed-lab{margin:0}
+.dr-val{position:absolute;left:50%;bottom:0;transform:translateX(-50%);white-space:nowrap;font-size:15px;font-weight:600;color:var(--accent-fg);font-variant-numeric:tabular-nums}
+.dr-win{position:relative;margin-top:8px;border-radius:12px;background:#F7F7F7}
+.dr-scroll{overflow-x:auto;overflow-y:hidden;scrollbar-width:none;scroll-snap-type:x mandatory;scroll-padding-left:50%;-webkit-overflow-scrolling:touch;overscroll-behavior-x:contain;touch-action:pan-x;
+  -webkit-mask-image:linear-gradient(to right,transparent,#000 18%,#000 82%,transparent);mask-image:linear-gradient(to right,transparent,#000 18%,#000 82%,transparent)}
+.dr-scroll::-webkit-scrollbar{display:none}
+.dr-ticks{display:flex;width:max-content;padding:0 50%;height:50px}
+.dr-ticks i{flex:none;position:relative;width:10px;height:100%;scroll-snap-align:start;font-style:normal}
+.dr-ticks i::before{content:"";position:absolute;left:0;top:8px;width:1px;height:8px;background:#CFCAC4}
+.dr-ticks i.q::before{height:13px}
+.dr-ticks i.h::before{width:1.5px;height:18px;background:var(--text2)}
+.dr-ticks b{position:absolute;left:0;top:29px;transform:translateX(-50%);font-size:11px;font-weight:500;color:var(--text2)}
+.dr-needle{position:absolute;left:50%;top:4px;width:3px;height:26px;margin-left:-1px;border-radius:2px;background:var(--accent-fg);pointer-events:none}
 .ed-fold-h{display:flex;align-items:center;gap:8px;width:100%;padding:0;border:0;background:none;font:inherit;color:inherit;text-align:left;cursor:pointer}
 .ed-fold-h .ed-lab{margin:0}
 .ed-fold-v{flex:1;min-width:0;font-size:12px;font-weight:400;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
@@ -3772,7 +3788,7 @@ sheet.addEventListener('touchstart', e => {
   if (sheet.classList.contains('dlg') || e.touches.length > 1) return;
   const onHead = e.target.closest('.grab, .sh-head');
   // 鍵盤打開時只能拉上方的拉桿或標題列關閉，免得想捲動內容卻把面板關掉
-  if (!onHead && (kbOpen() || sheet.scrollTop > 0 || e.target.closest('input, textarea, select, .chips, .full-txt, .ph-drag, .af-mapwrap, .af-bigmap, .cv-prev, .ts-cover, .cand-pick'))) return;
+  if (!onHead && (kbOpen() || sheet.scrollTop > 0 || e.target.closest('input, textarea, select, .chips, .full-txt, .ph-drag, .af-mapwrap, .af-bigmap, .cv-prev, .ts-cover, .cand-pick, .dr-scroll'))) return;
   pull = { y0: e.touches[0].clientY, dy: 0, t0: Date.now(), active: false };
 }, { passive: true });
 sheet.addEventListener('touchmove', e => {
@@ -4376,6 +4392,33 @@ function wireCandDrop(wrap, onPick, btn) {
   });
 }
 
+// ---------- 停留多久的刻度尺：左右滑，中間的指針指到的就是長度（5 分鐘一格、整點標字，放開會停在刻度上） ----------
+const DR_MIN = 5, DR_MAX = 480, DR_STEP = 5, DR_PX = 10;   // 每 5 分鐘 10px，最長 8 小時
+function durRulerHtml(id) {
+  let t = '';
+  for (let v = DR_MIN; v <= DR_MAX; v += DR_STEP) t += `<i class="${v % 60 === 0 ? 'h' : v % 15 === 0 ? 'q' : ''}">${v % 60 === 0 ? `<b>${v / 60}h</b>` : ''}</i>`;
+  return `<div class="dr" id="${id}"><div class="dr-head"><span class="ed-lab">停留時間</span><span class="dr-val"></span></div><div class="dr-win"><div class="dr-scroll"><div class="dr-ticks">${t}</div></div><span class="dr-needle"></span></div></div>`;
+}
+// get：現在的長度；set(分鐘)：滑到新的刻度時呼叫。回傳 sync(分鐘)：從外面改長度時把尺移過去
+function wireRuler(box, get, set) {
+  const sc = box.querySelector('.dr-scroll'), val = box.querySelector('.dr-val');
+  const clamp = v => Math.max(DR_MIN, Math.min(DR_MAX, v));
+  const toX = v => (clamp(v) - DR_MIN) / DR_STEP * DR_PX;
+  const show = v => { const h = Math.floor(v / 60), mm = v % 60; val.textContent = [h && `${h} 小時`, mm && `${mm} 分`].filter(Boolean).join(' '); };   // 「2 小時 15 分」
+  let last = clamp(get()), raf = 0, quiet = false;
+  show(last);
+  requestAnimationFrame(() => { quiet = true; sc.scrollLeft = toX(last); requestAnimationFrame(() => { quiet = false; }); });   // 面板畫好才量得到寬度
+  sc.addEventListener('scroll', () => {
+    if (quiet) return;
+    cancelAnimationFrame(raf);
+    raf = requestAnimationFrame(() => {
+      const v = clamp(DR_MIN + Math.round(sc.scrollLeft / DR_PX) * DR_STEP);
+      if (v === last) return;
+      last = v; show(v); set(v); navigator.vibrate?.(4);
+    });
+  }, { passive: true });
+  return v => { v = clamp(v); if (v === last) return; last = v; show(v); sc.scrollTo({ left: toX(v), behavior: 'smooth' }); };
+}
 let ed = null;   // 正在編輯的內容
 // replaceId：從備選替換——帶入備選 id 的資料，排在 replaceId 那張卡片的時段，存檔後那張移到備選
 // ---------- 加入行程（兩步）：1. 要去哪裡（搜尋 Google 地點，地圖確認）2. 什麼時候（名稱、類型、日期、時間、已訂位）----------
@@ -4561,16 +4604,14 @@ function drawAdd() {
   const where = af.pick ? `<i class="ti ti-map-pin-check"></i> ${esc(af.pick.name)}` : af.cand ? '<i class="ti ti-bookmark"></i> 從備選' : af.home ? `<i class="ti ti-bed"></i> ${esc(af.home.name)}` : '不用地點';
   const isStop = af.sub?.kind === 'stop', isAlt = af.sub?.kind === 'alt';
   if (isStop && !af.durTouched && !af.cand) af.dur = 15;   // 合併區塊的一站：預設停 15 分鐘
-  const durs = isStop ? [5, 10, 15, 30, 45, 60] : [30, 60, 90, 120, 180], stepMin = isStop ? 5 : 15;
   // 從某一天點進來的，不用再選第幾天；Google 地圖、備選、回飯店都已經分好類，只有自己打的名稱要選類型；回飯店不用訂位
   const fixedCls = !!(af.pick || af.cand || af.home);
   body.innerHTML = head(isAlt ? '停留多久？' : '什麼時候？', where) + `
     <label class="ed-field"><span class="ed-lab">名稱</span><input type="text" id="afName" value="${esc(af.name)}" placeholder="例如：自由活動、機場接送、整理行李" autocomplete="off" maxlength="60"></label>
     ${fixedCls ? '' : `<div class="ed-field"><span class="ed-lab">類型</span><div class="chips" id="afCls">${TYPES.map(([k, n]) => `<button type="button" class="chip ${k}${k === af.cls ? ' on' : ''}" data-v="${k}">${n}</button>`).join('')}</div></div>`}
     ${af.day === 'cand' ? '' : `<div class="ed-field"><span class="ed-lab">時間${isAlt ? ' <span class="ed-lab-hint">每一家同一個開始時間</span>' : ''}</span>
-      <div class="ed-time af-time"><input type="time" id="afS" step="300" value="${T(hhmm(af.s))}" aria-label="開始時間"${isAlt ? ' disabled' : ''}><span class="ed-arrow">→</span><span class="ed-endbox" aria-label="結束時間（自動算）">${T(hhmm(Math.min(af.s + af.dur, DAY_END)))}</span>
-        <span class="ed-len"><button type="button" class="step" data-d="-${stepMin}" aria-label="少 ${stepMin} 分鐘"><i class="ti ti-minus"></i></button><span class="ed-dur">${durLabel(af.dur)}</span><button type="button" class="step" data-d="${stepMin}" aria-label="多 ${stepMin} 分鐘"><i class="ti ti-plus"></i></button></span></div>
-      <div class="chips sm" id="afDur">${durs.map(x => `<button type="button" class="chip${x === af.dur ? ' on' : ''}" data-v="${x}">${durLabel(x)}</button>`).join('')}</div></div>
+      <div class="ed-time af-time"><input type="time" id="afS" step="300" value="${T(hhmm(af.s))}" aria-label="開始時間"${isAlt ? ' disabled' : ''}><span class="ed-arrow">→</span><span class="ed-endbox" id="afEnd" aria-label="結束時間（自動算）">${T(hhmm(Math.min(af.s + af.dur, DAY_END)))}</span></div>
+      ${durRulerHtml('afRuler')}</div>
     ${af.home || af.sub ? '' : `<label class="ed-switch"><input type="checkbox" class="sw" id="afBooked"${af.booked ? ' checked' : ''}><span>已訂位</span></label>`}`}
     <div class="err" id="afErr" hidden></div>
     <div class="ed-actions"><button type="button" class="btn ghost" id="afBack">上一步</button><button type="button" class="btn primary" id="afSave">加入</button></div>`;
@@ -4579,8 +4620,8 @@ function drawAdd() {
   $('afName').addEventListener('input', e => { af.name = e.target.value; });
   $('afCls')?.addEventListener('click', e => { const c = e.target.closest('.chip'); if (!c) return; af.cls = c.dataset.v; if (!af.durTouched) af.dur = CLS_DUR[af.cls]; drawAdd(); });
   $('afS')?.addEventListener('change', e => { if (e.target.value) { af.s = fromInput(e.target.value); af.sTouched = true; drawAdd(); } });
-  $('afDur')?.addEventListener('click', e => { const c = e.target.closest('.chip'); if (!c) return; af.dur = +c.dataset.v; af.durTouched = true; drawAdd(); });
-  body.querySelectorAll('.af-time .step').forEach(b => b.addEventListener('click', () => { af.dur = Math.max(stepMin, af.dur + +b.dataset.d); af.durTouched = true; drawAdd(); }));
+  // 停留多久：刻度尺（滑的時候不重畫整個面板，只更新結束時間，不然會打斷滑動）
+  if ($('afRuler')) wireRuler($('afRuler'), () => af.dur, v => { af.dur = v; af.durTouched = true; $('afEnd').textContent = T(hhmm(Math.min(af.s + af.dur, DAY_END))); });
   $('afBooked')?.addEventListener('change', e => { af.booked = e.target.checked; });
   $('afBack').addEventListener('click', () => { af.step = 1; af.cand = null; af.home = null; drawAdd(); });
   $('afSave').addEventListener('click', af.sub ? saveSubAdd : saveAdd);
@@ -4771,7 +4812,6 @@ function openEditor(id, startAt, toDay, replaceId) {
   const swaps = swapFrom ? (DATA.cand || []).filter(c => c.id !== id) : [];
   // 多選一的選項有設停留時間：整張的長度取最久的那一家，外層不能改長度
   ed.fixedLen = ed.group || (ed.pick && (it?.alts || []).some(a => +a.dur > 0));
-  const durs = [30, 60, 90, 120, 180];
   const cands = ed.isNew && isDay(current) ? DATA.cand || [] : [];
   openSheet(`
     <div class="sh-head"><div style="flex:1;min-width:0"><div class="sh-title" id="shTitle">${ed.isNew ? '新增行程' : old ? '從備選替換' : ed.fromCand ? '從備選排入' : '編輯行程'}</div>
@@ -4813,16 +4853,11 @@ function openEditor(id, startAt, toDay, replaceId) {
       <div class="chips sm day-chips" id="edDay">${ALL_KEYS.map(k => `<button type="button" class="chip${k === ed.day ? ' on' : ''}${k === 'cand' ? ' cand' : ''}" data-v="${k}">${k === 'cand' ? '備選' : dayNum(k)}</button>`).join('')}</div></div>
     <div class="ed-field"><span class="ed-lab">時間</span>
       <div class="ed-time"><input id="edS" type="time" step="300" value="${T(ed.s)}" aria-label="開始時間">
-        <span class="ed-arrow">→</span><span class="ed-endbox" id="edEnd" aria-label="結束時間（自動算）"></span>${ed.fixedLen ? '' : `
-        <span class="ed-len">
-          <button type="button" class="step" data-d="-15" aria-label="少 15 分鐘"><i class="ti ti-minus"></i></button>
-          <span class="ed-dur" id="edDurTxt"></span>
-          <button type="button" class="step" data-d="15" aria-label="多 15 分鐘"><i class="ti ti-plus"></i></button></span>`}</div>
+        <span class="ed-arrow">→</span><span class="ed-endbox" id="edEnd" aria-label="結束時間（自動算）"></span></div>
       <div class="ed-mid" id="edMid" hidden>結束時間過了午夜，還算同一天</div>
       ${ed.group ? '<div class="ed-hint"><i class="ti ti-info-circle"></i> 區塊的長度由裡面的店家決定。改開始時間，所有店家會一起移動</div>'
         : ed.fixedLen ? '<div class="ed-hint"><i class="ti ti-info-circle"></i> 長度取停留最久的那一家。要改長度，請展開後點那一家設定停留時間</div>' : `
-      <div class="chips sm" id="edDur">
-        ${durs.map(d => `<button type="button" class="chip" data-v="${d}">${durLabel(d)}</button>`).join('')}</div>`}
+      ${durRulerHtml('edRuler')}`}
       ${ed.isNew ? '' : '<label class="ed-switch" id="edPushWrap" hidden><input type="checkbox" class="sw" id="edPush"><span>後面的行程自動移動 <small id="edPushTxt"></small></span></label>'}
       <div class="err" id="edTimeErr" hidden></div>
     </div>
@@ -4872,6 +4907,7 @@ function wireEditor() {
     const sMin = $('edS').value ? fromInput($('edS').value) : m(ed.s), eMin = sMin + ed.dur;
     $('edEnd').textContent = clock(eMin); $('edMid').hidden = eMin <= 24 * 60;
     if ($('edDurTxt')) $('edDurTxt').textContent = durLabel(ed.dur);
+    ed.syncRuler?.(ed.dur);   // 別的地方改了長度（例如換卡片樣式），刻度尺跟著移
     sheet.querySelectorAll('#edDur .chip').forEach(c => c.classList.toggle('on', +c.dataset.v === ed.dur));
     // 時間有變時，才問要不要把後面的行程一起移動
     if ($('edPushWrap')) {
@@ -4937,7 +4973,9 @@ function wireEditor() {
     sheet.querySelectorAll('#edDay .chip').forEach(x => x.classList.toggle('on', x === c));
     refresh();
   });
-  $('edDur')?.addEventListener('click', e => { const c = e.target.closest('.chip'); if (c) { ed.dur = +c.dataset.v; refresh(); } });
+  // 停留多久：左右滑的刻度尺（5 分鐘一格，整點有標字）
+  const setRuler = $('edRuler') ? wireRuler($('edRuler'), () => ed.dur, v => { ed.dur = v; refresh(); }) : null;
+  ed.syncRuler = setRuler;
   sheet.querySelectorAll('.step').forEach(b => b.addEventListener('click', () => { ed.dur = Math.max(5, ed.dur + +b.dataset.d); refresh(); }));
   $('edS').addEventListener('input', refresh);
   $('edT').addEventListener('input', () => { $('edTErr').hidden = true; updateMapStatus(); });
@@ -5670,21 +5708,15 @@ function openSubEditor(cardId, kind, idx, fromCand, replace) {
     <div class="ed-field"><span class="ed-lab">時間</span>
       <div class="ed-time"><input id="sbS" type="time" step="300" value="${T(sub.s)}" aria-label="抵達時間">
         <span class="ed-arrow">→</span><span class="ed-endbox" id="sbEnd" aria-label="離開時間（自動算）"></span>
-        <span class="ed-len">
-          <button type="button" class="step" data-d="-5" aria-label="少 5 分鐘"><i class="ti ti-minus"></i></button>
-          <span class="ed-dur" id="sbDurTxt"></span>
-          <button type="button" class="step" data-d="5" aria-label="多 5 分鐘"><i class="ti ti-plus"></i></button></span></div>
-      <div><div class="chips sm" id="sbDur">${[5, 10, 15, 30, 45, 60].map(d => `<button type="button" class="chip" data-v="${d}">${durLabel(d)}</button>`).join('')}</div></div></div>
+</div>
+      ${durRulerHtml('sbRuler')}</div>
     <label class="ed-field"><span class="ed-lab">區域</span>
       <input id="sbArea" type="text" value="${esc(sub.area)}" placeholder="例如：寧曼區、Nimman Soi 13" autocomplete="off"></label>` : `
     <div class="ed-field"><span class="ed-lab">時間 <span class="ed-lab-hint">每一家同一個開始時間；整張的長度取最久的那一家</span></span>
       <div class="ed-time"><input id="sbS" type="time" step="300" value="${T(card.s)}" aria-label="開始時間（整張卡片一起改）">
         <span class="ed-arrow">→</span><span class="ed-endbox" id="sbEnd" aria-label="離開時間（自動算）"></span>
-        <span class="ed-len">
-          <button type="button" class="step" data-d="-15" aria-label="少 15 分鐘"><i class="ti ti-minus"></i></button>
-          <span class="ed-dur" id="sbDurTxt"></span>
-          <button type="button" class="step" data-d="15" aria-label="多 15 分鐘"><i class="ti ti-plus"></i></button></span></div>
-      <div><div class="chips sm" id="sbDur">${[30, 60, 90, 120, 180].map(d => `<button type="button" class="chip" data-v="${d}">${durLabel(d)}</button>`).join('')}</div></div></div>`}
+</div>
+      ${durRulerHtml('sbRuler')}</div>`}
     <div class="ed-field"><span class="ed-lab">類型 <span class="ed-lab-hint">拆成獨立卡片時用這個顏色</span></span><div class="chips" id="sbCls">
       ${TYPES.map(([k, n]) => `<button type="button" class="chip ${k}${k === sed.cls ? ' on' : ''}" data-v="${k}">${n}</button>`).join('')}</div></div>
     <label class="ed-field"><span class="ed-lab">重點提醒</span>
@@ -5726,14 +5758,10 @@ function openSubEditor(cardId, kind, idx, fromCand, replace) {
   }, { addEventListener() {} });
   const refresh = () => {
     $('sbMapStatus').innerHTML = mapStatusHtml($('sbMap').value.trim(), $('sbName').value.trim()); setPin($('sbMap'), isGMap($('sbMap').value.trim()));
-    $('sbDurTxt').textContent = durLabel(sed.dur);
-    sheet.querySelectorAll('#sbDur .chip').forEach(c => c.classList.toggle('on', +c.dataset.v === sed.dur));
     $('sbEnd').textContent = clock(($('sbS').value ? fromInput($('sbS').value) : m(isStop ? sub.s : card.s)) + sed.dur);
-    sheet.querySelectorAll('#sbDur .chip').forEach(c => c.classList.toggle('on', +c.dataset.v === sed.dur));
   };
   ['sbName', 'sbMap', 'sbS'].forEach(id => $(id)?.addEventListener('input', () => { $('sbNameErr').hidden = true; refresh(); }));
-  $('sbDur')?.addEventListener('click', e => { const c = e.target.closest('.chip'); if (c) { sed.dur = +c.dataset.v; refresh(); } });
-  sheet.querySelectorAll('.step').forEach(b => b.addEventListener('click', () => { sed.dur = Math.max(5, sed.dur + +b.dataset.d); refresh(); }));
+  wireRuler($('sbRuler'), () => sed.dur, v => { sed.dur = v; refresh(); });   // 停留多久：刻度尺
   wirePhoto('sbPhoto', nk);
   $('sbSave').addEventListener('click', saveSub);
   $('sbDel')?.addEventListener('click', deleteSub);
