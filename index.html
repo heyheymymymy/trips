@@ -807,8 +807,19 @@ button.ov-stay{width:100%;font:inherit;text-align:left;cursor:pointer}
 .chips.nights::-webkit-scrollbar{display:none}
 .chips.nights .chip{flex:none;height:32px;padding:0 12px;font-size:13px;font-variant-numeric:tabular-nums}
 .ov-stay-add{width:fit-content;margin-left:auto}
+.ov-add-full{width:100%;height:40px;margin-top:10px;border:0;border-radius:12px;background:var(--fill);color:var(--accent-fg);font:inherit;font-size:14px;font-weight:600;display:flex;align-items:center;justify-content:center;gap:4px;cursor:pointer}   /* 跟時間線的「＋ 加入行程」一樣 */
 /* 機票：去程、回程上下並排。起飛、抵達時間最大，下面機場代碼＋航廈；中間虛線上的小飛機照時間往前移（飛行中） */
 .fl-group + .fl-group{margin-top:16px}
+/* 時間線上的航班卡片：灰底、飛機圖示（從機票自動產生，不能拖） */
+.blk.flight{background:var(--fill);border-color:transparent;color:var(--text);cursor:pointer}
+.blk.flight .t{display:flex;align-items:center;gap:5px;font-weight:600}
+.blk.flight .t .ti{font-size:16px;color:var(--accent-fg)}
+.blk.flight .s{color:var(--text2)}
+.fb-go{margin-top:4px;font-size:12px;font-weight:600;color:var(--accent-fg)}
+.fb-st{font-size:11px;font-weight:600;padding:0 6px;border-radius:999px;background:var(--accent-fg);color:#fff}
+.fb-st.bad{background:#C2412D}
+.fl-sheet{margin-top:12px}
+.fl-sheet .fl-leg{cursor:default}
 .fl-seg .seg-thumb{width:calc((100% - 6px) / 2)}   /* 加入機票視窗裡的去程／回程 */
 .fl-seg[data-i="1"] .seg-thumb{transform:translateX(100%)}
 .fl-lab{font-size:12px;font-weight:600;color:var(--text2);margin:0 0 6px 2px}
@@ -1960,7 +1971,7 @@ setInterval(() => { if (document.visibilityState === 'visible' && !drag && !busy
 let START = 9, END = 22, baseH = 0;
 function computeRange() {
   let lo = 9 * 60, hi = 22 * 60;
-  for (const k of DAY_KEYS) for (const it of DATA[k] || []) { lo = Math.min(lo, m(it.s)); hi = Math.max(hi, m(it.e)); }
+  for (const k of DAY_KEYS) for (const it of withFlights(DATA[k] || [], k)) { lo = Math.min(lo, m(it.s)); hi = Math.max(hi, m(it.e)); }
   START = Math.floor(lo / 60); END = Math.min(29, Math.ceil(hi / 60));
   baseH = (END - START) * 60 * PX + 20;
 }
@@ -2040,7 +2051,7 @@ function renderGrid() {
 function buildLayer(page, isLive) {
   const layer = div('layer');
   target = layer; live = isLive;
-  renderCards(itemsOf(page), page);
+  renderCards(withFlights(itemsOf(page), page), page);
   target = null; live = true;
   return layer;
 }
@@ -2078,6 +2089,12 @@ function renderCards(items, day) {
     }
     const top = y(it.s), mins = m(it.e) - m(it.s), h = Math.max(mins * PX - 3, 28);
     const extra = clash.has(it.id) ? ' clash' : '';
+    if (it.flight) {   // 航班卡片：灰底＋飛機圖示，不能拖，點了看機票
+      const fb = div('blk flight' + (it.kind === 'dep' ? ' fdep' : '') + extra, flightBlockHtml(it, prev, h));
+      fb.dataset.flid = it.flight.id; setCol(fb, it.id);
+      fb.style.height = h + 'px'; place(fb, top);
+      return;
+    }
     // 合併區塊：好幾站依序走；多選一：幾間都可以去，到時候挑一間。兩種都是可以展開的卡片
     const pick = !it.group && !!it.alts?.length;
     if (it.group || pick) {
@@ -2188,6 +2205,7 @@ function renderPage(page) {
   if (page === 'trips') renderTrips();
   wizEl.hidden = page !== 'new';
   if (page === 'new') { if (prevPage !== 'new') wizReset(); renderWiz(); }
+  if (isDay(page) && tripFlights().length && flightItems(page).length) { fillAirportLocs().then(() => fillAirportRoute(page)); refreshFlights(); }   // 航班那天：補機場座標、算到機場的交通、查最新狀態
   if (onMap) { ovEl.hidden = candEl.hidden = true; tl.style.display = 'none'; cardsEl = curLayer = null; drawMap(page); return; }
   ovEl.hidden = page !== 'overview';
   if (page === 'overview') renderOverview();
@@ -2349,10 +2367,10 @@ function renderOverview() {
   if (!tripStays().length && !canEdit) html += '<div class="ov-empty">還沒有住處</div>';
   if (!tripStays().length && canEdit) html += '<button type="button" class="ov-stay add" id="staysAdd"><i class="ti ti-bed"></i><span><b>加入住處</b><small>每天第一段交通從住處算，加入行程可以一鍵回住處</small></span><i class="ti ti-plus"></i></button>';
   if (tripStays().length) html += stayListHtml()
-    + (canEdit ? '<button type="button" class="wiz-add ov-stay-add" id="staysAdd"><i class="ti ti-plus"></i>加入住處</button>' : '');
+    + (canEdit ? '<button type="button" class="ov-add-full" id="staysAdd"><i class="ti ti-plus"></i>加入住處</button>' : '');
   // 機票：去程／回程一張卡片；放在住宿下面
   html += '<div class="ov-sec">機票</div>';
-  if (tripFlights().length) html += flightCardHtml() + (canEdit ? '<button type="button" class="wiz-add ov-stay-add" id="flightAdd"><i class="ti ti-plus"></i>加入機票</button>' : '');
+  if (tripFlights().length) html += flightCardHtml() + (canEdit ? '<button type="button" class="ov-add-full" id="flightAdd"><i class="ti ti-plus"></i>加入機票</button>' : '');
   else if (canEdit) html += '<button type="button" class="ov-stay add" id="flightAdd"><i class="ti ti-plane"></i><span><b>加入機票</b><small>輸入航班號碼，自動帶入時間和航廈</small></span><i class="ti ti-plus"></i></button>';
   else html += '<div class="ov-empty">還沒有機票</div>';
   } else {
@@ -2909,15 +2927,15 @@ function defaultFlightDir() {
 const legsOf = dir => tripFlights().filter(f => f.dir === dir).sort((a, b) => (utcMs(a.dep.sched?.utc) || 0) - (utcMs(b.dep.sched?.utc) || 0) || (a.dep.sched?.local || '').localeCompare(b.dep.sched?.local || ''));
 let flightOpen = null;   // 點開看登機資訊的那一段
 // 機票：去程、回程上下並排，每一段一張卡片。最大的是起飛、抵達時間；下面是機場代碼＋航廈；中間虛線上的小飛機＝進度
-function flightCardHtml() {
-  const canEdit = TRIP_ROLE === 'edit';
-  const timeOf = e => localParts(e.sched?.local);
-  const legHtml = (f, i, legs) => {
+// 一段航班（機票卡片、時間線點開的視窗共用）。legs：同一個方向的所有段（算轉機）
+function flightLegHtml(f, i, legs) {
+    const canEdit = TRIP_ROLE === 'edit';
+    const timeOf = e => localParts(e.sched?.local);
     const pr = flightProgress(f), bd = flightBadge(f), open = flightOpen === f.id, lv = flightLive[liveKey(f)];
     const dp = timeOf(f.dep), ap = timeOf(f.arr);
     const plus = dp && ap && ap.md !== dp.md ? '<sup>+1</sup>' : '';   // 隔天才到
     const det = [['艙等', f.cls], ['座位', f.seat], ['訂位代號', f.pnr, 'copy'], ['機票號碼', f.ticket, 'copy'], ['託運行李', f.bag], ['機型', f.aircraft], ['登機門', lv?.dep?.gate], ['報到櫃檯', lv?.dep?.checkIn], ['備註', f.note]].filter(x => x[1]);
-    const next = legs[i + 1], lay = next ? Math.round((utcMs(next.dep.sched?.utc) - utcMs(f.arr.sched?.utc)) / 60000) : 0;
+    const next = legs?.[i + 1], lay = next ? Math.round((utcMs(next.dep.sched?.utc) - utcMs(f.arr.sched?.utc)) / 60000) : 0;
     const pos = Math.round((pr == null ? 0 : pr) * 100);
     const term = e => `${esc(e.iata)}${e.terminal ? ` · T${esc(e.terminal)}` : ''}`;
     return `<div class="fl-leg${open ? ' open' : ''}${pr === 1 ? ' done' : ''}" data-fl="${esc(f.id)}">
@@ -2934,8 +2952,9 @@ function flightCardHtml() {
         ${canEdit ? `<button type="button" class="btn ghost fl-edit" data-fledit="${esc(f.id)}"><i class="ti ti-pencil"></i> 編輯這段機票</button>` : ''}
       </div></div></div>
       ${next ? `<div class="fl-lay"><i class="ti ti-transfer"></i>${esc(airportZh(f.arr))}轉機${lay > 0 ? ` ${fmtDur(lay)}` : ''}</div>` : ''}`;
-  };
-  const group = (dir, label) => { const legs = legsOf(dir); return legs.length ? `<div class="fl-group"><div class="fl-lab">${label}</div>${legs.map((f, i) => legHtml(f, i, legs)).join('')}</div>` : ''; };
+}
+function flightCardHtml() {
+  const group = (dir, label) => { const legs = legsOf(dir); return legs.length ? `<div class="fl-group"><div class="fl-lab">${label}</div>${legs.map((f, i) => flightLegHtml(f, i, legs)).join('')}</div>` : ''; };
   return `<div class="fl-card">${group('out', '去程')}${group('back', '回程')}<div class="fl-src">航班資料：AeroDataBox．時間以你的機票為準</div></div>`;
 }
 // 航班當天（起飛前 12 小時到抵達後 2 小時）、出發前 2 天內：有編輯碼的人打開時查一次最新狀態
@@ -2977,11 +2996,12 @@ setInterval(() => {
   });
 }, 60000);
 let flightSeq = 0;
-async function saveFlights(flights, msg, ms = 1500) {
+// quiet：背景補資料（機場座標、到機場的交通時間），不跳提示、面板開著不重畫
+async function saveFlights(flights, msg, ms = 1500, quiet) {
   const prev = tripFlights(), seq = ++flightSeq;
   setTrip({ ...TRIP, flights }); cache();
-  if (current) renderPage(current);
-  toast(msg, '', () => {}, ms);
+  if (current && !(quiet && sheet.classList.contains('on'))) renderPage(current);
+  if (!quiet) toast(msg, '', () => {}, ms);
   try {
     const r = await api({ ...getAuth(), action: 'saveTrip', flights }, 60000);
     if (seq !== flightSeq) return;
@@ -2991,7 +3011,7 @@ async function saveFlights(flights, msg, ms = 1500) {
     if (seq !== flightSeq) return;
     setTrip({ ...TRIP, flights: prev }); cache();
     if (current && !sheet.classList.contains('on')) renderPage(current);
-    toast(x.code === 'network' ? '機票沒存到：連不上雲端' : '機票沒存到：' + x.message, '重試', () => saveFlights(flights, msg), 8000);
+    if (!quiet) toast(x.code === 'network' ? '機票沒存到：連不上雲端' : '機票沒存到：' + x.message, '重試', () => saveFlights(flights, msg), 8000);
   }
 }
 // 加入／編輯一段機票：輸入航班號碼＋日期查詢帶入（查不到可以手動輸入），再填登機資訊
@@ -3101,6 +3121,101 @@ function openFlightEditor(id, dir0) {
     if (!alive()) { sheet.removeEventListener('keydown', k); return; }
     if (e.key === 'Enter' && !e.isComposing && (e.target.id === 'feNum' || e.target.id === 'feDate') && !manual) { e.preventDefault(); look(); }
   });
+}
+// ---------- 時間線上的航班卡片（從機票自動產生，不存在行程裡）----------
+// 去程最後一段：落地那天放「抵達」，從落地開始預留 1 小時入境、領行李；當天下一站的交通從機場算
+// 回程第一段：起飛那天放「前往機場、報到」，起飛前 2.5 小時到機場；前一站（住處或最後一個行程）到機場的交通時間自動算，標出幾點要出發
+const ARRIVE_MIN = 60, CHECKIN_MIN = 150;
+const hmOfLocal = l => (/[ T](\d{2}:\d{2})/.exec(l || '') || [])[1] || '';
+// 當天有即時狀態就用最新的時間（當地）
+function flightLocal(f, end) {
+  const lv = flightLive[liveKey(f)]?.[end], e = f[end];
+  return lv?.runway?.local || lv?.revised?.local || lv?.predicted?.local || e.sched?.local || '';
+}
+function flightItems(day) {
+  if (!isDay(day) || !TRIP) return [];
+  const ymdOf = tripDates()[dayNum(day) - 1]?.ymd; if (!ymdOf) return [];
+  const out = legsOf('out'), back = legsOf('back'), list = [];
+  const a = out[out.length - 1], d = back[0];
+  if (a && (a.arr.sched?.local || '').slice(0, 10) === ymdOf) {
+    const s = m(hmOfLocal(flightLocal(a, 'arr')));
+    if (!isNaN(s)) list.push({ id: 'fl-a-' + a.id, flight: a, kind: 'arr', s: hhmm(s), e: hhmm(Math.min(s + ARRIVE_MIN, DAY_END)), t: `抵達${airportZh(a.arr)}`, loc: a.arr.loc || '', cls: 'other' });
+  }
+  if (d && (d.dep.sched?.local || '').slice(0, 10) === ymdOf) {
+    const e = m(hmOfLocal(flightLocal(d, 'dep')));
+    if (!isNaN(e)) list.push({ id: 'fl-d-' + d.id, flight: d, kind: 'dep', s: hhmm(Math.max(0, e - CHECKIN_MIN)), e: hhmm(e), t: '前往機場、報到', loc: d.dep.loc || '', cls: 'other',
+      travel: d.toAirport?.text || '', troute: d.toAirport?.troute || '' });
+  }
+  return list;
+}
+// 這天的行程＋航班卡片，照時間排
+const withFlights = (items, day) => [...items, ...flightItems(day)].sort((a, b) => m(a.s) - m(b.s));
+// 航班卡片的內容
+function flightBlockHtml(it, prev, h) {
+  const f = it.flight, dp = localParts(f.dep.sched?.local), ap = localParts(f.arr.sched?.local), bd = flightBadge(f);
+  const term = e => `${esc(e.iata)}${e.terminal ? ` T${esc(e.terminal)}` : ''}`;
+
+  let lead = '';
+  if (it.kind === 'dep') {
+    const min = parseInt(it.travel, 10);
+    if (prev && min >= 0 && !isNaN(min)) lead = `<div class="fb-go"><i class="ti ti-door-exit"></i> ${T(hhmm(m(it.s) - min))} ${prev.home ? '離開住處' : `從${esc(shortName(prev.t))}出發`}</div>`;
+  }
+  const sub = it.kind === 'arr' ? `入境、領行李 · ${esc(f.number)} ${ap ? ap.hm : ''} 抵達 ${term(f.arr)}`
+    : `${esc(f.number)} ${dp ? dp.hm : ''} 起飛 · ${term(f.dep)} → ${term(f.arr)}`;
+  return `<div class="t"><i class="ti ti-plane${it.kind === 'arr' ? '-arrival' : '-departure'}"></i> ${esc(it.t)}${bd.cls ? ` <span class="fb-st ${bd.cls}">${esc(bd.text)}</span>` : ''}</div>
+    ${h >= 60 ? `<div class="s">${sub}</div>` : ''}${lead}`;
+}
+// 點航班卡片：打開那一段機票（航廈、訂位代號、座位）
+function openFlightSheet(id) {
+  const f = tripFlights().find(x => x.id === id); if (!f) return;
+  const draw = () => {
+    flightOpen = f.id;
+    openSheet(`
+      <div class="sh-head"><div style="flex:1;min-width:0"><div class="sh-title" id="shTitle">${f.dir === 'out' ? '去程' : '回程'} ${esc(f.number)}</div></div>
+        <button class="sh-close" aria-label="關閉"><i class="ti ti-x"></i></button></div>
+      <div class="fl-sheet">${flightLegHtml(f, null)}</div>`);
+  };
+  draw();
+  const token = sheet._fl = {};
+  sheet.addEventListener('click', function h(e) {
+    if (sheet._fl !== token || !sheet.querySelector('.fl-sheet')) { sheet.removeEventListener('click', h); return; }
+    const cp = e.target.closest('.fl-copy'); if (cp) { navigator.clipboard?.writeText(cp.dataset.copy).then(() => toast('已複製'), () => {}); return; }
+    const ed = e.target.closest('[data-fledit]'); if (ed) { sheet.removeEventListener('click', h); withAuth(() => openFlightEditor(ed.dataset.fledit)); }
+  });
+}
+// 機場座標：查航班時會一起帶；沒有的（舊資料、手動輸入）用 Google 查一次機場，存回機票
+const airportAsked = {};
+async function fillAirportLocs() {
+  if (!getAuth()) return;
+  let changed = false;
+  const list = JSON.parse(JSON.stringify(tripFlights()));
+  const out = legsOf('out'), back = legsOf('back');
+  const need = [out[out.length - 1]?.arr, back[0]?.dep].filter(Boolean).map(e => e.iata);   // 只有時間線用得到的：抵達目的地、從目的地起飛
+  for (const f of list) for (const k of ['dep', 'arr']) {
+    const e = f[k]; if (e.loc || !e.iata || !need.includes(e.iata) || airportAsked[e.iata]) continue;
+    airportAsked[e.iata] = true;
+    try {
+      const p = (await api({ ...getAuth(), action: 'lookupPlace', link: `${e.name || e.iata} Airport ${e.iata}` }, 60000)).place;
+      if (p?.loc) { list.forEach(x => ['dep', 'arr'].forEach(kk => { if (x[kk].iata === e.iata) x[kk].loc = p.loc; })); changed = true; }
+    } catch {}
+  }
+  if (changed) saveFlights(list, '', 0, true);
+}
+// 回程那天：前一站到機場的交通時間沒算過、或前一站換了，自動算一次存回機票
+const airportRouteAsked = {};
+async function fillAirportRoute(day) {
+  const it = flightItems(day).find(x => x.kind === 'dep'); if (!it || !it.loc || !getAuth()) return;
+  const items = withFlights(itemsOf(day), day), i = items.indexOf(items.find(x => x.id === it.id));
+  const prev = items[i - 1] || homePrev(day); if (!prev) return;
+  const a = lastLoc(prev), key = routeKey(prev, it); if (!a || !key) return;
+  if (parseRoute(it.troute).key === key || airportRouteAsked[key]) return;
+  airportRouteAsked[key] = true;
+  try {
+    const r = (await api({ ...getAuth(), action: 'routeTimes', pairs: [{ a, b: it.loc }] }, 60000)).routes[0];
+    if (!r || r.error) return;
+    const list = tripFlights().map(f => f.id === it.flight.id ? { ...f, toAirport: { text: routeText(r) || '0 分', troute: `auto|${r.mode}|${key}` } } : f);
+    saveFlights(list, '', 0, true);
+  } catch {}
 }
 function stayListHtml() {
   const list = tripStays().map((h, i) => ({ h, i, first: tripDates().findIndex(x => (h.nights || []).includes(x.md)) })).sort((a, b) => (a.first < 0 ? 99 : a.first) - (b.first < 0 ? 99 : b.first));
@@ -4412,6 +4527,8 @@ function openAuth(then) {
 
 // 編輯模式下：點卡片＝編輯，點空白處＝在那個時間新增
 tl.addEventListener('click', e => {
+  const fb = e.target.closest('.blk.flight[data-flid]');   // 航班卡片：一般、編輯模式都是打開那段機票
+  if (fb && isDay(current)) { e.stopPropagation(); e.preventDefault(); openFlightSheet(fb.dataset.flid); return; }
   // 一般模式：點卡片看資訊；合併區塊、多選一點了是展開，展開後點某一站看那一站
   if (!editing && isDay(current)) {
     if (e.target.closest('.nav, .chev')) return;
@@ -6089,9 +6206,9 @@ function openDayPicker(id) {
 // 編輯模式上方的「交通」：把這天每一段都算一遍，列出「原本 → 新的」，勾選要套用的
 document.getElementById('routeFab').addEventListener('click', () => { if (isDay(current)) openRoutePlanner(current); });
 async function openRoutePlanner(day) {
-  const items = [...DATA[day]].sort((a, b) => m(a.s) - m(b.s) || m(a.e) - m(b.e));
+  const items = withFlights(DATA[day], day);   // 航班卡片也算一站：抵達後的下一站從機場算、回程算到機場
   const home = homePrev(day), list = home && items.length ? [home, ...items] : items;   // 有住處：第一段是從住處出發
-  const segs = list.slice(1).map((it, i) => { const prev = list[i]; return { it, prev, a: lastLoc(prev), b: firstLoc(it) }; });
+  const segs = list.slice(1).map((it, i) => { const prev = list[i]; return { it, prev, a: lastLoc(prev), b: firstLoc(it) }; }).filter(g => g.it.kind !== 'arr');
   openSheet(`
     <div class="sh-head"><div style="flex:1;min-width:0"><div class="sh-title" id="shTitle">計算交通時間</div>
       <div class="sh-sub">第 ${dayNum(day)} 天．${routeRule()}</div></div>
@@ -6131,10 +6248,13 @@ async function openRoutePlanner(day) {
   go.addEventListener('click', () => {
     const snap = takeSnap();
     let n = 0;
+    let fl = null;
     segs.forEach((g, i) => {
       if (!rows[i].querySelector('input:checked') || !g.r || g.r.error) return;
+      if (g.it.flight) { fl = tripFlights().map(f => f.id === g.it.flight.id ? { ...f, toAirport: { text: routeText(g.r) || '0 分', troute: `auto|${g.r.mode}|${g.a}>${g.b}` } } : f); n++; return; }   // 到機場：存在機票上
       g.it.travel = routeText(g.r); g.it.troute = `auto|${g.r.mode}|${g.a}>${g.b}`; n++;
     });
+    if (fl) saveFlights(fl, '', 0, true);
     saveData('計算交通'); closeSheet(); renderPage(current);
     toast(`已更新 ${n} 段交通時間`, '復原', () => undoSnap(snap), UNDO_MS);
   });
