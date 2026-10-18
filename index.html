@@ -36,7 +36,7 @@ html,body{margin:0;background:var(--page);color:var(--text);-webkit-text-size-ad
    輸入框、可以直接改的標題、店家資訊卡（描述、營業時間、筆記）、住處地址、分享文字 */
 body{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
 input,textarea,[contenteditable],.sheet .sh-title,.sheet .sh-sub,.sh-desc,.sh-meta,.sh-list,.full-txt,.sheet .mine,.st-al span,.share-text{-webkit-user-select:text;user-select:text;-webkit-touch-callout:default}
-.app{max-width:480px;margin:0 auto;min-height:100vh;padding-bottom:env(safe-area-inset-bottom)}
+.app{max-width:480px;margin:0 auto;min-height:100vh;overflow-x:clip;padding-bottom:env(safe-area-inset-bottom)}
 header{position:sticky;top:0;z-index:10;background:var(--page);padding:calc(12px + env(safe-area-inset-top)) 16px 10px;border-bottom:1px solid var(--line)}
 /* 天數列：放得下時置中；放不下時可左右滑，兩側保留 16px 邊界 */
 .tabs-row{display:flex;align-items:center;margin:0 -16px 10px}
@@ -732,7 +732,9 @@ button.ov-stay{width:100%;font:inherit;text-align:left;cursor:pointer}
 .trips-empty small{display:block;margin-top:14px;font-size:12px;color:var(--muted)}
 .trips-carry{margin-top:22px;text-align:center}
 /* Google 登入：還沒登入是一張卡片，登入了是一行帳號＋登出 */
-.acct-opts{display:flex;flex-direction:column;gap:10px;margin-top:22px}
+.acct-opts{display:flex;flex-direction:column;gap:12px;margin-top:22px}
+.acct-alt{text-align:center;font-size:13px;color:var(--muted)}
+.acct-alt button{padding:4px 0;border:0;background:none;font:inherit;color:var(--text2);text-decoration:underline;text-underline-offset:3px;cursor:pointer}
 .acct-in{display:flex;align-items:center;gap:12px;width:100%;padding:14px;border:0;border-radius:14px;background:#F7F7F7;font:inherit;text-align:left;color:var(--text);cursor:pointer}
 .acct-in > i:first-child{flex:none;width:24px;color:var(--text);font-size:22px;display:flex;align-items:center;justify-content:center}
 .acct-in span{flex:1;min-width:0}
@@ -3110,9 +3112,9 @@ function acctHtml(hasTrips) {
   const a = getAccount();
   if (a) return `<div class="acct"><span class="acct-pic">${a.pic ? `<img src="${esc(a.pic)}" alt="" referrerpolicy="no-referrer">` : '<i class="ti ti-user"></i>'}</span>
     <span class="acct-t"><b>${esc(a.name || 'Google 帳號')}</b><small>${esc(a.email || '')}．旅程已同步</small></span><button type="button" class="acct-out" id="acctOut">登出</button></div>`;
-  // 沒登入：兩個平行的選項，讓旅程在別的裝置也看得到
+  // 沒登入：主要推 Google 登入；不想登入的人才用連結搬（小字）
   return `<div class="acct-opts"><button type="button" class="acct-in" id="acctIn"><i class="ti ti-brand-google"></i><span><b>用 Google 登入</b><small>手機、電腦看到一樣的旅程，換手機也不會不見</small></span><i class="ti ti-chevron-right"></i></button>`
-    + (hasTrips ? `<button type="button" class="acct-in" id="tripsCarry"><i class="ti ti-link"></i><span><b>用連結帶到其他裝置</b><small>不想登入的話，換手機、從 LINE 換到 Safari 時用連結一起帶過去</small></span><i class="ti ti-chevron-right"></i></button>` : '')
+    + (hasTrips ? `<div class="acct-alt">不想登入？<button type="button" id="tripsCarry">用連結帶到其他裝置</button></div>` : '')
     + `</div>`;
 }
 function renderTrips() {
@@ -3130,7 +3132,7 @@ function renderTrips() {
     return g.length ? `<div class="ov-sec">${label}</div>${g.map(card).join('')}` : '';
   });
   const waiting = all.length - list.length;
-  tripsEl.innerHTML = (list.length ? groups.join('') : waiting ? '' : `<div class="trips-empty"><div class="en">Bon voyage.</div>還沒有旅程<br>按右下角「建立旅程」開始規劃，或打開朋友傳給你的旅程連結<br><small>在別的手機或 LINE 裡有旅程？在那邊的「我的旅程」按「用連結帶到其他裝置」</small></div>`)
+  tripsEl.innerHTML = (list.length ? groups.join('') : waiting ? '' : `<div class="trips-empty"><div class="en">Bon voyage.</div>還沒有旅程<br>按右下角「建立旅程」開始規劃，或打開朋友傳給你的旅程連結<br><small>在別的手機或 LINE 裡有旅程？兩邊登入同一個 Google 帳號就看得到</small></div>`)
     + (waiting ? `<div class="ov-empty">正在載入 ${waiting} 趟旅程…</div>` : '')
     + acctHtml(all.length);
   if (!tripsFetched && all.length) refreshTrips();
@@ -3209,7 +3211,7 @@ tripsEl.addEventListener('click', e => {
   const c = e.target.closest('[data-trip]'); if (!c) return;
   const t = myTrips().find(x => x.id === c.dataset.trip); if (!t) return;
   if (t.id === TRIP_ID && t.key === TRIP_KEY) location.hash = 'overview';
-  else location.href = tripUrl(t.id, t.key);   // 別趟旅程，或這趟有可以編輯的鑰匙：換網址重新載入
+  else { try { sessionStorage.setItem('trip-enter', '1'); } catch {} location.href = tripUrl(t.id, t.key); }   // 別趟旅程，或這趟有可以編輯的鑰匙：換網址重新載入；載入後一樣從右邊滑進來
 });
 document.getElementById('tripNew').addEventListener('click', () => { location.hash = 'new'; });
 
@@ -3328,6 +3330,13 @@ function openCreateAuth() {
   $('crNick').addEventListener('keydown', e => { if (e.key === 'Enter' && !e.isComposing) go(); });
 }
 
+function pageSlide(cls, el) {
+  if (reduceMotion) return;
+  [document.querySelector('header'), el].forEach(x => {
+    x.classList.remove('sl-in-r', 'sl-in-l'); void x.offsetWidth; x.classList.add(cls);
+    x.addEventListener('animationend', () => x.classList.remove(cls), { once: true });
+  });
+}
 function showPage(page, animate = true) {
   if (TRIP_ID && !TRIP && /^d\d+$/.test(page)) wantPage = page;   // 還不知道這趟有幾天：載入後再跳過去
   if (!TRIP_ID) { if (page !== 'new') page = 'trips'; }
@@ -3341,6 +3350,9 @@ function showPage(page, animate = true) {
     slideTo(page, dayNum(page) > dayNum(prev) ? 1 : -1);
   } else {
     renderPage(page);
+    // 我的旅程 → 旅程、建立旅程：從右邊推進來；返回我的旅程：從左邊滑回來
+    if (animate && prev === 'trips' && (page === 'overview' || page === 'new')) pageSlide('sl-in-r', page === 'new' ? wizEl : ovEl);
+    else if (animate && page === 'trips' && (prev === 'overview' || prev === 'new')) pageSlide('sl-in-l', tripsEl);
   }
   // 打開今天：捲到「現在」的小圓點（放在畫面上方 1/3），其他天回到最上面
   const line = tl.querySelector('.now');
@@ -5874,6 +5886,7 @@ let shownToday = tripNow()?.day || null;
 if (shownToday) history.replaceState(null, '', '#' + shownToday);
 if (TRIP_ID && TRIP && TRIP_ROLE) rememberTrip(TRIP, TRIP_ROLE, TRIP_KEY, TRIP_CODE);
 showPage(shownToday || location.hash.slice(1) || (TRIP_ID ? 'overview' : 'trips'), false);
+try { if (sessionStorage.getItem('trip-enter')) { sessionStorage.removeItem('trip-enter'); if (current === 'overview') pageSlide('sl-in-r', ovEl); } } catch {}
 try { justCreated = !!sessionStorage.getItem('trip-created'); sessionStorage.removeItem('trip-created'); } catch {}
 try { const d = sessionStorage.getItem('trip-deleted'); if (d) { sessionStorage.removeItem('trip-deleted'); setTimeout(() => toast(`已刪除「${d}」`), 300); } } catch {}
 { const n = importCarry(); if (n) { renderTrips(); toast(n > 0 ? `已加入 ${n} 趟旅程` : '這些旅程本來就在列表裡了'); } }
