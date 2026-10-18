@@ -741,13 +741,22 @@ button.ov-stay{width:100%;font:inherit;text-align:left;cursor:pointer}
 .acct-in b{display:block;font-size:15px}
 .acct-in small{display:block;margin-top:2px;font-size:12px;color:var(--text2)}
 .acct-in > i:last-child{color:var(--muted)}
-.acct{display:flex;align-items:center;gap:10px;margin-top:22px;padding:10px 4px;border-top:1px solid var(--line)}
+/* 登入後：我的旅程左上角放頭像，點了往下展開帳號選單（名字、信箱、登出） */
+.acct-btn{position:absolute;left:16px;bottom:9px;width:32px;height:32px;padding:0;border:0;border-radius:50%;overflow:hidden;background:var(--other-bg);color:var(--text2);font-size:18px;display:none;align-items:center;justify-content:center;cursor:pointer}
+.on-trips:not(.on-new) .acct-btn:not([hidden]){display:flex}
+.acct-btn img{width:100%;height:100%;object-fit:cover}
+.acct-menu{position:absolute;left:12px;top:calc(100% - 4px);z-index:20;min-width:240px;max-width:calc(100% - 24px);padding:6px;border-radius:14px;background:#fff;box-shadow:0 8px 28px rgba(0,0,0,.14),0 0 0 1px rgba(0,0,0,.04);animation:dropIn .16s ease}
+.acct-menu[hidden]{display:none}
+.am-who{display:flex;align-items:center;gap:10px;padding:10px 10px 12px;border-bottom:1px solid var(--line);margin-bottom:4px}
+.am-who .acct-pic{width:36px;height:36px}
+.am-who b{display:block;font-size:14px}
+.am-who small{display:block;font-size:12px;color:var(--text2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.am-who > span:last-child{min-width:0}
+.am-item{display:flex;align-items:center;gap:10px;width:100%;padding:10px;border:0;border-radius:10px;background:none;font:inherit;font-size:14px;color:var(--text);text-align:left;cursor:pointer}
+.am-item i{font-size:18px}
+.am-item:active{background:#F7F7F7}
 .acct-pic{flex:none;width:32px;height:32px;border-radius:50%;overflow:hidden;background:var(--other-bg);color:var(--text2);display:flex;align-items:center;justify-content:center}
 .acct-pic img{width:100%;height:100%;object-fit:cover}
-.acct-t{flex:1;min-width:0}
-.acct-t b{display:block;font-size:14px}
-.acct-t small{display:block;font-size:12px;color:var(--text2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.acct-out{flex:none;height:32px;padding:0 12px;border:1px solid var(--border);border-radius:999px;background:#fff;font:inherit;font-size:13px;color:var(--text2);cursor:pointer}
 .g-btn{display:flex;justify-content:center;min-height:44px;align-items:center;margin-top:18px}
 .g-note{margin-top:16px;font-size:12px;color:var(--muted);text-align:center;line-height:1.6}
 .g-note a{color:var(--text2)}
@@ -795,12 +804,16 @@ button.ov-stay{width:100%;font:inherit;text-align:left;cursor:pointer}
 .dr{margin-top:14px}
 .dr-head{position:relative;display:flex;align-items:baseline;min-height:20px}
 .dr-head .ed-lab{margin:0}
-.dr-val{position:absolute;left:50%;bottom:0;transform:translateX(-50%);white-space:nowrap;font-size:15px;font-weight:600;color:var(--accent-fg);font-variant-numeric:tabular-nums}
+.dr-val{position:absolute;left:50%;bottom:0;transform:translateX(-50%);white-space:nowrap;font-size:15px;font-weight:600;color:var(--text);font-variant-numeric:tabular-nums}
 .dr-win{position:relative;margin-top:8px;border-radius:12px;background:#F7F7F7}
 .dr-scroll{overflow-x:auto;overflow-y:hidden;scrollbar-width:none;scroll-snap-type:x mandatory;scroll-padding-left:50%;-webkit-overflow-scrolling:touch;overscroll-behavior-x:contain;touch-action:pan-x;
   -webkit-mask-image:linear-gradient(to right,transparent,#000 18%,#000 82%,transparent);mask-image:linear-gradient(to right,transparent,#000 18%,#000 82%,transparent)}
 .dr-scroll::-webkit-scrollbar{display:none}
-.dr-ticks{display:flex;width:max-content;padding:0 50%;height:50px}
+.dr-ticks{position:relative;display:flex;width:max-content;padding:0 50%;height:50px}
+/* 原本的長度：一條灰線；滑到別的長度時，原本和現在之間反白（拉長＝咖啡色、縮短＝灰色） */
+.dr-band{position:absolute;top:5px;height:24px;border-radius:7px;pointer-events:none;background:color-mix(in srgb,var(--accent-fg) 16%,transparent)}
+.dr-band.less{background:rgba(0,0,0,.07)}
+.dr-orig{position:absolute;top:4px;height:26px;width:0;margin-left:-.5px;border-left:1.5px dashed var(--muted);pointer-events:none}
 .dr-ticks i{flex:none;position:relative;width:10px;height:100%;scroll-snap-align:start;font-style:normal}
 .dr-ticks i::before{content:"";position:absolute;left:0;top:8px;width:1px;height:8px;background:#CFCAC4}
 .dr-ticks i.q::before{height:13px}
@@ -1038,6 +1051,14 @@ button.ov-stay{width:100%;font:inherit;text-align:left;cursor:pointer}
 .ed-sep{border:0;border-top:1px solid var(--line);margin:20px -18px 0}
 .ed-switch{display:flex;align-items:center;gap:10px;margin-top:14px;font-size:15px;cursor:pointer}
 .ed-switch small{color:var(--muted);font-size:13px}
+/* 時間有變才出現的開關：高度從 0 長出來，把下面的欄位往下推 */
+/* 內容淡入，晚一拍才出現（收起來時先淡掉再收高度），看不到被切掉的那條邊 */
+.ed-push{display:grid;grid-template-rows:0fr;transition:grid-template-rows .24s cubic-bezier(.4,0,.2,1) .06s}
+.ed-push.on{grid-template-rows:1fr;transition-delay:0s}
+.ed-push > div{overflow:hidden;min-height:0}
+.ed-push .ed-switch{opacity:0;transition:opacity .14s ease}
+.ed-push.on .ed-switch{opacity:1;transition:opacity .3s ease .1s}
+@media (prefers-reduced-motion:reduce){.ed-push,.ed-push .ed-switch{transition:none}}
 input.sw{-webkit-appearance:none;appearance:none;width:44px;height:26px;margin:0;border-radius:13px;background:var(--border);position:relative;flex:none;cursor:pointer;transition:background .2s}
 input.sw::after{content:"";position:absolute;top:3px;left:3px;width:20px;height:20px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.2);transition:transform .2s}
 input.sw:checked{background:var(--accent-fg)}
@@ -1069,6 +1090,8 @@ input.sw:focus-visible{outline:2px solid var(--accent-bg);outline-offset:2px}
     <div class="day-title" id="dayTitle"></div>
     <div class="day-sub" id="daySub"></div>
     <button type="button" class="map-btn" id="mapBtn" aria-label="看地圖" hidden><i class="ti ti-map"></i></button>
+    <button type="button" class="acct-btn" id="acctBtn" aria-label="Google 帳號" aria-expanded="false" hidden></button>
+    <div class="acct-menu" id="acctMenu" hidden></div>
     <button type="button" class="edit-btn" id="editBtn" aria-label="編輯行程"><i class="ti ti-pencil"></i></button>
   </header>
   <div class="tl" id="tl"></div>
@@ -3108,10 +3131,28 @@ function tripState(start, days) {
 }
 let tripsFetched = false;
 // 「我的旅程」最下面：還沒登入＝登入卡片；登入了＝帳號、登出
+const acctBtn = document.getElementById('acctBtn'), acctMenu = document.getElementById('acctMenu');
+const acctPic = a => a.pic ? `<img src="${esc(a.pic)}" alt="" referrerpolicy="no-referrer">` : '<i class="ti ti-user"></i>';
+function updateAcctBtn() {
+  const a = getAccount();
+  acctBtn.hidden = !a; acctMenuClose();
+  if (a) acctBtn.innerHTML = acctPic(a);
+}
+function acctMenuClose() { acctMenu.hidden = true; acctBtn.setAttribute('aria-expanded', 'false'); }
+acctBtn.addEventListener('click', e => {
+  e.stopPropagation();
+  if (!acctMenu.hidden) { acctMenuClose(); return; }
+  const a = getAccount(); if (!a) return;
+  acctMenu.innerHTML = `<div class="am-who"><span class="acct-pic">${acctPic(a)}</span><span><b>${esc(a.name || 'Google 帳號')}</b><small>${esc(a.email || '')}</small><small>旅程已同步</small></span></div>
+    <button type="button" class="am-item" id="acctOut"><i class="ti ti-logout"></i>登出</button>`;
+  acctMenu.hidden = false; acctBtn.setAttribute('aria-expanded', 'true');
+});
+acctMenu.addEventListener('click', e => { if (e.target.closest('#acctOut')) { acctMenuClose(); logoutAccount(); } });
+addEventListener('click', e => { if (!acctMenu.hidden && !e.target.closest('#acctMenu')) acctMenuClose(); });
+addEventListener('hashchange', acctMenuClose);
 function acctHtml(hasTrips) {
   const a = getAccount();
-  if (a) return `<div class="acct"><span class="acct-pic">${a.pic ? `<img src="${esc(a.pic)}" alt="" referrerpolicy="no-referrer">` : '<i class="ti ti-user"></i>'}</span>
-    <span class="acct-t"><b>${esc(a.name || 'Google 帳號')}</b><small>${esc(a.email || '')}．旅程已同步</small></span><button type="button" class="acct-out" id="acctOut">登出</button></div>`;
+  if (a) return '';   // 登入了：帳號在左上角的頭像選單
   // 沒登入：主要推 Google 登入；不想登入的人才用連結搬（小字）
   return `<div class="acct-opts"><button type="button" class="acct-in" id="acctIn"><i class="ti ti-brand-google"></i><span><b>用 Google 登入</b><small>手機、電腦看到一樣的旅程，換手機也不會不見</small></span><i class="ti ti-chevron-right"></i></button>`
     + (hasTrips ? `<div class="acct-alt">不想登入？<button type="button" id="tripsCarry">用連結帶到其他裝置</button></div>` : '')
@@ -3135,6 +3176,7 @@ function renderTrips() {
   tripsEl.innerHTML = (list.length ? groups.join('') : waiting ? '' : `<div class="trips-empty"><div class="en">Bon voyage.</div>還沒有旅程<br>按右下角「建立旅程」開始規劃，或打開朋友傳給你的旅程連結<br><small>在別的手機或 LINE 裡有旅程？兩邊登入同一個 Google 帳號就看得到</small></div>`)
     + (waiting ? `<div class="ov-empty">正在載入 ${waiting} 趟旅程…</div>` : '')
     + acctHtml(all.length);
+  updateAcctBtn();
   if (!tripsFetched && all.length) refreshTrips();
   if (getAccount() && !syncMine.done) { syncMine.done = true; syncMine(); }   // 每次打開網站跟帳號同步一次
 }
@@ -3207,7 +3249,6 @@ tripsEl.addEventListener('click', e => {
   if (tripPressed) { tripPressed = false; e.preventDefault(); return; }   // 長按放開的那一下不要打開旅程
   if (e.target.closest('#tripsCarry')) { openCarry(); return; }
   if (e.target.closest('#acctIn')) { openLogin(); return; }
-  if (e.target.closest('#acctOut')) { logoutAccount(); return; }
   const c = e.target.closest('[data-trip]'); if (!c) return;
   const t = myTrips().find(x => x.id === c.dataset.trip); if (!t) return;
   if (t.id === TRIP_ID && t.key === TRIP_KEY) location.hash = 'overview';
@@ -4435,15 +4476,30 @@ function durRulerHtml(id) {
   return `<div class="dr" id="${id}"><div class="dr-head"><span class="ed-lab">停留時間</span><span class="dr-val"></span></div><div class="dr-win"><div class="dr-scroll"><div class="dr-ticks">${t}</div></div><span class="dr-needle"></span></div></div>`;
 }
 // get：現在的長度；set(分鐘)：滑到新的刻度時呼叫。回傳 sync(分鐘)：從外面改長度時把尺移過去
-function wireRuler(box, get, set) {
+// mark：標出原本的長度（編輯已經有的行程才用；新加的不用）
+function wireRuler(box, get, set, mark) {
   const sc = box.querySelector('.dr-scroll'), val = box.querySelector('.dr-val');
   const clamp = v => Math.max(DR_MIN, Math.min(DR_MAX, v));
   const toX = v => (clamp(v) - DR_MIN) / DR_STEP * DR_PX;
   const show = v => { const h = Math.floor(v / 60), mm = v % 60; val.textContent = [h && `${h} 小時`, mm && `${mm} 分`].filter(Boolean).join(' '); };   // 「2 小時 15 分」
   let last = clamp(get()), raf = 0, quiet = false;
   show(last);
-  requestAnimationFrame(() => { quiet = true; sc.scrollLeft = toX(last); requestAnimationFrame(() => { quiet = false; }); });   // 面板畫好才量得到寬度
+  // 原本的位置（刻度座標）跟指針（scrollLeft＋半個窗）之間畫一塊反白
+  const orig = last, band = mark ? document.createElement('span') : null, origEl = mark ? document.createElement('span') : null;
+  if (mark) {
+    band.className = 'dr-band'; origEl.className = 'dr-orig';
+    const tk = box.querySelector('.dr-ticks'); tk.prepend(band); tk.append(origEl);
+  }
+  const paintBand = () => {
+    if (!mark) return;
+    const half = sc.clientWidth / 2, o = half + toX(orig), n = sc.scrollLeft + half;
+    origEl.style.left = o + 'px';
+    band.style.left = Math.min(o, n) + 'px'; band.style.width = Math.abs(n - o) + 'px';
+    band.classList.toggle('less', n < o);
+  };
+  requestAnimationFrame(() => { quiet = true; sc.scrollLeft = toX(last); paintBand(); requestAnimationFrame(() => { quiet = false; }); });   // 面板畫好才量得到寬度
   sc.addEventListener('scroll', () => {
+    paintBand();
     if (quiet) return;
     cancelAnimationFrame(raf);
     raf = requestAnimationFrame(() => {
@@ -4893,7 +4949,7 @@ function openEditor(id, startAt, toDay, replaceId) {
       ${ed.group ? '<div class="ed-hint"><i class="ti ti-info-circle"></i> 區塊的長度由裡面的店家決定。改開始時間，所有店家會一起移動</div>'
         : ed.fixedLen ? '<div class="ed-hint"><i class="ti ti-info-circle"></i> 長度取停留最久的那一家。要改長度，請展開後點那一家設定停留時間</div>' : `
       ${durRulerHtml('edRuler')}`}
-      ${ed.isNew ? '' : '<label class="ed-switch" id="edPushWrap" hidden><input type="checkbox" class="sw" id="edPush"><span>後面的行程自動移動 <small id="edPushTxt"></small></span></label>'}
+      ${ed.isNew ? '' : '<div class="ed-push" id="edPushWrap"><div><label class="ed-switch"><input type="checkbox" class="sw" id="edPush"><span>後面的行程自動移動 <small id="edPushTxt"></small></span></label></div></div>'}
       <div class="err" id="edTimeErr" hidden></div>
     </div>
     ${ed.group ? '' : `<label class="ed-switch"><input type="checkbox" class="sw" id="edBooked"${ed.booked ? ' checked' : ''}><span>已訂位</span></label>`}
@@ -4947,8 +5003,8 @@ function wireEditor() {
     // 時間有變時，才問要不要把後面的行程一起移動
     if ($('edPushWrap')) {
       const delta = eMin - m(ed.orig.e);
-      $('edPushWrap').hidden = delta === 0 || !laterItems().length || ed.day !== ed.fromDay;
-      $('edPushTxt').textContent = delta ? `（${delta > 0 ? '往後' : '提前'} ${durLabel(Math.abs(delta))}）` : '';
+      $('edPushWrap').classList.toggle('on', !(delta === 0 || !laterItems().length || ed.day !== ed.fromDay));   // 往下推開／收起來
+      if (delta) $('edPushTxt').textContent = `（${delta > 0 ? '往後' : '提前'} ${durLabel(Math.abs(delta))}）`;   // 收起來的時候字先留著，不要收到一半變空
     }
     $('edTimeErr').hidden = true;
   };
@@ -5009,7 +5065,7 @@ function wireEditor() {
     refresh();
   });
   // 停留多久：左右滑的刻度尺（5 分鐘一格，整點有標字）
-  const setRuler = $('edRuler') ? wireRuler($('edRuler'), () => ed.dur, v => { ed.dur = v; refresh(); }) : null;
+  const setRuler = $('edRuler') ? wireRuler($('edRuler'), () => ed.dur, v => { ed.dur = v; refresh(); }, !ed.isNew) : null;
   ed.syncRuler = setRuler;
   sheet.querySelectorAll('.step').forEach(b => b.addEventListener('click', () => { ed.dur = Math.max(5, ed.dur + +b.dataset.d); refresh(); }));
   $('edS').addEventListener('input', refresh);
@@ -5796,7 +5852,7 @@ function openSubEditor(cardId, kind, idx, fromCand, replace) {
     $('sbEnd').textContent = clock(($('sbS').value ? fromInput($('sbS').value) : m(isStop ? sub.s : card.s)) + sed.dur);
   };
   ['sbName', 'sbMap', 'sbS'].forEach(id => $(id)?.addEventListener('input', () => { $('sbNameErr').hidden = true; refresh(); }));
-  wireRuler($('sbRuler'), () => sed.dur, v => { sed.dur = v; refresh(); });   // 停留多久：刻度尺
+  wireRuler($('sbRuler'), () => sed.dur, v => { sed.dur = v; refresh(); }, !isNew && !old && !c);   // 停留多久：刻度尺
   wirePhoto('sbPhoto', nk);
   $('sbSave').addEventListener('click', saveSub);
   $('sbDel')?.addEventListener('click', deleteSub);
