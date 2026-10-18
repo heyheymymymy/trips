@@ -485,6 +485,9 @@ html.on-map:not(.sheet-lock),html.on-map:not(.sheet-lock) body{background:#f4f0e
 .chips{display:flex;flex-wrap:wrap;gap:6px}
 .chip{height:34px;padding:0 14px;border-radius:999px;border:1px solid var(--border);background:#fff;font-size:14px;color:var(--text2);cursor:pointer}
 .chip.on{border-color:transparent;background:var(--accent-bg);color:var(--accent-fg);font-weight:600}
+.pick-chips{margin-top:8px}
+.pick-chips .pick-other{display:inline-flex;align-items:center;gap:4px}
+.pick-chips .pick-other i{font-size:14px}
 .chip.on.eat{background:var(--eat-bg);color:var(--eat-fg)}.chip.on.spa{background:var(--spa-bg);color:var(--spa-fg)}
 .chip.on.cafe{background:var(--cafe-bg);color:var(--cafe-fg)}.chip.on.shop{background:var(--shop-bg);color:var(--shop-fg)}
 .chip.on.bar{background:var(--bar-bg);color:var(--bar-fg)}.chip.on.see{background:var(--see-bg);color:var(--see-fg)}.chip.on.other{background:var(--other-bg);color:var(--other-fg)}
@@ -540,7 +543,9 @@ html.on-map:not(.sheet-lock),html.on-map:not(.sheet-lock) body{background:#f4f0e
 /* 旅程設定：同行的人（建立的人每個名字後面有 ×，下面一格可以新增） */
 .ts-mem span:not(.ov-empty){display:inline-flex;align-items:center;gap:2px;padding:6px 12px;font-size:14px}
 .ts-mem-x{width:22px;height:22px;margin:-4px -6px -4px 2px;border:0;border-radius:50%;background:none;color:var(--muted);font-size:13px;display:flex;align-items:center;justify-content:center;cursor:pointer}
-.ts-mem-add{display:flex;gap:8px;margin-top:10px}
+.ts-mem-add{display:flex;gap:8px;margin-top:10px;animation:dropIn .16s ease}
+.ts-mem-new{display:inline-flex;align-items:center;gap:4px;padding:6px 12px;border:1px dashed var(--border);border-radius:999px;background:none;font:inherit;font-size:14px;color:var(--text2);cursor:pointer}
+.ts-mem-new i{font-size:15px}
 .ts-mem-add input{flex:1;min-width:0}
 .ts-mem-add .btn{flex:none;padding:0 16px}
 .inv{display:flex;flex-direction:column;gap:8px;margin-top:12px}
@@ -1342,6 +1347,27 @@ function nickFieldHtml(id, label, hint, enter) {
   const input = `<label class="ed-field"${nickFolded() ? ' hidden' : ''}><span class="ed-lab">${label} <span class="ed-lab-hint">${hint}</span></span>
       <input id="${id}" type="text" value="${esc(getNick())}" placeholder="例如：小明" autocomplete="nickname" maxlength="20" enterkeyhint="${enter}"></label>`;
   return (nickFolded() ? `<div class="nick-as"><i class="ti ti-user"></i><span>以 <b>${esc(getNick())}</b> 的身分編輯</span><button type="button" class="nick-chg">改名</button></div>` : '') + input;
+}
+// 從同行的人裡點選一個名字（開始編輯的「你是誰？」、待辦的「指派給誰」）：選的值放在 input；最後一顆「other」展開 input 自己填
+function pickChipsHtml(names, sel, other) {
+  return `<div class="chips pick-chips">${names.map(n => `<button type="button" class="chip${n === sel ? ' on' : ''}" data-pick="${esc(n)}">${esc(n)}</button>`).join('')}<button type="button" class="chip pick-other" data-pick-other><i class="ti ti-pencil"></i>${other}</button></div>`;
+}
+// toggle：再點一次同一個名字＝取消（指派用）。自己填的輸入框：包在 label 裡就藏整個欄位，不然藏輸入框本身
+function wirePickChips(box, input, toggle) {
+  const list = box.querySelector('.pick-chips'), chips = () => list.querySelectorAll('.chip');
+  const target = input.closest('label.ed-field') || input;
+  if (!target.hidden) list.querySelector('.pick-other').classList.add('on');   // 原本就是名單外的名字
+  list.addEventListener('click', e => {
+    const c = e.target.closest('.chip'); if (!c) return;
+    if (c.classList.contains('pick-other')) {
+      chips().forEach(x => x.classList.toggle('on', x === c));
+      if (target.hidden) input.value = '';
+      target.hidden = false; input.focus(); placeDialog(); return;
+    }
+    const off = toggle && c.classList.contains('on');
+    chips().forEach(x => x.classList.toggle('on', !off && x === c));
+    input.value = off ? '' : c.dataset.pick; target.hidden = true; placeDialog();
+  });
 }
 // reopen：改完（或按返回）滑回原本的視窗
 function wireNickField(box, reopen) {
@@ -2499,8 +2525,8 @@ function openTripSettings(keep) {
           : PH_PICK}</div>
         ${st.cover.src && !st.cover.busy ? '<button type="button" class="st-own" id="tsCoverOff"><i class="ti ti-photo-off"></i> 不用封面照片</button>' : ''}</div>
       <div class="ed-field"><span class="ed-lab">同行的人 <span class="ed-lab-hint">${canMem ? '有人改過行程也會自動加進來' : '只有建立旅程的人可以新增、移除'}</span></span>
-        <div class="ov-members ts-mem">${st.members.map((n, i) => `<span>${esc(n)}${canMem ? `<button type="button" class="ts-mem-x" data-mrm="${i}" aria-label="移除 ${esc(n)}"><i class="ti ti-x"></i></button>` : ''}</span>`).join('') || '<span class="ov-empty">還沒有人</span>'}</div>
-        ${canMem ? `<div class="ts-mem-add"><input id="tsMemIn" type="text" value="${esc(st.memDraft)}" placeholder="輸入暱稱，例如：小明" maxlength="20" autocomplete="off" enterkeyhint="done"><button type="button" class="btn ghost" id="tsMemAdd">加入</button></div>` : ''}</div>
+        <div class="ov-members ts-mem">${st.members.map((n, i) => `<span>${esc(n)}${canMem ? `<button type="button" class="ts-mem-x" data-mrm="${i}" aria-label="移除 ${esc(n)}"><i class="ti ti-x"></i></button>` : ''}</span>`).join('') || (canMem ? '' : '<span class="ov-empty">還沒有人</span>')}${canMem && !st.memOpen ? '<button type="button" class="ts-mem-new" id="tsMemNew"><i class="ti ti-plus"></i>加入新旅伴</button>' : ''}</div>
+        ${canMem && st.memOpen ? `<div class="ts-mem-add"><input id="tsMemIn" type="text" value="${esc(st.memDraft)}" placeholder="輸入暱稱，例如：小明" maxlength="20" autocomplete="off" enterkeyhint="done"><button type="button" class="btn ghost" id="tsMemAdd">加入</button></div>` : ''}</div>
       <div class="ed-field"><span class="ed-lab">每天通常幾點出門 <span class="ed-lab-hint">空白的那天從這個時間開始排</span></span>
         <input id="tsDayStart" class="ts-time" type="time" step="900" value="${st.dayStart}"></div>
       <div class="ts-more">
@@ -2543,7 +2569,7 @@ function openTripSettings(keep) {
   const addMem = () => {
     const v = st.memDraft.replace(/,/g, ' ').trim(); if (!v) return;
     if (!st.members.includes(v)) st.members.push(v);
-    st.memDraft = ''; draw(); body.querySelector('#tsMemIn')?.focus();
+    st.memDraft = ''; st.memOpen = false; draw();
   };
   body.addEventListener('keydown', e => { if (e.target.id === 'tsMemIn' && e.key === 'Enter' && !e.isComposing) { e.preventDefault(); addMem(); } });
   let cd = null;
@@ -2567,6 +2593,7 @@ function openTripSettings(keep) {
     if (b.id === 'tsCoverOff') { st.cover = { src: '', x: 50, y: 50, busy: false }; draw(); return; }
     if (b.id === 'tsDel') { openDeleteTrip(); return; }
     if (b.id === 'tsMemAdd') { addMem(); return; }
+    if (b.id === 'tsMemNew') { st.memOpen = true; draw(); body.querySelector('#tsMemIn')?.focus(); return; }
     // 修改紀錄、換編輯碼：同一張面板往右推進去，返回時設定改到一半的還在
     const back = () => sheetSlide(-1, () => openTripSettings(st));
     if (b.id === 'tsHistory') { sheetSlide(1, () => openHistory({ back })); return; }
@@ -3117,6 +3144,13 @@ async function saveChecks(items, deleted = []) {
     load(true);
   }
 }
+// 指派給誰：從同行的人點選（再點一次取消），名單裡沒有的點「其他人」自己填；還沒有同行的人就直接打字
+function whoFieldHtml(who) {
+  const mates = [...(TRIP?.members || [])], other = who && !mates.includes(who);
+  if (!mates.length) return `<label class="ed-field"><span class="ed-lab">指派給誰 <span class="ed-lab-hint">選填</span></span><input type="text" id="ckWho" value="${esc(who || '')}" autocomplete="off"></label>`;
+  return `<div class="ed-field"><span class="ed-lab">指派給誰 <span class="ed-lab-hint">選填，再點一次取消</span></span>${pickChipsHtml(mates, who, '其他人')}
+    <input type="text" id="ckWho" value="${esc(who || '')}" placeholder="輸入名字" autocomplete="off" maxlength="20"${other ? '' : ' hidden'} style="margin-top:8px"></div>`;
+}
 // 點文字：修改內容、指派給誰（只有待辦有），或刪除
 function openCheckEditor(c) {
   const todo = c.kind === 'todo';
@@ -3124,12 +3158,13 @@ function openCheckEditor(c) {
     <div class="sh-head"><div style="flex:1;min-width:0"><div class="sh-title" id="shTitle">${todo ? '修改待辦' : '修改注意事項'}</div></div>
       <button class="sh-close" aria-label="關閉"><i class="ti ti-x"></i></button></div>
     <label class="ed-field"><span class="ed-lab">內容</span><textarea id="ckText" rows="2">${esc(c.text)}</textarea></label>
-    ${todo ? `<label class="ed-field"><span class="ed-lab">指派給誰 <span class="ed-lab-hint">選填</span></span><input type="text" id="ckWho" value="${esc(c.who || '')}" autocomplete="off"></label>` : ''}
+    ${todo ? whoFieldHtml(c.who) : ''}
     <div class="ed-actions">
       <button type="button" class="btn ghost danger" id="ckDel"><i class="ti ti-trash"></i> 刪除</button>
       <button type="button" class="btn primary" id="ckSave" style="flex:1">儲存</button>
     </div>`);
   const $ = id => sheet.querySelector('#' + id);
+  if (todo && sheet.querySelector('.pick-chips')) wirePickChips(sheet, $('ckWho'), true);
   $('ckSave').onclick = () => {
     const text = $('ckText').value.trim();
     if (!text) { $('ckText').focus(); return; }
@@ -3394,7 +3429,7 @@ wizNext.addEventListener('click', () => {
 function openCreateAuth() {
   openSheet(`
     <div class="sh-head"><div style="flex:1;min-width:0"><div class="sh-title" id="shTitle">建立「${esc(wizName())}」</div>
-      <div class="sh-sub">資料會存在這個網站的 Google 試算表，架網站的人看得到</div></div>
+</div>
       <button class="sh-close" aria-label="關閉"><i class="ti ti-x"></i></button></div>
     ${nickFieldHtml('crNick', '你的暱稱', '旅伴會看到是誰改的', 'done')}
     <div class="err" id="crErr" hidden></div>
@@ -3998,24 +4033,30 @@ document.getElementById('editCancel').addEventListener('click', () => {
 function openAuth(then) {
   if (!TRIP_ROLE) { toast('行程還在載入，請稍等'); return; }
   const needCode = TRIP_ROLE !== 'edit' || !TRIP_CODE;
+  // 同行的人有名單：讓他點自己的名字（名字跟名單一致，不會多出重複的人）；登入又有暱稱的照舊
+  const mates = nickFolded() ? [] : (TRIP?.members || []), mine = mates.includes(getNick()) ? getNick() : '';
   openSheet(`
     <div class="sh-head"><div style="flex:1;min-width:0"><div class="sh-title" id="shTitle">開始編輯</div>
       <div class="sh-sub">${needCode ? '編輯碼問一下揪團的人（在總覽頁最下面）' : '填一次就好，這支手機會記住'}</div></div>
       <button class="sh-close" aria-label="關閉"><i class="ti ti-x"></i></button></div>
-    ${nickFieldHtml('auNick', '暱稱', '修改紀錄會顯示是誰改的', needCode ? 'next' : 'done')}
+    ${mates.length ? `<div class="ed-field"><span class="ed-lab">你是誰？ <span class="ed-lab-hint">點你的名字</span></span>${pickChipsHtml(mates, mine, '我不在裡面')}</div>
+      <label class="ed-field" hidden><span class="ed-lab">暱稱 <span class="ed-lab-hint">修改紀錄會顯示是誰改的</span></span>
+      <input id="auNick" type="text" value="${esc(mine)}" placeholder="例如：小明" autocomplete="nickname" maxlength="20" enterkeyhint="${needCode ? 'next' : 'done'}"></label>`
+      : nickFieldHtml('auNick', '暱稱', '修改紀錄會顯示是誰改的', needCode ? 'next' : 'done')}
     ${needCode ? `<label class="ed-field"><span class="ed-lab">編輯碼 <span class="ed-lab-hint">4 位數字</span></span>
       <span class="code-boxes"><input id="auCode" type="text" inputmode="numeric" pattern="[0-9]*" maxlength="4" autocomplete="one-time-code" class="code-input" enterkeyhint="done" aria-label="編輯碼">${'<i></i>'.repeat(4)}</span></label>` : ''}
     <div class="err" id="auErr" hidden></div>
     <div class="ed-actions">
       <button type="button" class="btn ghost ed-cancel">取消</button>
       <button type="button" class="btn primary" id="auGo">開始編輯</button>
-    </div>`, getNick() && needCode ? '#auCode' : nickFolded() ? null : '#auNick', true);
+    </div>`, mates.length ? (mine && needCode ? '#auCode' : null) : getNick() && needCode ? '#auCode' : nickFolded() ? null : '#auNick', true);
   const $ = id => sheet.querySelector('#' + id);
   wireNickField(sheet, () => openAuth(then));
+  if (mates.length) wirePickChips(sheet, $('auNick'));
   const go = async () => {
     const nick = $('auNick').value.trim(), code = needCode ? $('auCode').value.replace(/\D/g, '') : TRIP_CODE;
     const err = msg => { $('auErr').textContent = msg; $('auErr').hidden = false; placeDialog(); };
-    if (!nick) return err('請填暱稱');
+    if (!nick) return err(mates.length ? '請點你的名字，或選「我不在裡面」自己填' : '請填暱稱');
     if (code.length !== 4) return err('編輯碼是 4 位數字');
     $('auGo').disabled = true; $('auGo').textContent = '確認中…'; $('auErr').hidden = true;
     try {
