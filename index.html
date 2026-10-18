@@ -807,44 +807,45 @@ button.ov-stay{width:100%;font:inherit;text-align:left;cursor:pointer}
 .chips.nights::-webkit-scrollbar{display:none}
 .chips.nights .chip{flex:none;height:32px;padding:0 12px;font-size:13px;font-variant-numeric:tabular-nums}
 .ov-stay-add{width:fit-content;margin-left:auto}
-/* 機票卡片：去程／回程切換、起降機場大字、中間進度條（飛行中照時間往前跑）、下面航空公司／航班／艙等；點開看登機資訊 */
-.ov-sec1{margin-top:6px}
-.fl-card{padding:14px 16px 10px;border-radius:16px;background:var(--fill)}
-.fl-seg{background:var(--fill2)}
-.fl-card .fl-seg{margin-bottom:6px}
-.fl-seg .seg-thumb{width:calc((100% - 6px) / 2)}
+/* 機票：去程、回程上下並排。起飛、抵達時間最大，下面機場代碼＋航廈；中間虛線上的小飛機照時間往前移（飛行中） */
+.fl-group + .fl-group{margin-top:16px}
+.fl-seg .seg-thumb{width:calc((100% - 6px) / 2)}   /* 加入機票視窗裡的去程／回程 */
 .fl-seg[data-i="1"] .seg-thumb{transform:translateX(100%)}
-.fl-one{font-size:12px;font-weight:600;color:var(--text2);margin-bottom:2px}
-.fl-leg{cursor:pointer}
-.fl-route{display:flex;align-items:flex-end;gap:10px;padding:14px 0 12px}
-.fl-end{flex:none;display:flex;flex-direction:column;min-width:0}
+.fl-lab{font-size:12px;font-weight:600;color:var(--text2);margin:0 0 6px 2px}
+.fl-leg{padding:14px 16px 12px;border-radius:16px;background:var(--fill);cursor:pointer}
+.fl-leg.done{opacity:.6}
+.fl-top{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--text2)}
+.fl-air{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.fl-no{flex:none;padding:2px 9px;border-radius:999px;background:#fff;color:var(--text);font-weight:600;font-size:12px}
+.fl-date{flex:1;text-align:right;white-space:nowrap}
+.fl-route{display:flex;align-items:flex-start;gap:8px;margin-top:10px}
+.fl-end{flex:0 0 auto;display:flex;flex-direction:column;min-width:0;white-space:nowrap}
 .fl-end.r{text-align:right;align-items:flex-end}
+.fl-end b{font-size:28px;font-weight:700;line-height:1.1;font-variant-numeric:tabular-nums;letter-spacing:-.3px}
+.fl-end b sup{font-size:11px;font-weight:600;color:var(--accent-fg);margin-left:2px;vertical-align:14px}
+.fl-end span{margin-top:3px;font-size:14px;font-weight:600;color:var(--text)}
 .fl-end small{font-size:12px;color:var(--muted)}
-.fl-end b{font-size:30px;font-weight:700;line-height:1.1;letter-spacing:.5px}
-.fl-end span{margin-top:3px;font-size:12px;color:var(--text2);font-variant-numeric:tabular-nums;white-space:nowrap}
-.fl-mid{flex:1;min-width:0;display:flex;flex-direction:column;align-items:center;gap:8px;padding-bottom:24px}
-.fl-badge{padding:2px 9px;border-radius:999px;background:var(--spa-bg);color:var(--spa-fg);font-size:12px;font-weight:600;white-space:nowrap}
-.fl-badge.live{background:var(--accent-fg);color:#fff}
-.fl-badge.bad{background:#FBE3DF;color:#C2412D}
-.fl-bar{display:block;width:100%;height:5px;border-radius:3px;background:#fff;overflow:hidden}
-.fl-bar i{display:block;height:100%;border-radius:3px;background:var(--text);transition:width .6s ease}
-.fl-info{display:flex;padding:10px 0;border-radius:12px;background:#fff}
-.fl-info span{flex:1;min-width:0;display:flex;flex-direction:column;align-items:center;gap:2px;padding:0 6px}
-.fl-info span + span{border-left:1px solid var(--line)}
-.fl-info small{font-size:11px;color:var(--muted)}
-.fl-info b{font-size:14px;font-weight:600;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.fl-mid{flex:1;min-width:0;display:flex;flex-direction:column;align-items:center;gap:6px;padding-top:9px}
+.fl-line{position:relative;width:100%;height:14px;display:flex;align-items:center}
+.fl-dot{flex:none;width:7px;height:7px;border-radius:50%;background:var(--text2)}
+.fl-dash{position:relative;flex:1;height:0;margin:0 2px;border-top:1.5px dashed #CFCFCF}
+.fl-done{position:absolute;left:0;top:-1.5px;height:1.5px;background:var(--text2)}
+.fl-plane{position:absolute;top:50%;transform:translate(-50%,-50%);font-size:17px;color:var(--accent-fg);background:var(--fill);padding:0 2px;transition:left .6s ease}
+.fl-badge{font-size:12px;color:var(--text2);white-space:nowrap}
+.fl-badge.live{color:var(--accent-fg);font-weight:600}
+.fl-badge.bad{color:#C2412D;font-weight:600}
 .fl-det{display:grid;grid-template-rows:0fr;transition:grid-template-rows .26s cubic-bezier(.2,.8,.3,1)}
 .fl-det > div{overflow:hidden;min-height:0}
 .fl-leg.open .fl-det{grid-template-rows:1fr}
 .fl-row{display:flex;align-items:center;gap:10px;padding:9px 2px;border-bottom:1px solid var(--fill2);font-size:14px}
-.fl-row:first-child{margin-top:6px}
+.fl-row:first-child{margin-top:10px;border-top:1px solid var(--fill2)}
 .fl-row small{flex:none;width:64px;font-size:12px;color:var(--muted)}
 .fl-row span{flex:1;min-width:0;-webkit-user-select:text;user-select:text;word-break:break-all}
 .fl-row.empty{color:var(--muted);font-size:13px}
 .fl-copy{flex:none;width:30px;height:30px;border:0;border-radius:8px;background:none;color:var(--text2);font-size:16px;cursor:pointer}
 .fl-hint{margin-top:8px;font-size:12px;color:var(--muted)}
-.fl-edit{width:100%;margin:10px 0 4px;height:40px;font-size:14px;background:#fff}
-.fl-lay{display:flex;align-items:center;justify-content:center;gap:6px;margin:10px 0 0;padding:6px;border-radius:10px;background:var(--fill2);font-size:12px;color:var(--text2)}
+.fl-edit{width:100%;margin:10px 0 2px;height:40px;font-size:14px;background:#fff}
+.fl-lay{display:flex;align-items:center;justify-content:center;gap:6px;margin:8px 0;padding:6px;border-radius:10px;background:var(--fill2);font-size:12px;color:var(--text2)}
 .fl-src{margin-top:10px;font-size:11px;color:var(--muted);text-align:center}
 .fe-q{display:flex;gap:10px}
 .fe-q .ed-field{flex:1;min-width:0}
@@ -2344,16 +2345,16 @@ function renderOverview() {
   } else if (ovTab === 'stay') {
   // 住宿：照片卡片，點了看資訊、長按編輯
   const canEdit = TRIP_ROLE === 'edit';
-  // 機票：去程／回程一張卡片；最上面
-  html += '<div class="ov-sec ov-sec1">機票</div>';
-  if (tripFlights().length) html += flightCardHtml() + (canEdit ? '<button type="button" class="wiz-add ov-stay-add" id="flightAdd"><i class="ti ti-plus"></i>加入機票</button>' : '');
-  else if (canEdit) html += '<button type="button" class="ov-stay add" id="flightAdd"><i class="ti ti-plane"></i><span><b>加入機票</b><small>輸入航班號碼，自動帶入時間和航廈</small></span><i class="ti ti-plus"></i></button>';
-  else html += '<div class="ov-empty">還沒有機票</div>';
-  html += '<div class="ov-sec">住宿</div>';
+  html += '<div class="ov-sec ov-sec1">住宿</div>';
   if (!tripStays().length && !canEdit) html += '<div class="ov-empty">還沒有住處</div>';
   if (!tripStays().length && canEdit) html += '<button type="button" class="ov-stay add" id="staysAdd"><i class="ti ti-bed"></i><span><b>加入住處</b><small>每天第一段交通從住處算，加入行程可以一鍵回住處</small></span><i class="ti ti-plus"></i></button>';
   if (tripStays().length) html += stayListHtml()
     + (canEdit ? '<button type="button" class="wiz-add ov-stay-add" id="staysAdd"><i class="ti ti-plus"></i>加入住處</button>' : '');
+  // 機票：去程／回程一張卡片；放在住宿下面
+  html += '<div class="ov-sec">機票</div>';
+  if (tripFlights().length) html += flightCardHtml() + (canEdit ? '<button type="button" class="wiz-add ov-stay-add" id="flightAdd"><i class="ti ti-plus"></i>加入機票</button>' : '');
+  else if (canEdit) html += '<button type="button" class="ov-stay add" id="flightAdd"><i class="ti ti-plane"></i><span><b>加入機票</b><small>輸入航班號碼，自動帶入時間和航廈</small></span><i class="ti ti-plus"></i></button>';
+  else html += '<div class="ov-empty">還沒有機票</div>';
   } else {
   // 待辦、注意事項都照新增的順序；做完的待辦留在原位，劃線變淡
   const addRow = (kind, ph) => `<label class="ck-add"><i class="ti ti-plus"></i><input type="text" class="ck-new" data-kind="${kind}" placeholder="${ph}" enterkeyhint="done" autocomplete="off"></label>`;
@@ -2907,21 +2908,26 @@ function defaultFlightDir() {
 }
 const legsOf = dir => tripFlights().filter(f => f.dir === dir).sort((a, b) => (utcMs(a.dep.sched?.utc) || 0) - (utcMs(b.dep.sched?.utc) || 0) || (a.dep.sched?.local || '').localeCompare(b.dep.sched?.local || ''));
 let flightOpen = null;   // 點開看登機資訊的那一段
+// 機票：去程、回程上下並排，每一段一張卡片。最大的是起飛、抵達時間；下面是機場代碼＋航廈；中間虛線上的小飛機＝進度
 function flightCardHtml() {
-  const hasOut = legsOf('out').length, hasBack = legsOf('back').length;
-  const dir = flightDir && (flightDir === 'out' ? hasOut : hasBack) ? flightDir : defaultFlightDir();
-  const legs = legsOf(dir), canEdit = TRIP_ROLE === 'edit';
-  const endHtml = (e, r) => { const p = localParts(e.sched?.local); return `<div class="fl-end${r ? ' r' : ''}"><small>${esc(airportZh(e))}</small><b>${esc(e.iata)}</b><span>${p ? `${p.md} ${p.hm}` : ''}${e.terminal ? ` · T${esc(e.terminal)}` : ''}</span></div>`; };
-  const legHtml = (f, i) => {
+  const canEdit = TRIP_ROLE === 'edit';
+  const timeOf = e => localParts(e.sched?.local);
+  const legHtml = (f, i, legs) => {
     const pr = flightProgress(f), bd = flightBadge(f), open = flightOpen === f.id, lv = flightLive[liveKey(f)];
-    const info = [['航空公司', airlineZh(f) || '—'], ['航班', f.number || '—'], ['艙等', f.cls || '—']];
-    const det = [['訂位代號', f.pnr, 'copy'], ['機票號碼', f.ticket, 'copy'], ['座位', f.seat], ['託運行李', f.bag], ['機型', f.aircraft], ['登機門', lv?.dep?.gate], ['報到櫃檯', lv?.dep?.checkIn], ['備註', f.note]].filter(x => x[1]);
+    const dp = timeOf(f.dep), ap = timeOf(f.arr);
+    const plus = dp && ap && ap.md !== dp.md ? '<sup>+1</sup>' : '';   // 隔天才到
+    const det = [['艙等', f.cls], ['座位', f.seat], ['訂位代號', f.pnr, 'copy'], ['機票號碼', f.ticket, 'copy'], ['託運行李', f.bag], ['機型', f.aircraft], ['登機門', lv?.dep?.gate], ['報到櫃檯', lv?.dep?.checkIn], ['備註', f.note]].filter(x => x[1]);
     const next = legs[i + 1], lay = next ? Math.round((utcMs(next.dep.sched?.utc) - utcMs(f.arr.sched?.utc)) / 60000) : 0;
-    return `<div class="fl-leg${open ? ' open' : ''}" data-fl="${esc(f.id)}">
-      <div class="fl-route">${endHtml(f.dep)}
-        <div class="fl-mid">${bd.text ? `<span class="fl-badge ${bd.cls}">${esc(bd.text)}</span>` : ''}<span class="fl-bar"><i style="width:${pr == null ? 0 : Math.round(pr * 100)}%"></i></span></div>
-        ${endHtml(f.arr, true)}</div>
-      <div class="fl-info">${info.map(([k, v]) => `<span><small>${k}</small><b>${esc(v)}</b></span>`).join('')}</div>
+    const pos = Math.round((pr == null ? 0 : pr) * 100);
+    const term = e => `${esc(e.iata)}${e.terminal ? ` · T${esc(e.terminal)}` : ''}`;
+    return `<div class="fl-leg${open ? ' open' : ''}${pr === 1 ? ' done' : ''}" data-fl="${esc(f.id)}">
+      <div class="fl-top"><span class="fl-air">${esc(airlineZh(f) || '航班')}</span><span class="fl-no">${esc(f.number || '—')}</span><span class="fl-date">${dp ? `${dp.md}（${dp.wd.slice(1)}）` : ''}</span></div>
+      <div class="fl-route">
+        <div class="fl-end"><b>${dp ? dp.hm : '—'}</b><span>${term(f.dep)}</span><small>${esc(airportZh(f.dep))}</small></div>
+        <div class="fl-mid"><div class="fl-line"><i class="fl-dot"></i><span class="fl-dash"><span class="fl-done" style="width:${pos}%"></span></span><i class="fl-dot"></i><i class="ti ti-plane fl-plane" style="left:calc(18px + (100% - 36px) * ${pos / 100})"></i></div>
+          ${bd.text ? `<span class="fl-badge ${bd.cls}">${esc(bd.text)}</span>` : ''}</div>
+        <div class="fl-end r"><b>${ap ? ap.hm : '—'}${plus}</b><span>${term(f.arr)}</span><small>${esc(airportZh(f.arr))}</small></div>
+      </div>
       <div class="fl-det"><div>
         ${det.length ? det.map(([k, v, c]) => `<div class="fl-row"><small>${k}</small><span>${esc(v)}</span>${c ? `<button type="button" class="fl-copy" data-copy="${esc(v)}" aria-label="複製${k}"><i class="ti ti-copy"></i></button>` : ''}</div>`).join('') : '<div class="fl-row empty">還沒有登機資訊</div>'}
         ${!canEdit && TRIP_ROLE ? '<div class="fl-hint">訂位代號、機票號碼要輸入編輯碼才看得到</div>' : ''}
@@ -2929,10 +2935,8 @@ function flightCardHtml() {
       </div></div></div>
       ${next ? `<div class="fl-lay"><i class="ti ti-transfer"></i>${esc(airportZh(f.arr))}轉機${lay > 0 ? ` ${fmtDur(lay)}` : ''}</div>` : ''}`;
   };
-  return `<div class="fl-card">
-    ${hasOut && hasBack ? `<div class="seg fl-seg" data-i="${dir === 'out' ? 0 : 1}" style="--n:2"><span class="seg-thumb"></span><button type="button" data-fldir="out"${dir === 'out' ? ' class="on"' : ''}>去程</button><button type="button" data-fldir="back"${dir === 'back' ? ' class="on"' : ''}>回程</button></div>` : `<div class="fl-one">${dir === 'out' ? '去程' : '回程'}</div>`}
-    ${legs.map(legHtml).join('')}
-    <div class="fl-src">航班資料：AeroDataBox．時間以你的機票為準</div></div>`;
+  const group = (dir, label) => { const legs = legsOf(dir); return legs.length ? `<div class="fl-group"><div class="fl-lab">${label}</div>${legs.map((f, i) => legHtml(f, i, legs)).join('')}</div>` : ''; };
+  return `<div class="fl-card">${group('out', '去程')}${group('back', '回程')}<div class="fl-src">航班資料：AeroDataBox．時間以你的機票為準</div></div>`;
 }
 // 航班當天（起飛前 12 小時到抵達後 2 小時）、出發前 2 天內：有編輯碼的人打開時查一次最新狀態
 // 表定時間變了就更新存起來，並提醒大家
@@ -2966,7 +2970,10 @@ setInterval(() => {
   if (current !== 'overview' || ovTab !== 'stay') return;
   ovEl.querySelectorAll('.fl-leg[data-fl]').forEach(el => {
     const f = tripFlights().find(x => x.id === el.dataset.fl); const pr = f && flightProgress(f);
-    if (pr != null) el.querySelector('.fl-bar i').style.width = Math.round(pr * 100) + '%';
+    if (pr == null) return;
+    const pos = Math.round(pr * 100);
+    el.querySelector('.fl-done').style.width = pos + '%';
+    el.querySelector('.fl-plane').style.left = `calc(18px + (100% - 36px) * ${pos / 100})`;
   });
 }, 60000);
 let flightSeq = 0;
