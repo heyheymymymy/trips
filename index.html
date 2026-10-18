@@ -755,6 +755,8 @@ button.ov-stay{width:100%;font:inherit;text-align:left;cursor:pointer}
 .am-item{display:flex;align-items:center;gap:10px;width:100%;padding:10px;border:0;border-radius:10px;background:none;font:inherit;font-size:14px;color:var(--text);text-align:left;cursor:pointer}
 .am-item i{font-size:18px}
 .am-item:active{background:#F7F7F7}
+.am-val{margin-left:auto;color:var(--text2);max-width:9em;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.am-item .am-go{font-size:16px;color:var(--muted);margin-left:-4px}
 .acct-pic{flex:none;width:32px;height:32px;border-radius:50%;overflow:hidden;background:var(--other-bg);color:var(--text2);display:flex;align-items:center;justify-content:center}
 .acct-pic img{width:100%;height:100%;object-fit:cover}
 .g-btn{display:flex;justify-content:center;min-height:44px;align-items:center;margin-top:18px}
@@ -1236,7 +1238,11 @@ let mineSyncing = false;
 async function syncMine() {
   const a = getAccount(); if (!a || mineSyncing) return;
   mineSyncing = true;
-  try { applyMine((await api({ action: 'mine', sub: a.sub, akey: a.akey, items: mineItems() }, 30000)).items); }
+  try {
+    const r = await api({ action: 'mine', sub: a.sub, akey: a.akey, items: mineItems(), nick: getNick() }, 30000);
+    applyMine(r.items);
+    if (r.nick && r.nick !== getNick()) setNick(r.nick);   // 暱稱以帳號為準（在別的裝置改過）
+  }
   catch (e) { if (e.code === 'bad_account') { try { localStorage.removeItem(ACCT_KEY); } catch {} if (current === 'trips') renderTrips(); toast(e.message); } }
   finally { mineSyncing = false; }
 }
@@ -1270,9 +1276,9 @@ function openLogin() {
     box.innerHTML = '<span class="st-al-wait"><i class="ti ti-loader-2 spin"></i> 登入中…</span>';
     try {
       const p = JSON.parse(decodeURIComponent(escape(atob(resp.credential.split('.')[1].replace(/-/g, '+').replace(/_/g, '/')))));
-      const r = await api({ action: 'login', token: resp.credential, items: mineItems() }, 30000);
+      const r = await api({ action: 'login', token: resp.credential, items: mineItems(), nick: getNick() || (p.given_name || p.name || '').trim().slice(0, 20) }, 30000);
       try { localStorage.setItem(ACCT_KEY, JSON.stringify({ sub: r.sub, akey: r.akey, name: p.name || '', given: p.given_name || '', email: p.email || '', pic: p.picture || '' })); } catch {}
-      if (!getNick()) setNick(acctNick());
+      if (r.nick) setNick(r.nick); else if (!getNick()) setNick(acctNick());   // 帳號已經有暱稱就用帳號的
       applyMine(r.items);
       closeSheet(); tripsFetched = false; if (current === 'trips') renderTrips();
       const n = Object.values(r.items).filter(x => !x.gone).length;
@@ -1337,11 +1343,57 @@ function nickFieldHtml(id, label, hint, enter) {
       <input id="${id}" type="text" value="${esc(getNick())}" placeholder="例如：小明" autocomplete="nickname" maxlength="20" enterkeyhint="${enter}"></label>`;
   return (nickFolded() ? `<div class="nick-as"><i class="ti ti-user"></i><span>以 <b>${esc(getNick())}</b> 的身分編輯</span><button type="button" class="nick-chg">改名</button></div>` : '') + input;
 }
-function wireNickField(box) {
-  box.querySelector('.nick-chg')?.addEventListener('click', e => {
-    const row = e.target.closest('.nick-as'), f = row.nextElementSibling;
-    row.remove(); f.hidden = false; const inp = f.querySelector('input'); inp.focus(); inp.select(); placeDialog();
+// reopen：改完（或按返回）滑回原本的視窗
+function wireNickField(box, reopen) {
+  box.querySelector('.nick-chg')?.addEventListener('click', () => {
+    const back = () => sheetSlide(-1, reopen);
+    sheetSlide(1, () => openNickEdit({ back, done: back }));
   });
+}
+// 改暱稱：有編輯碼的旅程裡的舊名字一起換掉（雲端 renameNick）；有登入就存進帳號，其他裝置同步時跟著換
+function openNickEdit(opts = {}) {
+  const old = getNick(), a = getAccount();
+  const trips = myTrips().filter(t => t.role === 'edit' && t.code);
+  openSheet(`
+    <div class="sh-head">${opts.back ? '<button type="button" class="sh-back" id="nkUp" aria-label="返回"><i class="ti ti-chevron-left"></i></button>' : ''}<div style="flex:1;min-width:0"><div class="sh-title" id="shTitle">暱稱</div>
+      <div class="sh-sub">旅伴會在同行的人、修改紀錄看到這個名字</div></div>
+      <button class="sh-close" aria-label="關閉"><i class="ti ti-x"></i></button></div>
+    <label class="ed-field"><span class="ed-lab">暱稱</span>
+      <input id="nkIn" type="text" value="${esc(old)}" placeholder="例如：小明" autocomplete="nickname" maxlength="20" enterkeyhint="done"></label>
+    ${old && trips.length ? `<div class="ed-hint"><i class="ti ti-info-circle"></i> 你可以編輯的 ${trips.length} 趟旅程裡，「${esc(old)}」會一起換成新名字（同行的人、修改紀錄、待辦）</div>` : ''}
+    <div class="err" id="nkErr" hidden></div>
+    <div class="ed-actions">
+      <button type="button" class="btn ghost ed-cancel">取消</button>
+      <button type="button" class="btn primary" id="nkGo">儲存</button>
+    </div>`, null, true);
+  const $ = id => sheet.querySelector('#' + id);
+  $('nkUp')?.addEventListener('click', opts.back);
+  const err = msg => { $('nkErr').textContent = msg; $('nkErr').hidden = false; placeDialog(); };
+  const finish = () => opts.done ? opts.done() : closeSheet();
+  const go = async () => {
+    const to = $('nkIn').value.trim().slice(0, 20);
+    if (!to) return err('請填暱稱');
+    if (/,/.test(to)) return err('暱稱不能有逗號');
+    if (to === old) return finish();
+    if (old && (trips.length || a)) {
+      $('nkGo').disabled = true; $('nkGo').textContent = '儲存中…'; $('nkErr').hidden = true;
+      try {
+        await api({ action: 'renameNick', nick: old, to, trips: trips.map(t => ({ trip: t.id, key: t.key, code: t.code })), ...(a ? { sub: a.sub, akey: a.akey } : {}) }, 60000);
+      } catch (e) {
+        $('nkGo').disabled = false; $('nkGo').textContent = '儲存';
+        return err(e.code === 'network' ? '連不上雲端，請檢查網路' : e.message);
+      }
+    }
+    setNick(to);
+    // 列表的「是不是建立的人」先跟著換，等一下再跟雲端要
+    try { localStorage.setItem(MINE_KEY, JSON.stringify(myTrips().map(t => t.created_by === old ? { ...t, created_by: to } : t))); } catch {}
+    if (TRIP && TRIP.created_by === old) TRIP.created_by = to;
+    tripsFetched = false; if (current === 'trips') renderTrips();
+    if (TRIP_ID && TRIP_ROLE === 'edit') load(true);   // 這趟的同行的人、修改紀錄拿新的
+    finish(); toast(`暱稱改成「${to}」`);
+  };
+  $('nkGo').addEventListener('click', go);
+  $('nkIn').addEventListener('keydown', e => { if (e.key === 'Enter' && !e.isComposing) go(); });
 }
 
 // 呼叫 Apps Script：用 text/plain 送 JSON，瀏覽器才不會先送預檢請求（Apps Script 不支援）
@@ -3144,10 +3196,14 @@ acctBtn.addEventListener('click', e => {
   if (!acctMenu.hidden) { acctMenuClose(); return; }
   const a = getAccount(); if (!a) return;
   acctMenu.innerHTML = `<div class="am-who"><span class="acct-pic">${acctPic(a)}</span><span><b>${esc(a.name || 'Google 帳號')}</b><small>${esc(a.email || '')}</small><small>旅程已同步</small></span></div>
+    <button type="button" class="am-item" id="acctNick"><i class="ti ti-user-edit"></i>暱稱<span class="am-val">${esc(getNick() || '還沒填')}</span><i class="ti ti-chevron-right am-go"></i></button>
     <button type="button" class="am-item" id="acctOut"><i class="ti ti-logout"></i>登出</button>`;
   acctMenu.hidden = false; acctBtn.setAttribute('aria-expanded', 'true');
 });
-acctMenu.addEventListener('click', e => { if (e.target.closest('#acctOut')) { acctMenuClose(); logoutAccount(); } });
+acctMenu.addEventListener('click', e => {
+  if (e.target.closest('#acctOut')) { acctMenuClose(); logoutAccount(); }
+  if (e.target.closest('#acctNick')) { acctMenuClose(); openNickEdit(); }
+});
 addEventListener('click', e => { if (!acctMenu.hidden && !e.target.closest('#acctMenu')) acctMenuClose(); });
 addEventListener('hashchange', acctMenuClose);
 function acctHtml(hasTrips) {
@@ -3347,7 +3403,7 @@ function openCreateAuth() {
       <button type="button" class="btn primary" id="crGo">建立旅程</button>
     </div>`, nickFolded() ? null : '#crNick', true);
   const $ = id => sheet.querySelector('#' + id);
-  wireNickField(sheet);
+  wireNickField(sheet, openCreateAuth);
   const go = async () => {
     const nick = $('crNick').value.trim();
     const err = msg => { $('crErr').textContent = msg; $('crErr').hidden = false; placeDialog(); };
@@ -3955,7 +4011,7 @@ function openAuth(then) {
       <button type="button" class="btn primary" id="auGo">開始編輯</button>
     </div>`, getNick() && needCode ? '#auCode' : nickFolded() ? null : '#auNick', true);
   const $ = id => sheet.querySelector('#' + id);
-  wireNickField(sheet);
+  wireNickField(sheet, () => openAuth(then));
   const go = async () => {
     const nick = $('auNick').value.trim(), code = needCode ? $('auCode').value.replace(/\D/g, '') : TRIP_CODE;
     const err = msg => { $('auErr').textContent = msg; $('auErr').hidden = false; placeDialog(); };
