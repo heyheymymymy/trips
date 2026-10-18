@@ -701,6 +701,7 @@ button.ov-stay{width:100%;font:inherit;text-align:left;cursor:pointer}
 .sheet.soft .ts-strip.on{border-color:var(--accent-fg)}
 .sheet.soft .cal{background:var(--fill);border-color:transparent}
 .sheet.soft .wiz-opt{background:var(--fill);border-color:transparent}
+.sheet.soft .wiz-opt.on{border-color:var(--accent-fg)}   /* 上面那條比 .wiz-opt.on 優先，選中的框線要再寫一次 */
 .sheet.soft .wiz-opt > i{width:auto;height:auto;background:none;font-size:20px}   /* 交通方式的圖示不要圓圈 */
 .sheet.soft .ts-mem-add .btn{background:var(--fill);border-color:transparent}
 .sheet.soft .ts-mem span:not(.ov-empty){background:var(--fill)}   /* 同行的人名字：跟輸入框同一個淺灰 */
@@ -714,8 +715,8 @@ button.ov-stay{width:100%;font:inherit;text-align:left;cursor:pointer}
 .hs-main small{display:block;margin-top:1px;font-size:12px;color:var(--text2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .hs-time{flex:none;font-size:12px;color:var(--muted);font-variant-numeric:tabular-nums}
 .hs-row .btn{flex:none;height:34px;padding:0 14px;font-size:13px}
-.inv-btn.trip-set{margin-top:12px;border-color:transparent;padding-left:0;padding-right:4px}   /* 沒有外框：跟上面的內容對齊左邊 */
-.inv-btn.trip-set > i:first-child{background:var(--fill);color:var(--text2)}
+.inv-btn.trip-set{margin-top:12px;background:none;padding-left:0;padding-right:4px}   /* 沒有外框：跟上面的內容對齊左邊 */
+.inv-btn.trip-set > i:first-child{color:var(--text)}
 /* 分享編輯碼：大卡片，數字一格一格；下面兩顆並排的按鈕 */
 .inv-code{display:flex;flex-direction:column;align-items:center;gap:14px;padding:24px 16px 26px;border-radius:20px;background:var(--fill);text-align:center}
 .inv-code > span{font-size:14px;font-weight:600;color:var(--text2)}
@@ -735,16 +736,7 @@ button.ov-stay{width:100%;font:inherit;text-align:left;cursor:pointer}
 .trips-empty{padding:60px 16px;text-align:center;font-size:14px;color:var(--text2);line-height:1.7}
 .trips-empty small{display:block;margin-top:14px;font-size:12px;color:var(--muted)}
 .trips-carry{margin-top:22px;text-align:center}
-/* Google 登入：還沒登入是一張卡片，登入了是一行帳號＋登出 */
-.acct-opts{display:flex;flex-direction:column;gap:12px;margin-top:22px}
-.acct-alt{text-align:center;font-size:13px;color:var(--muted)}
-.acct-alt button{padding:4px 0;border:0;background:none;font:inherit;color:var(--text2);text-decoration:underline;text-underline-offset:3px;cursor:pointer}
-.acct-in{display:flex;align-items:center;gap:12px;width:100%;padding:14px;border:0;border-radius:14px;background:var(--fill);font:inherit;text-align:left;color:var(--text);cursor:pointer}
-.acct-in > i:first-child{flex:none;width:24px;color:var(--text);font-size:22px;display:flex;align-items:center;justify-content:center}
-.acct-in span{flex:1;min-width:0}
-.acct-in b{display:block;font-size:15px}
-.acct-in small{display:block;margin-top:2px;font-size:12px;color:var(--text2)}
-.acct-in > i:last-child{color:var(--muted)}
+/* Google 登入：入口在「我的旅程」左上角的頭像（沒登入是灰色的頭）、第一次建立旅程時問一次 */
 /* 登入後：我的旅程左上角放頭像，點了往下展開帳號選單（名字、信箱、登出） */
 .acct-btn{position:absolute;left:16px;bottom:9px;width:32px;height:32px;padding:0;border:0;border-radius:50%;overflow:hidden;background:var(--other-bg);color:var(--text2);font-size:18px;display:none;align-items:center;justify-content:center;cursor:pointer}
 .on-trips:not(.on-new) .acct-btn:not([hidden]){display:flex}
@@ -766,6 +758,8 @@ button.ov-stay{width:100%;font:inherit;text-align:left;cursor:pointer}
 .g-btn{display:flex;justify-content:center;min-height:44px;align-items:center;margin-top:18px}
 .g-note{margin-top:16px;font-size:12px;color:var(--muted);text-align:center;line-height:1.6}
 .g-note a{color:var(--text2)}
+.g-skip{display:block;margin:10px auto 0;padding:6px 4px;border:0;background:none;font:inherit;font-size:13px;color:var(--text2);text-decoration:underline;text-underline-offset:3px;cursor:pointer}
+.acct-btn.anon{color:#B5B5B5;font-size:20px}   /* 沒登入：灰色的頭 */
 .trips-carry button{display:inline-flex;align-items:center;gap:6px;height:38px;padding:0 14px;border:1px solid var(--border);border-radius:999px;background:#fff;font:inherit;font-size:14px;color:var(--text);cursor:pointer}
 .trips-carry small{display:block;margin:8px auto 0;max-width:280px;font-size:12px;line-height:1.5;color:var(--muted)}
 .trips-empty .en{font-family:"Isometra",cursive;font-size:30px;color:var(--accent-fg);margin-bottom:8px}
@@ -862,7 +856,7 @@ button.ov-stay{width:100%;font:inherit;text-align:left;cursor:pointer}
 .sheet .af-search input{padding-left:38px}
 /* 加入地點：搜尋框、方塊都是灰底，不要框線 */
 .sheet .af-search input{background:var(--fill);border-color:transparent}
-.sheet .af-search input:focus{background:#fff}
+.sheet .af-search input:focus{background:#fff;border-color:var(--accent-fg)}   /* 打字中：跟其他輸入框一樣白底＋陶土橘框（只變白會跟面板融在一起看不見）*/
 .sheet .af-search:has(.af-candbtn) input{padding-right:42px}
 .sheet .af-search input::placeholder{font-size:14.5px}
 /* 搜尋框尾巴：從備選挑 */
@@ -1261,14 +1255,20 @@ function loadGis() {
   });
   return gisReady;
 }
-function openLogin() {
+// opts.then：建立旅程前問的（下面有「先不登入，直接建立」；登入好或略過都接著建立）
+function openLogin(opts = {}) {
   openSheet(`
-    <div class="sh-head"><div style="flex:1;min-width:0"><div class="sh-title" id="shTitle">用 Google 登入</div>
+    <div class="sh-head"><div style="flex:1;min-width:0"><div class="sh-title" id="shTitle">${opts.then ? '建立旅程前，先登入嗎？' : '用 Google 登入'}</div>
       <div class="sh-sub">登入後「我的旅程」存在你的 Google 帳號，手機、電腦登入同一個帳號就看得到一樣的旅程，換手機也不會不見</div></div>
       <button class="sh-close" aria-label="關閉"><i class="ti ti-x"></i></button></div>
     ${inLine() ? `<div class="ed-hint"><i class="ti ti-info-circle"></i> LINE 裡沒辦法用 Google 登入：請點右上角「⋯」或右下角的分享圖示，選「用預設瀏覽器開啟」（Safari），再登入一次</div>`
       : '<div class="g-btn" id="gBtn"><span class="st-al-wait"><i class="ti ti-loader-2 spin"></i> 載入中…</span></div><div class="err" id="gErr" hidden></div>'}
-    <div class="g-note">只用來記住你的旅程列表，不會存你的名字和信箱。<a href="privacy.html" target="_blank" rel="noopener">隱私權說明</a></div>`);
+    <div class="g-note">只用來記住你的旅程列表，不會存你的名字和信箱。<a href="privacy.html" target="_blank" rel="noopener">隱私權說明</a></div>
+    ${opts.then ? '<button type="button" class="g-skip" id="gSkip">先不登入，直接建立</button>' : ''}`);
+  sheet.querySelector('#gSkip')?.addEventListener('click', () => {
+    try { localStorage.setItem(LOGIN_SKIP_KEY, '1'); } catch {}
+    closeSheet(); opts.then();
+  });
   if (inLine()) return;
   const box = sheet.querySelector('#gBtn'), err = m => { const el = sheet.querySelector('#gErr'); if (el) { el.textContent = m; el.hidden = false; } };
   loadGis().then(() => {
@@ -1285,6 +1285,7 @@ function openLogin() {
       if (r.nick) setNick(r.nick); else if (!getNick()) setNick(acctNick());   // 帳號已經有暱稱就用帳號的
       applyMine(r.items);
       closeSheet(); tripsFetched = false; if (current === 'trips') renderTrips();
+      opts.then?.();
       const n = Object.values(r.items).filter(x => !x.gone).length;
       toast(`已登入${p.name ? ' ' + p.name : ''}，${n} 趟旅程已存到帳號`);
     } catch (e) {
@@ -2240,8 +2241,7 @@ function shortName(t) {
 }
 // 總覽目前在哪一頁（每天／住宿／待辦清單），記在這支手機
 const OV_TABS = [['days', '每天'], ['stay', '住宿'], ['todo', '待辦清單']];
-let ovTab = 'days';
-try { const t = localStorage.getItem('cm-ov-tab'); if (OV_TABS.some(([k]) => k === t)) ovTab = t; } catch {}
+let ovTab = 'days';   // 打開網站、從「我的旅程」進來都從「每天」開始；在這趟裡換天數再回總覽才留在原本那頁
 const ovTabIdx = () => OV_TABS.findIndex(([k]) => k === ovTab);
 function renderOverview() {
   const today = tripNow()?.day;
@@ -2350,7 +2350,7 @@ function runSetup(k) {
     const card = ovEl.querySelector('.setup'); card.classList.toggle('fold', o.fold); card.querySelector('.setup-toggle').setAttribute('aria-expanded', String(!o.fold));
     return;
   }
-  if (k === 'stay') withAuth(() => { if (ovTab !== 'stay') { ovTab = 'stay'; try { localStorage.setItem('cm-ov-tab', ovTab); } catch {} renderOverview(); } openStayEditor(null); });
+  if (k === 'stay') withAuth(() => { if (ovTab !== 'stay') { ovTab = 'stay'; renderOverview(); } openStayEditor(null); });
   else if (k === 'mode') withAuth(openTripSettings);
   else if (k === 'import') { markSetup('import'); location.hash = 'cand'; setTimeout(() => withAuth(() => openAddFlow('cand')), 350); }
   else if (k === 'invite') { markSetup('invite'); shareTrip('edit'); setTimeout(renderOverview, 600); }
@@ -3055,7 +3055,7 @@ ovEl.addEventListener('click', e => {
   const tab = e.target.closest('[data-ovtab]');
   if (tab) {
     if (tab.dataset.ovtab === ovTab) return;
-    ovTab = tab.dataset.ovtab; try { localStorage.setItem('cm-ov-tab', ovTab); } catch {}
+    ovTab = tab.dataset.ovtab;
     const seg = ovEl.querySelector('.ov-seg'); seg.dataset.i = ovTabIdx();   // 先讓白色小塊滑過去，再換內容
     seg.querySelectorAll('button').forEach(x => x.classList.toggle('on', x === tab));
     setTimeout(renderOverview, 180);
@@ -3221,15 +3221,19 @@ const acctBtn = document.getElementById('acctBtn'), acctMenu = document.getEleme
 const acctPic = a => a.pic ? `<img src="${esc(a.pic)}" alt="" referrerpolicy="no-referrer">` : '<i class="ti ti-user"></i>';
 function updateAcctBtn() {
   const a = getAccount();
-  acctBtn.hidden = !a; acctMenuClose();
-  if (a) acctBtn.innerHTML = acctPic(a);
+  acctBtn.hidden = false; acctMenuClose();
+  acctBtn.classList.toggle('anon', !a);   // 沒登入：灰色的頭
+  acctBtn.innerHTML = a ? acctPic(a) : '<i class="ti ti-user-filled"></i>';
 }
 function acctMenuClose() { acctMenu.hidden = true; acctBtn.setAttribute('aria-expanded', 'false'); }
 acctBtn.addEventListener('click', e => {
   e.stopPropagation();
   if (!acctMenu.hidden) { acctMenuClose(); return; }
-  const a = getAccount(); if (!a) return;
-  acctMenu.innerHTML = `<div class="am-who"><span class="acct-pic">${acctPic(a)}</span><span><b>${esc(a.name || 'Google 帳號')}</b><small>${esc(a.email || '')}</small><small>旅程已同步</small></span></div>
+  const a = getAccount();
+  // 沒登入：Google 登入、用連結搬到其他裝置（手機裡有旅程才有）
+  if (!a) acctMenu.innerHTML = `<button type="button" class="am-item" id="acctLogin"><i class="ti ti-brand-google"></i>用 Google 登入</button>
+    ${myTrips().length ? '<button type="button" class="am-item" id="acctCarry"><i class="ti ti-link"></i>用連結帶到其他裝置</button>' : ''}`;
+  else acctMenu.innerHTML = `<div class="am-who"><span class="acct-pic">${acctPic(a)}</span><span><b>${esc(a.name || 'Google 帳號')}</b><small>${esc(a.email || '')}</small><small>旅程已同步</small></span></div>
     <button type="button" class="am-item" id="acctNick"><i class="ti ti-user-edit"></i>暱稱<span class="am-val">${esc(getNick() || '還沒填')}</span><i class="ti ti-chevron-right am-go"></i></button>
     <button type="button" class="am-item" id="acctOut"><i class="ti ti-logout"></i>登出</button>`;
   acctMenu.hidden = false; acctBtn.setAttribute('aria-expanded', 'true');
@@ -3237,17 +3241,11 @@ acctBtn.addEventListener('click', e => {
 acctMenu.addEventListener('click', e => {
   if (e.target.closest('#acctOut')) { acctMenuClose(); logoutAccount(); }
   if (e.target.closest('#acctNick')) { acctMenuClose(); openNickEdit(); }
+  if (e.target.closest('#acctLogin')) { acctMenuClose(); openLogin(); }
+  if (e.target.closest('#acctCarry')) { acctMenuClose(); openCarry(); }
 });
 addEventListener('click', e => { if (!acctMenu.hidden && !e.target.closest('#acctMenu')) acctMenuClose(); });
 addEventListener('hashchange', acctMenuClose);
-function acctHtml(hasTrips) {
-  const a = getAccount();
-  if (a) return '';   // 登入了：帳號在左上角的頭像選單
-  // 沒登入：主要推 Google 登入；不想登入的人才用連結搬（小字）
-  return `<div class="acct-opts"><button type="button" class="acct-in" id="acctIn"><i class="ti ti-brand-google"></i><span><b>用 Google 登入</b><small>手機、電腦看到一樣的旅程，換手機也不會不見</small></span><i class="ti ti-chevron-right"></i></button>`
-    + (hasTrips ? `<div class="acct-alt">不想登入？<button type="button" id="tripsCarry">用連結帶到其他裝置</button></div>` : '')
-    + `</div>`;
-}
 function renderTrips() {
   const all = myTrips(), list = all.filter(t => t.start).map(t => {
     // 正在看的這趟：封面沒設定就用筆記裡第一張照片
@@ -3263,9 +3261,8 @@ function renderTrips() {
     return g.length ? `<div class="ov-sec">${label}</div>${g.map(card).join('')}` : '';
   });
   const waiting = all.length - list.length;
-  tripsEl.innerHTML = (list.length ? groups.join('') : waiting ? '' : `<div class="trips-empty"><div class="en">Bon voyage.</div>還沒有旅程<br>按右下角「建立旅程」開始規劃，或打開朋友傳給你的旅程連結<br><small>在別的手機或 LINE 裡有旅程？兩邊登入同一個 Google 帳號就看得到</small></div>`)
-    + (waiting ? `<div class="ov-empty">正在載入 ${waiting} 趟旅程…</div>` : '')
-    + acctHtml(all.length);
+  tripsEl.innerHTML = (list.length ? groups.join('') : waiting ? '' : `<div class="trips-empty"><div class="en">Bon voyage.</div>還沒有旅程<br>按右下角「建立旅程」開始規劃，或打開朋友傳給你的旅程連結<br><small>在別的手機或 LINE 裡有旅程？點左上角的頭像，兩邊登入同一個 Google 帳號就看得到</small></div>`)
+    + (waiting ? `<div class="ov-empty">正在載入 ${waiting} 趟旅程…</div>` : '');
   updateAcctBtn();
   if (!tripsFetched && all.length) refreshTrips();
   if (getAccount() && !syncMine.done) { syncMine.done = true; syncMine(); }   // 每次打開網站跟帳號同步一次
@@ -3337,14 +3334,18 @@ function openTripMenu(id) {
 }
 tripsEl.addEventListener('click', e => {
   if (tripPressed) { tripPressed = false; e.preventDefault(); return; }   // 長按放開的那一下不要打開旅程
-  if (e.target.closest('#tripsCarry')) { openCarry(); return; }
-  if (e.target.closest('#acctIn')) { openLogin(); return; }
   const c = e.target.closest('[data-trip]'); if (!c) return;
   const t = myTrips().find(x => x.id === c.dataset.trip); if (!t) return;
   if (t.id === TRIP_ID && t.key === TRIP_KEY) location.hash = 'overview';
   else { try { sessionStorage.setItem('trip-enter', '1'); } catch {} location.href = tripUrl(t.id, t.key); }   // 別趟旅程，或這趟有可以編輯的鑰匙：換網址重新載入；載入後一樣從右邊滑進來
 });
-document.getElementById('tripNew').addEventListener('click', () => { location.hash = 'new'; });
+// 第一次建立旅程、還沒登入：先問要不要用 Google 登入（選「先不登入」就記住，之後不再問）
+const LOGIN_SKIP_KEY = 'login-skip' + TEST_SUFFIX;
+document.getElementById('tripNew').addEventListener('click', () => {
+  let skipped = false; try { skipped = !!localStorage.getItem(LOGIN_SKIP_KEY); } catch {}
+  if (getAccount() || skipped) { location.hash = 'new'; return; }
+  openLogin({ then: () => { location.hash = 'new'; } });
+});
 
 // ---------- 建立旅程：一頁就好（名稱、目的地、日期；名稱沒自己填就自動帶入）；封面、住處、交通方式、匯入清單建好後在「開始規劃」卡片裡做 ----------
 const wizEl = document.getElementById('wiz'), wizBack = document.getElementById('wizBack'), wizNext = document.getElementById('wizNext');
@@ -3474,6 +3475,7 @@ function showPage(page, animate = true) {
   else if (!['overview', 'cand', 'trips', 'new'].includes(page) && !isDay(page)) page = 'overview';
   if (page === current) return;
   const prev = current; current = page;
+  if (page === 'overview' && (prev === 'trips' || prev === 'new')) ovTab = 'days';
   // 網址的 #頁面 跟著換：直接呼叫 showPage 跳頁（例如開始規劃、已訂位標籤）時網址沒變，之後點同一個分頁會因為網址一樣而沒反應
   if (location.hash !== '#' + page) history.replaceState(null, '', location.pathname + location.search + '#' + page);
   updateHeader(page);
