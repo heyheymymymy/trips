@@ -810,14 +810,14 @@ button.ov-stay{width:100%;font:inherit;text-align:left;cursor:pointer}
 .ov-add-full{width:100%;height:40px;margin-top:10px;border:0;border-radius:12px;background:var(--fill);color:var(--accent-fg);font:inherit;font-size:14px;font-weight:600;display:flex;align-items:center;justify-content:center;gap:4px;cursor:pointer}   /* 跟時間線的「＋ 加入行程」一樣 */
 /* 機票：去程、回程上下並排。起飛、抵達時間最大，下面機場代碼＋航廈；中間虛線上的小飛機照時間往前移（飛行中） */
 .fl-group + .fl-group{margin-top:16px}
-/* 時間線上的航班卡片：灰底、飛機圖示（從機票自動產生，不能拖） */
-.blk.flight{background:var(--fill);border-color:transparent;color:var(--text);cursor:pointer}
-.blk.flight .t{display:flex;align-items:center;gap:5px;font-weight:600}
-.blk.flight .t .ti{font-size:16px;color:var(--accent-fg)}
-.blk.flight .s{color:var(--text2)}
-.fb-go{margin-top:4px;font-size:12px;font-weight:600;color:var(--accent-fg)}
-.fb-st{font-size:11px;font-weight:600;padding:0 6px;border-radius:999px;background:var(--accent-fg);color:#fff}
-.fb-st.bad{background:#C2412D}
+/* 時間線上的航班卡片：深藍底、白字（像登機證，一天裡最醒目），重點用橘色；從機票自動產生，不能拖 */
+.blk.flight{background:#24384F;border-color:transparent;color:#fff;cursor:pointer}
+.blk.flight .t{display:flex;align-items:center;gap:5px;font-weight:600;color:#fff}
+.blk.flight .t .ti{font-size:16px;color:#F6C38E}
+.blk.flight .s{color:rgba(255,255,255,.8)}
+.fb-go{margin-top:4px;font-size:12px;font-weight:600;color:#F6C38E}
+.fb-st{font-size:11px;font-weight:600;padding:0 6px;border-radius:999px;background:#F6C38E;color:#24384F}
+.fb-st.bad{background:#E8836F;color:#fff}
 .fl-sheet{margin-top:12px}
 .fl-sheet .fl-leg{cursor:default}
 .fl-seg .seg-thumb{width:calc((100% - 6px) / 2)}   /* 加入機票視窗裡的去程／回程 */
