@@ -464,6 +464,10 @@ html.on-map:not(.sheet-lock),html.on-map:not(.sheet-lock) body{background:#f4f0e
 .ed-field{display:block;margin-top:16px}
 .ed-lab{display:block;font-size:12px;font-weight:600;color:var(--muted);margin-bottom:6px}
 .ed-lab-hint{font-weight:400;margin-left:4px}
+.nick-as{display:flex;align-items:center;gap:6px;margin-top:14px;font-size:14px;color:var(--text2)}
+.nick-as b{color:var(--text)}
+.nick-as span{flex:1;min-width:0}
+.nick-chg{flex:none;padding:4px 2px;border:0;background:none;font:inherit;font-size:14px;color:var(--accent-fg);cursor:pointer}
 .ed-lab-row{display:flex;align-items:center;gap:8px}
 .ed-lab-row .ed-lab{flex:1;min-width:0}
 .swap-btn{flex:none;display:inline-flex;align-items:center;gap:4px;margin:-6px -6px 0 0;padding:4px 8px;border:0;border-radius:999px;background:none;color:var(--accent-fg);font:inherit;font-size:12px;font-weight:600;cursor:pointer}
@@ -728,8 +732,9 @@ button.ov-stay{width:100%;font:inherit;text-align:left;cursor:pointer}
 .trips-empty small{display:block;margin-top:14px;font-size:12px;color:var(--muted)}
 .trips-carry{margin-top:22px;text-align:center}
 /* Google 登入：還沒登入是一張卡片，登入了是一行帳號＋登出 */
-.acct-in{display:flex;align-items:center;gap:12px;width:100%;margin-top:22px;padding:14px;border:1px solid var(--border);border-radius:14px;background:#fff;font:inherit;text-align:left;color:var(--text);cursor:pointer}
-.acct-in > i:first-child{flex:none;width:36px;height:36px;border-radius:50%;background:var(--accent-bg);color:var(--accent-fg);font-size:19px;display:flex;align-items:center;justify-content:center}
+.acct-opts{display:flex;flex-direction:column;gap:10px;margin-top:22px}
+.acct-in{display:flex;align-items:center;gap:12px;width:100%;padding:14px;border:0;border-radius:14px;background:#F7F7F7;font:inherit;text-align:left;color:var(--text);cursor:pointer}
+.acct-in > i:first-child{flex:none;width:24px;color:var(--text);font-size:22px;display:flex;align-items:center;justify-content:center}
 .acct-in span{flex:1;min-width:0}
 .acct-in b{display:block;font-size:15px}
 .acct-in small{display:block;margin-top:2px;font-size:12px;color:var(--text2)}
@@ -1241,7 +1246,8 @@ function openLogin() {
     try {
       const p = JSON.parse(decodeURIComponent(escape(atob(resp.credential.split('.')[1].replace(/-/g, '+').replace(/_/g, '/')))));
       const r = await api({ action: 'login', token: resp.credential, items: mineItems() }, 30000);
-      try { localStorage.setItem(ACCT_KEY, JSON.stringify({ sub: r.sub, akey: r.akey, name: p.name || '', email: p.email || '', pic: p.picture || '' })); } catch {}
+      try { localStorage.setItem(ACCT_KEY, JSON.stringify({ sub: r.sub, akey: r.akey, name: p.name || '', given: p.given_name || '', email: p.email || '', pic: p.picture || '' })); } catch {}
+      if (!getNick()) setNick(acctNick());
       applyMine(r.items);
       closeSheet(); tripsFetched = false; if (current === 'trips') renderTrips();
       const n = Object.values(r.items).filter(x => !x.gone).length;
@@ -1296,6 +1302,22 @@ function cache() { try { localStorage.setItem(CACHE_KEY, JSON.stringify({ trip: 
 const getNick = () => { try { return localStorage.getItem(NICK_KEY) || ''; } catch { return ''; } };
 const getAuth = () => TRIP_ID && TRIP_ROLE === 'edit' && TRIP_CODE && getNick() ? { trip: TRIP_ID, key: TRIP_KEY, code: TRIP_CODE, nick: getNick() } : null;
 const setNick = n => { try { n ? localStorage.setItem(NICK_KEY, n) : localStorage.removeItem(NICK_KEY); } catch {} };
+// 登入 Google 的人：還沒有暱稱就用 Google 的名字（不蓋掉已經有的暱稱，舊旅程的刪除權限、同行的人都是看暱稱）
+const acctNick = () => { const a = getAccount(); return a ? (a.given || a.name || '').trim().slice(0, 20) : ''; };
+if (!getNick() && acctNick()) setNick(acctNick());
+// 暱稱欄位：登入又有暱稱時收成一行「以 XX 的身分編輯．改名」，點改名才展開輸入框
+const nickFolded = () => !!(getAccount() && getNick());
+function nickFieldHtml(id, label, hint, enter) {
+  const input = `<label class="ed-field"${nickFolded() ? ' hidden' : ''}><span class="ed-lab">${label} <span class="ed-lab-hint">${hint}</span></span>
+      <input id="${id}" type="text" value="${esc(getNick())}" placeholder="例如：小明" autocomplete="nickname" maxlength="20" enterkeyhint="${enter}"></label>`;
+  return (nickFolded() ? `<div class="nick-as"><i class="ti ti-user"></i><span>以 <b>${esc(getNick())}</b> 的身分編輯</span><button type="button" class="nick-chg">改名</button></div>` : '') + input;
+}
+function wireNickField(box) {
+  box.querySelector('.nick-chg')?.addEventListener('click', e => {
+    const row = e.target.closest('.nick-as'), f = row.nextElementSibling;
+    row.remove(); f.hidden = false; const inp = f.querySelector('input'); inp.focus(); inp.select(); placeDialog();
+  });
+}
 
 // 呼叫 Apps Script：用 text/plain 送 JSON，瀏覽器才不會先送預檢請求（Apps Script 不支援）
 async function api(body, ms = 40000) {
@@ -2333,7 +2355,7 @@ function carryUrl() {
 }
 function openCarry() {
   const n = myTrips().length;
-  openCopySheet('帶到其他裝置', `在另一支手機、或從 LINE 換到 Safari 時打開這個連結，${n} 趟旅程會一起搬過去。連結裡有編輯碼，只傳給自己`, carryUrl(), '已複製，到另一個裝置或 Safari 貼上打開');
+  openCopySheet('用連結帶到其他裝置', `在另一支手機、或從 LINE 換到 Safari 時打開這個連結，${n} 趟旅程會一起搬過去。連結裡有編輯碼，只傳給自己`, carryUrl(), '已複製，到另一個裝置或 Safari 貼上打開');
 }
 // 打開「帶到其他裝置」的連結：合併進這支手機的列表（已經有的保留，補上編輯碼），名稱、日期等跟雲端要
 function importCarry() {
@@ -3084,11 +3106,14 @@ function tripState(start, days) {
 }
 let tripsFetched = false;
 // 「我的旅程」最下面：還沒登入＝登入卡片；登入了＝帳號、登出
-function acctHtml() {
+function acctHtml(hasTrips) {
   const a = getAccount();
   if (a) return `<div class="acct"><span class="acct-pic">${a.pic ? `<img src="${esc(a.pic)}" alt="" referrerpolicy="no-referrer">` : '<i class="ti ti-user"></i>'}</span>
     <span class="acct-t"><b>${esc(a.name || 'Google 帳號')}</b><small>${esc(a.email || '')}．旅程已同步</small></span><button type="button" class="acct-out" id="acctOut">登出</button></div>`;
-  return `<button type="button" class="acct-in" id="acctIn"><i class="ti ti-brand-google"></i><span><b>用 Google 登入</b><small>手機、電腦看到一樣的旅程，換手機也不會不見</small></span><i class="ti ti-chevron-right"></i></button>`;
+  // 沒登入：兩個平行的選項，讓旅程在別的裝置也看得到
+  return `<div class="acct-opts"><button type="button" class="acct-in" id="acctIn"><i class="ti ti-brand-google"></i><span><b>用 Google 登入</b><small>手機、電腦看到一樣的旅程，換手機也不會不見</small></span><i class="ti ti-chevron-right"></i></button>`
+    + (hasTrips ? `<button type="button" class="acct-in" id="tripsCarry"><i class="ti ti-link"></i><span><b>用連結帶到其他裝置</b><small>不想登入的話，換手機、從 LINE 換到 Safari 時用連結一起帶過去</small></span><i class="ti ti-chevron-right"></i></button>` : '')
+    + `</div>`;
 }
 function renderTrips() {
   const all = myTrips(), list = all.filter(t => t.start).map(t => {
@@ -3105,11 +3130,9 @@ function renderTrips() {
     return g.length ? `<div class="ov-sec">${label}</div>${g.map(card).join('')}` : '';
   });
   const waiting = all.length - list.length;
-  tripsEl.innerHTML = (list.length ? groups.join('') : waiting ? '' : `<div class="trips-empty"><div class="en">Bon voyage.</div>還沒有旅程<br>按右下角「建立旅程」開始規劃，或打開朋友傳給你的旅程連結<br><small>在別的手機或 LINE 裡有旅程？在那邊的「我的旅程」按「帶到其他裝置」</small></div>`)
+  tripsEl.innerHTML = (list.length ? groups.join('') : waiting ? '' : `<div class="trips-empty"><div class="en">Bon voyage.</div>還沒有旅程<br>按右下角「建立旅程」開始規劃，或打開朋友傳給你的旅程連結<br><small>在別的手機或 LINE 裡有旅程？在那邊的「我的旅程」按「用連結帶到其他裝置」</small></div>`)
     + (waiting ? `<div class="ov-empty">正在載入 ${waiting} 趟旅程…</div>` : '')
-    + acctHtml()
-    + (all.length && !getAccount() ? `<div class="trips-carry"><button type="button" id="tripsCarry"><i class="ti ti-device-mobile-share"></i> 帶到其他裝置</button>
-      <small>沒登入時，「我的旅程」只記在這支手機的這個瀏覽器；不想登入的話，換手機、從 LINE 換到 Safari 時用這個一起帶過去</small></div>` : '');
+    + acctHtml(all.length);
   if (!tripsFetched && all.length) refreshTrips();
   if (getAccount() && !syncMine.done) { syncMine.done = true; syncMine(); }   // 每次打開網站跟帳號同步一次
 }
@@ -3274,14 +3297,14 @@ function openCreateAuth() {
     <div class="sh-head"><div style="flex:1;min-width:0"><div class="sh-title" id="shTitle">建立「${esc(wizName())}」</div>
       <div class="sh-sub">資料會存在這個網站的 Google 試算表，架網站的人看得到</div></div>
       <button class="sh-close" aria-label="關閉"><i class="ti ti-x"></i></button></div>
-    <label class="ed-field"><span class="ed-lab">你的暱稱 <span class="ed-lab-hint">旅伴會看到是誰改的</span></span>
-      <input id="crNick" type="text" value="${esc(getNick())}" placeholder="例如：小明" autocomplete="nickname" maxlength="20" enterkeyhint="done"></label>
+    ${nickFieldHtml('crNick', '你的暱稱', '旅伴會看到是誰改的', 'done')}
     <div class="err" id="crErr" hidden></div>
     <div class="ed-actions">
       <button type="button" class="btn ghost ed-cancel">取消</button>
       <button type="button" class="btn primary" id="crGo">建立旅程</button>
-    </div>`, '#crNick', true);
+    </div>`, nickFolded() ? null : '#crNick', true);
   const $ = id => sheet.querySelector('#' + id);
+  wireNickField(sheet);
   const go = async () => {
     const nick = $('crNick').value.trim();
     const err = msg => { $('crErr').textContent = msg; $('crErr').hidden = false; placeDialog(); };
@@ -3870,16 +3893,16 @@ function openAuth(then) {
     <div class="sh-head"><div style="flex:1;min-width:0"><div class="sh-title" id="shTitle">開始編輯</div>
       <div class="sh-sub">${needCode ? '編輯碼問一下揪團的人（在總覽頁最下面）' : '填一次就好，這支手機會記住'}</div></div>
       <button class="sh-close" aria-label="關閉"><i class="ti ti-x"></i></button></div>
-    <label class="ed-field"><span class="ed-lab">暱稱 <span class="ed-lab-hint">修改紀錄會顯示是誰改的</span></span>
-      <input id="auNick" type="text" value="${esc(getNick())}" placeholder="例如：小明" autocomplete="nickname" maxlength="20" enterkeyhint="${needCode ? 'next' : 'done'}"></label>
+    ${nickFieldHtml('auNick', '暱稱', '修改紀錄會顯示是誰改的', needCode ? 'next' : 'done')}
     ${needCode ? `<label class="ed-field"><span class="ed-lab">編輯碼 <span class="ed-lab-hint">4 位數字</span></span>
       <span class="code-boxes"><input id="auCode" type="text" inputmode="numeric" pattern="[0-9]*" maxlength="4" autocomplete="one-time-code" class="code-input" enterkeyhint="done" aria-label="編輯碼">${'<i></i>'.repeat(4)}</span></label>` : ''}
     <div class="err" id="auErr" hidden></div>
     <div class="ed-actions">
       <button type="button" class="btn ghost ed-cancel">取消</button>
       <button type="button" class="btn primary" id="auGo">開始編輯</button>
-    </div>`, getNick() && needCode ? '#auCode' : '#auNick', true);
+    </div>`, getNick() && needCode ? '#auCode' : nickFolded() ? null : '#auNick', true);
   const $ = id => sheet.querySelector('#' + id);
+  wireNickField(sheet);
   const go = async () => {
     const nick = $('auNick').value.trim(), code = needCode ? $('auCode').value.replace(/\D/g, '') : TRIP_CODE;
     const err = msg => { $('auErr').textContent = msg; $('auErr').hidden = false; placeDialog(); };
