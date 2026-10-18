@@ -17,6 +17,7 @@
   color-scheme:light;
   /* 旅行感配色：暖白底＋大地色系 */
   --page:#ffffff;--text:#2b2622;--text2:#6e665e;--muted:#a39a90;--line:#efeae3;--border:#e2dbd2;
+  --fill:#F7F7F7;--fill2:#EFEFEF;                     /* 輸入框、選項、按鈕的淺灰底（沒有框線）；fill2：再深一階（分段切換底、按下去） */
   --accent-bg:#F7E6DA;--accent-fg:#9A4A25;           /* 陶土橘：選取中的天數 */
   --eat-bg:#FCEBDD;--eat-bd:#F0B48C;--eat-fg:#8A4B22;  /* 吃：芒果蜜桃 */
   --spa-bg:#E9F0E4;--spa-bd:#A9C49C;--spa-fg:#3F5E3A;  /* 按摩：香茅綠 */
@@ -118,7 +119,7 @@ header{position:sticky;top:0;z-index:10;background:var(--page);padding:calc(12px
 .ck-bullet{flex:none;width:5px;height:5px;margin:8px 8px 0;border-radius:50%;background:var(--accent-fg)}
 .ck-txt{flex:1;min-width:0;padding:0;border:0;background:none;font:inherit;font-size:14px;line-height:1.45;color:var(--text);text-align:left;cursor:pointer;word-break:break-word}
 .ck.done .ck-txt{color:var(--muted);text-decoration:line-through}
-.ck-who{display:inline-block;margin-left:6px;padding:0 7px;border-radius:999px;background:var(--line);color:var(--text2);font-size:11px;line-height:18px;text-decoration:none;vertical-align:1px}
+.ck-who{display:inline-block;margin-left:6px;padding:0 7px;border-radius:999px;background:var(--fill2);color:var(--text2);font-size:11px;line-height:18px;text-decoration:none;vertical-align:1px}
 .ck{position:relative;background:#fff;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
 .ck.ck-shift{transition:transform .15s ease}
 .ck.ck-lift{z-index:2;box-shadow:0 6px 18px rgba(60,40,20,.16);border-radius:10px;border-top-color:transparent;transform-origin:center}
@@ -225,11 +226,11 @@ html.sheet-lock body{position:fixed;left:0;right:0;bottom:0;overflow:hidden}
 .sheet.dlg .ed-actions{position:static;margin-top:18px;padding:12px 18px 16px;border-radius:0 0 18px 18px}
 /* 拉桿：固定在面板最上面，內容往上捲時不會跟著捲走；整條白色橫條都可以按著往下拉 */
 .grab{position:sticky;top:-8px;z-index:3;height:22px;margin:-8px -18px 2px;background:#fff;border-radius:18px 18px 0 0}
-.grab::before{content:"";position:absolute;left:50%;top:8px;width:38px;height:4px;margin-left:-19px;border-radius:2px;background:var(--border)}
+.grab::before{content:"";position:absolute;left:50%;top:8px;width:38px;height:4px;margin-left:-19px;border-radius:2px;background:#DCDCDC}
 .ed-full textarea{font-size:14px}
 /* 照片：筆記最上方的大照片（直角）；編輯面板裡的預覽 */
 /* 照片框固定 339:206（用 padding 撐高度，舊版 iPhone 也支援）；照片等比例放大到短邊填滿，置中裁掉多的部分 */
-.ph-frame{position:relative;width:100%;height:0;padding-top:60.77%;overflow:hidden;background:var(--line)}
+.ph-frame{position:relative;width:100%;height:0;padding-top:60.77%;overflow:hidden;background:var(--fill)}
 .ph-frame img{position:absolute;top:0;left:0;width:100%;height:100%;object-fit:cover;object-position:50% 50%;display:block}
 .sh-photo{margin:0 0 14px}
 .ph-prev{position:relative}
@@ -257,7 +258,7 @@ html.sheet-lock body{position:fixed;left:0;right:0;bottom:0;overflow:hidden}
 .sh-meta div{display:flex;align-items:flex-start;gap:6px;line-height:1.5}
 .sh-meta i{flex:none;font-size:15px;margin-top:1px}
 .sh-empty{margin-top:14px;font-size:13px;color:var(--muted)}
-.sh-close{flex:none;width:30px;height:30px;border-radius:50%;border:0;background:var(--line);color:var(--text2);font-size:16px;
+.sh-close{flex:none;width:30px;height:30px;border-radius:50%;border:0;background:var(--fill2);color:var(--text2);font-size:16px;
   display:flex;align-items:center;justify-content:center;cursor:pointer}
 /* 同一張面板裡往下一層：內容從右邊滑進來；返回：從左邊滑回來 */
 .sh-back{flex:none;width:30px;height:30px;margin:0 -4px 0 -6px;border:0;background:none;color:var(--text);font-size:22px;display:flex;align-items:center;justify-content:center;cursor:pointer}
@@ -295,7 +296,7 @@ html.sheet-lock body{position:fixed;left:0;right:0;bottom:0;overflow:hidden}
 .editing .edit-btn{display:none}
 /* ---------- 地圖 ---------- */
 /* 分段切換（卡片樣式）：三段等寬，選中的那段是白色小塊，切換時滑過去 */
-.seg{position:relative;display:flex;height:36px;padding:3px;border-radius:10px;background:#EFEBE5;box-sizing:border-box}
+.seg{position:relative;display:flex;height:36px;padding:3px;border-radius:10px;background:var(--fill2);box-sizing:border-box}
 .seg-thumb{position:absolute;top:3px;bottom:3px;left:3px;width:calc((100% - 6px) / 3);border-radius:8px;background:#fff;box-shadow:0 1px 3px rgba(60,40,20,.16);transition:transform .2s ease}
 .seg[data-i="1"] .seg-thumb{transform:translateX(100%)}
 .seg[data-i="2"] .seg-thumb{transform:translateX(200%)}
@@ -384,7 +385,7 @@ html.on-map:not(.sheet-lock),html.on-map:not(.sheet-lock) body{background:#f4f0e
 .ed-switch.sm input.sw{width:34px;height:20px;border-radius:10px}
 .ed-switch.sm input.sw::after{top:2px;left:2px;width:16px;height:16px}
 .ed-switch.sm input.sw:checked::after{transform:translateX(14px)}
-.ed-tfix{flex:1;display:flex;align-items:center;gap:6px;height:36px;padding:0 12px;border-radius:10px;background:#EFEBE5;font-size:14px;font-weight:600;color:var(--text)}   /* 手動填：只剩當時選的交通方式 */
+.ed-tfix{flex:1;display:flex;align-items:center;gap:6px;height:36px;padding:0 12px;border-radius:10px;background:var(--fill2);font-size:14px;font-weight:600;color:var(--text)}   /* 手動填：只剩當時選的交通方式 */
 .seg.ed-modes .md-min{margin-left:4px}
 .seg.ed-modes .seg-thumb{width:calc((100% - 6px) / var(--n, 2));transform:translateX(calc(var(--i, 0) * 100%))}   /* 交通方式的數量不固定 */
 .seg.ed-modes button{display:inline-flex;align-items:center;justify-content:center;gap:4px}
@@ -398,7 +399,7 @@ html.on-map:not(.sheet-lock),html.on-map:not(.sheet-lock) body{background:#f4f0e
 .blk.compact .edit-ic{top:50%;transform:translateY(-50%)}
 .editing .edit-ic{display:flex}
 .editing .nav{display:none}
-.sub-ed{display:none;align-self:center;width:22px;height:22px;flex:none;border-radius:50%;background:var(--line);color:var(--text2);
+.sub-ed{display:none;align-self:center;width:22px;height:22px;flex:none;border-radius:50%;background:var(--fill2);color:var(--text2);
   align-items:center;justify-content:center;font-size:12px}
 .sub-ed i{display:block;line-height:1}
 .editing .sub-ed{display:flex}
@@ -443,7 +444,7 @@ html.on-map:not(.sheet-lock),html.on-map:not(.sheet-lock) body{background:#f4f0e
 .clash{box-shadow:inset 0 0 0 2px #E24B4A}
 .tag-ok{white-space:nowrap}
 .tag-q{white-space:nowrap;opacity:.8}
-.sh-pending{margin-top:14px;padding:10px 12px;border-radius:10px;background:#FAF7F3;font-size:13px;line-height:1.5;color:var(--text2)}
+.sh-pending{margin-top:14px;padding:10px 12px;border-radius:10px;background:var(--fill);font-size:13px;line-height:1.5;color:var(--text2)}
 .fab{position:fixed;right:max(20px,calc(50vw - 220px));bottom:calc(24px + env(safe-area-inset-bottom));z-index:40;width:52px;height:52px;border-radius:50%;
   border:0;background:var(--accent-fg);color:#fff;font-size:24px;display:none;align-items:center;justify-content:center;box-shadow:0 4px 14px rgba(60,30,10,.22);cursor:pointer}
 .fab i{display:block;line-height:1}
@@ -477,14 +478,14 @@ html.on-map:not(.sheet-lock),html.on-map:not(.sheet-lock) body{background:#f4f0e
 .map-status i{vertical-align:-1px}
 .map-status .ok{color:#3F5E3A;font-weight:600}
 .map-status a{color:var(--accent-fg)}
-.sheet input[type=text],.sheet input[type=password],.sheet input[type=time],.sheet textarea{width:100%;font-size:16px;padding:10px 12px;border:1px solid var(--border);
-  border-radius:10px;background:#fff;color:var(--text);font-family:inherit;-webkit-appearance:none;appearance:none}
+.sheet input[type=text],.sheet input[type=password],.sheet input[type=time],.sheet textarea{width:100%;font-size:16px;padding:10px 12px;border:1.5px solid transparent;
+  border-radius:12px;background:var(--fill);color:var(--text);font-family:inherit;-webkit-appearance:none;appearance:none}
 .sheet input[type=time]{width:auto;min-width:120px}
 .sheet textarea{resize:vertical;line-height:1.5}
-.sheet input:focus,.sheet textarea:focus{outline:2px solid var(--accent-bg);border-color:var(--accent-fg)}
+.sheet input:focus,.sheet textarea:focus{outline:none;background:#fff;border-color:var(--accent-fg)}
 .chips{display:flex;flex-wrap:wrap;gap:6px}
-.chip{height:34px;padding:0 14px;border-radius:999px;border:1px solid var(--border);background:#fff;font-size:14px;color:var(--text2);cursor:pointer}
-.chip.on{border-color:transparent;background:var(--accent-bg);color:var(--accent-fg);font-weight:600}
+.chip{height:34px;padding:0 14px;border-radius:999px;border:0;background:var(--fill);font-size:14px;color:var(--text2);cursor:pointer}
+.chip.on{background:var(--accent-fg);color:#fff;font-weight:600}   /* 小標籤選中：陶土橘實心白字 */
 .pick-chips{margin-top:8px}
 .pick-chips .pick-other{display:inline-flex;align-items:center;gap:4px}
 .pick-chips .pick-other i{font-size:14px}
@@ -500,7 +501,7 @@ html.on-map:not(.sheet-lock),html.on-map:not(.sheet-lock) body{background:#f4f0e
 .ed-time input[type=time]::-webkit-calendar-picker-indicator{display:none}   /* 電腦版瀏覽器的時鐘圖示會把格子撐寬；點格子一樣會跳出選擇器 */
 .ed-time input[type=time]::-webkit-date-and-time-value{text-align:center}
 .ed-arrow{color:var(--muted);flex:none;font-size:14px;margin:0 6px}
-.ed-endbox{flex:1 1 0;min-width:0;font-size:16px;padding:10px 4px;border:1px solid var(--line);border-radius:10px;background:#F7F5F2;color:var(--muted);line-height:normal;white-space:nowrap;text-align:center;overflow:hidden}
+.ed-endbox{flex:1 1 0;min-width:0;font-size:16px;padding:10px 4px;border:1.5px solid transparent;border-radius:12px;background:var(--fill);color:var(--muted);line-height:normal;white-space:nowrap;text-align:center;overflow:hidden}
 .ed-mid{font-size:12px;color:var(--muted);margin-top:4px}
 .ed-len{flex:1.2 1 0;min-width:0;display:flex;align-items:center;justify-content:space-between;margin-left:6px;height:44px}
 .ed-len .step{width:26px;height:26px;flex:none;border:0;background:var(--line)}
@@ -525,7 +526,7 @@ html.on-map:not(.sheet-lock),html.on-map:not(.sheet-lock) body{background:#f4f0e
 .trip-name{font-size:16px;font-weight:600;line-height:1.35}
 .trip-meta{margin-top:3px;font-size:13px;color:var(--text2);font-variant-numeric:tabular-nums}
 .trip-card.past{box-shadow:0 0 0 1px var(--line)}
-.trip-card.past .trip-cover{height:76px;background:#F1EEEA}
+.trip-card.past .trip-cover{height:76px;background:var(--fill)}
 .trip-card.past .trip-cover .en{font-size:26px;color:var(--muted)}
 .trip-demo{margin-left:6px;font-size:11px;font-weight:400;color:var(--muted)}
 .trip-new{position:fixed;right:max(20px,calc(50vw - 220px));bottom:calc(24px + env(safe-area-inset-bottom));z-index:40;height:46px;padding:0 18px 0 14px;border:0;border-radius:999px;
@@ -533,13 +534,13 @@ html.on-map:not(.sheet-lock),html.on-map:not(.sheet-lock) body{background:#f4f0e
 .trip-new i{font-size:20px;line-height:1}
 .on-trips .trip-new{display:flex}
 /* 總覽頁副標題：點了回到「我的旅程」 */
-.trip-sw{display:inline-flex;align-items:center;gap:3px;max-width:100%;padding:3px 8px 3px 11px;border:0;border-radius:999px;background:#F3EFEA;
+.trip-sw{display:inline-flex;align-items:center;gap:3px;max-width:100%;padding:3px 8px 3px 11px;border:0;border-radius:999px;background:var(--fill);
   font:inherit;font-size:13px;color:var(--text2);cursor:pointer;vertical-align:middle}
 .trip-sw i{font-size:14px;line-height:1;color:var(--muted)}
 .editing .trip-sw{pointer-events:none;opacity:.5}
 .trip-sw span{min-width:0;max-width:150px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .ov-members{display:flex;flex-wrap:wrap;gap:6px}
-.ov-members span:not(.ov-empty){padding:4px 10px;border-radius:999px;background:#F3EFEA;font-size:13px;color:var(--text)}
+.ov-members span:not(.ov-empty){padding:4px 10px;border-radius:999px;background:var(--fill);font-size:13px;color:var(--text)}
 /* 旅程設定：同行的人（建立的人每個名字後面有 ×，下面一格可以新增） */
 .ts-mem span:not(.ov-empty){display:inline-flex;align-items:center;gap:2px;padding:6px 12px;font-size:14px}
 .ts-mem-x{width:22px;height:22px;margin:-4px -6px -4px 2px;border:0;border-radius:50%;background:none;color:var(--muted);font-size:13px;display:flex;align-items:center;justify-content:center;cursor:pointer}
@@ -549,8 +550,8 @@ html.on-map:not(.sheet-lock),html.on-map:not(.sheet-lock) body{background:#f4f0e
 .ts-mem-add input{flex:1;min-width:0}
 .ts-mem-add .btn{flex:none;padding:0 16px}
 .inv{display:flex;flex-direction:column;gap:8px;margin-top:12px}
-.inv-btn{display:flex;align-items:center;gap:12px;width:100%;padding:12px 14px;border:1px solid var(--border);border-radius:14px;background:#fff;font:inherit;text-align:left;color:var(--text);cursor:pointer}
-.inv-btn > i:first-child{flex:none;width:34px;height:34px;border-radius:50%;background:var(--accent-bg);color:var(--accent-fg);font-size:18px;display:flex;align-items:center;justify-content:center}
+.inv-btn{display:flex;align-items:center;gap:12px;width:100%;padding:12px 14px;border:0;border-radius:12px;background:var(--fill);font:inherit;text-align:left;color:var(--text);cursor:pointer}
+.inv-btn > i:first-child{flex:none;width:24px;height:24px;color:var(--text);font-size:21px;display:flex;align-items:center;justify-content:center}
 .inv-btn > span{flex:1;min-width:0}
 .inv-btn b{display:block;font-size:15px}
 .inv-btn small{display:block;margin-top:1px;font-size:12px;color:var(--text2)}
@@ -565,7 +566,7 @@ button.ov-stay{width:100%;font:inherit;text-align:left;cursor:pointer}
 .st-item{position:relative;display:flex;align-items:center;gap:10px}
 .st-item + .st-item::before{content:"";position:absolute;left:13px;bottom:50%;height:calc(100% + 12px - 28px);margin-bottom:14px;border-left:1.5px dashed var(--line)}
 .st-step{flex:none;position:relative;z-index:1;width:28px;height:28px;border:1.5px solid;border-radius:50%;background:var(--page);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700}
-.st-row{flex:1;min-width:0;text-decoration:none;display:flex;align-items:center;gap:12px;padding:10px 12px 10px 10px;border:1px solid var(--border);border-radius:16px;background:#fff;font:inherit;text-align:left;color:var(--text);cursor:pointer;box-shadow:0 1px 4px rgba(60,40,20,.06)}
+.st-row{flex:1;min-width:0;text-decoration:none;display:flex;align-items:center;gap:12px;padding:10px 12px 10px 10px;border:0;border-radius:12px;background:var(--fill);font:inherit;text-align:left;color:var(--text);cursor:pointer}
 .st-pic{flex:none;position:relative;width:64px;height:64px;border-radius:12px;overflow:hidden;display:flex;align-items:center;justify-content:center;font-size:24px}
 .st-pic img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;z-index:1}
 .st-row > span:nth-child(2){flex:1;min-width:0}
@@ -587,8 +588,8 @@ button.ov-stay{width:100%;font:inherit;text-align:left;cursor:pointer}
 .btn.primary.danger-fill[disabled]{opacity:.4}
 /* 我的旅程：長按選單 */
 .tm-list{display:flex;flex-direction:column;gap:8px;margin-top:14px}
-.tm-opt{display:flex;align-items:center;gap:12px;width:100%;padding:12px 14px;border:1px solid var(--border);border-radius:14px;background:#fff;font:inherit;text-align:left;color:var(--text);cursor:pointer}
-.tm-opt > i{flex:none;width:34px;height:34px;border-radius:50%;background:var(--other-bg);color:var(--text2);font-size:18px;display:flex;align-items:center;justify-content:center}
+.tm-opt{display:flex;align-items:center;gap:12px;width:100%;padding:12px 14px;border:0;border-radius:12px;background:var(--fill);font:inherit;text-align:left;color:var(--text);cursor:pointer}
+.tm-opt > i{flex:none;width:24px;height:24px;color:var(--text);font-size:21px;display:flex;align-items:center;justify-content:center}
 .tm-opt span{flex:1;min-width:0}
 .tm-opt b{display:block;font-size:15px}
 .tm-opt.danger b,.tm-opt.danger > i{color:#C2412D}
@@ -597,11 +598,11 @@ button.ov-stay{width:100%;font:inherit;text-align:left;cursor:pointer}
 .trip-card img{pointer-events:none}   /* 長按封面不要跳出 iPhone 的圖片預覽 */
 /* 住處資訊：地址一行一行，點了複製 */
 .st-addrs{display:flex;flex-direction:column;gap:6px}
-.st-al{display:flex;align-items:flex-start;gap:8px;width:100%;padding:10px 12px;border:1px solid var(--border);border-radius:12px;background:#fff;font:inherit;text-align:left;color:var(--text);cursor:pointer}
+.st-al{display:flex;align-items:flex-start;gap:8px;width:100%;padding:10px 12px;border:0;border-radius:12px;background:var(--fill);font:inherit;text-align:left;color:var(--text);cursor:pointer}
 .st-al span{flex:1;min-width:0;font-size:15px;line-height:1.5;user-select:text;-webkit-user-select:text}
 .st-al i{flex:none;color:var(--muted);font-size:17px;margin-top:3px}
 .st-al-wait{font-size:12px;color:var(--muted)}
-.stay-strip{display:flex;align-items:center;margin-top:12px;padding:14px 8px;border:1px solid var(--border);border-radius:16px;background:#fff}
+.stay-strip{display:flex;align-items:center;margin-top:12px;padding:14px 8px;border:1.5px solid transparent;border-radius:12px;background:var(--fill)}
 .ss-c{flex:1;min-width:0;text-align:center}
 .ss-c small{display:block;font-size:12px;color:var(--text2);margin-bottom:4px}
 .ss-d{display:inline-flex;align-items:center;gap:3px}
@@ -609,7 +610,7 @@ button.ov-stay{width:100%;font:inherit;text-align:left;cursor:pointer}
 .ss-wd{font-size:10px;line-height:1.15;color:var(--text2);text-align:center}
 .ss-none{font-size:14px!important;font-weight:500!important;color:var(--muted)!important}
 .ss-arrow{flex:none;font-size:22px;color:var(--text)}
-.ss-bar{flex:none;width:1px;align-self:stretch;margin:4px 4px;background:var(--line)}
+.ss-bar{flex:none;width:1px;align-self:stretch;margin:4px 4px;background:#E3E3E3}
 .ss-n{flex:.8}
 /* 旅程設定的日期列：整條可以點，展開／收起月曆 */
 .ts-strip{position:relative;width:100%;margin-top:4px;padding:16px 8px;font:inherit;color:inherit;text-align:center;cursor:pointer}
@@ -637,7 +638,7 @@ button.ov-stay{width:100%;font:inherit;text-align:left;cursor:pointer}
 .cal-bar.l.end{right:calc(50% - 18px);border-radius:0 18px 18px 0}   /* 退房日：圓頭停在數字 */
 .st-legend{display:flex;flex-direction:column;gap:4px;margin-top:8px;font-size:12px;color:var(--text2)}
 .st-legend i{display:inline-block;width:16px;height:10px;margin-right:6px;border-radius:5px;vertical-align:-1px;opacity:.3}
-.ov-stay{display:flex;align-items:center;gap:12px;padding:12px 14px;border:1px solid var(--border);border-radius:14px;background:#fff;color:var(--text);text-decoration:none}
+.ov-stay{display:flex;align-items:center;gap:12px;padding:12px 14px;border:0;border-radius:12px;background:var(--fill);color:var(--text);text-decoration:none}
 .ov-stay > i:first-child{flex:none;width:34px;height:34px;border-radius:50%;background:var(--other-bg);color:var(--other-fg);font-size:18px;display:flex;align-items:center;justify-content:center}
 .ov-stay > span{flex:1;min-width:0}
 .ov-stay b{display:block;font-size:15px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
@@ -653,7 +654,7 @@ button.ov-stay{width:100%;font:inherit;text-align:left;cursor:pointer}
 .ov-hero-t b{display:block;font-size:17px;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .ov-hero-t span{display:block;margin-top:1px;font-size:13px;opacity:.85;font-variant-numeric:tabular-nums}
 .ov-hero-cam{position:absolute;right:12px;bottom:12px;width:32px;height:32px;border-radius:50%;background:rgba(255,255,255,.9);color:var(--text2);display:flex;align-items:center;justify-content:center;font-size:16px}
-.setup{margin:0 0 16px;padding:12px 14px 6px;border-radius:16px;background:#FAF7F3}
+.setup{margin:0 0 16px;padding:12px 14px 6px;border-radius:16px;background:var(--fill)}
 .setup-h{display:flex;align-items:center;gap:8px;margin-bottom:4px}
 .setup-toggle{display:flex;align-items:center;gap:8px;padding:2px 0;border:0;background:none;font:inherit;color:var(--text);cursor:pointer}
 .setup-toggle b{font-size:15px}
@@ -686,25 +687,23 @@ button.ov-stay{width:100%;font:inherit;text-align:left;cursor:pointer}
 .cv-pick{position:absolute;left:0;right:0;bottom:12px;display:flex;justify-content:center;align-items:center;gap:4px;font-size:13px;color:var(--accent-fg)}
 .cv-acts .btn{flex:1;height:40px;font-size:14px}
 .cv-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
-.cv-grid button{aspect-ratio:1;border:0;border-radius:10px;background:#EFEBE5 center/cover no-repeat;cursor:pointer}
+.cv-grid button{aspect-ratio:1;border:0;border-radius:10px;background:var(--fill2) center/cover no-repeat;cursor:pointer}
 .ov-foot{margin-top:28px;padding-top:2px;border-top:1px solid var(--line)}
 .sheet input.ts-time{display:block;width:100%;min-width:0;text-align:left;-webkit-appearance:none;appearance:none;box-sizing:border-box}   /* 每天幾點出門：跟其他輸入框一樣占滿 */
 .ts-more{display:flex;flex-direction:column;margin-top:4px}
 /* 淺色表單（旅程設定、編輯卡片，面板加 .soft）：圓角統一 12px（圓形、膠囊除外）；輸入框、日期條、月曆、選項都是淺灰底、沒有框線，正在打字的輸入框變白底加咖啡色框 */
 .sheet.soft input[type=text],.sheet.soft input[type=time],.sheet.soft textarea,.sheet.soft .ts-strip,.sheet.soft .cal,.sheet.soft .wiz-opt,.sheet.soft .ts-cover,.sheet.soft .btn,.sheet.soft .ed-endbox,.sheet.soft .seg,.sheet.soft .ph-frame,.sheet.soft .cand-drop{border-radius:12px}
 .sheet.soft .seg button,.sheet.soft .seg-thumb{border-radius:9px}
-.sheet.soft .seg{background:#F2F2F2}   /* 分段切換的底色跟著換成灰 */
-.sheet.soft input[type=text],.sheet.soft input[type=time]{height:44px;background:#F7F7F7;border-color:transparent}
-.sheet.soft textarea,.sheet.soft .ed-endbox{background:#F7F7F7;border-color:transparent}
+.sheet.soft input[type=text],.sheet.soft input[type=time]{height:44px;background:var(--fill);border-color:transparent}
+.sheet.soft textarea,.sheet.soft .ed-endbox{background:var(--fill);border-color:transparent}
 .sheet.soft input:focus,.sheet.soft textarea:focus{background:#fff;border-color:var(--accent-fg)}
-.sheet.soft .ts-strip{background:#F7F7F7;border-color:transparent}
-.sheet.soft .ts-strip.on{background:#fff;border-color:var(--accent-fg)}
-.sheet.soft .cal{background:#F7F7F7;border-color:transparent}
-.sheet.soft .wiz-opt{background:#F7F7F7;border-color:transparent}
-.sheet.soft .wiz-opt.on{background:var(--accent-bg);border-color:var(--accent-fg)}
+.sheet.soft .ts-strip{background:var(--fill);border-color:transparent}
+.sheet.soft .ts-strip.on{border-color:var(--accent-fg)}
+.sheet.soft .cal{background:var(--fill);border-color:transparent}
+.sheet.soft .wiz-opt{background:var(--fill);border-color:transparent}
 .sheet.soft .wiz-opt > i{width:auto;height:auto;background:none;font-size:20px}   /* 交通方式的圖示不要圓圈 */
-.sheet.soft .ts-mem-add .btn{background:#F7F7F7;border-color:transparent}
-.sheet.soft .ts-mem span:not(.ov-empty){background:#F7F7F7}   /* 同行的人名字：跟輸入框同一個淺灰 */
+.sheet.soft .ts-mem-add .btn{background:var(--fill);border-color:transparent}
+.sheet.soft .ts-mem span:not(.ov-empty){background:var(--fill)}   /* 同行的人名字：跟輸入框同一個淺灰 */
 .ts-more .inv-btn.trip-set{margin-top:0}
 /* 修改紀錄 */
 .hs-list{display:flex;flex-direction:column}
@@ -716,22 +715,22 @@ button.ov-stay{width:100%;font:inherit;text-align:left;cursor:pointer}
 .hs-time{flex:none;font-size:12px;color:var(--muted);font-variant-numeric:tabular-nums}
 .hs-row .btn{flex:none;height:34px;padding:0 14px;font-size:13px}
 .inv-btn.trip-set{margin-top:12px;border-color:transparent;padding-left:0;padding-right:4px}   /* 沒有外框：跟上面的內容對齊左邊 */
-.inv-btn.trip-set > i:first-child{background:#F3EFEA;color:var(--text2)}
+.inv-btn.trip-set > i:first-child{background:var(--fill);color:var(--text2)}
 /* 分享編輯碼：大卡片，數字一格一格；下面兩顆並排的按鈕 */
-.inv-code{display:flex;flex-direction:column;align-items:center;gap:14px;padding:24px 16px 26px;border-radius:20px;background:#F6F3EF;text-align:center}
+.inv-code{display:flex;flex-direction:column;align-items:center;gap:14px;padding:24px 16px 26px;border-radius:20px;background:var(--fill);text-align:center}
 .inv-code > span{font-size:14px;font-weight:600;color:var(--text2)}
 .inv-digits{display:flex;gap:10px}
-.inv-digits b{width:46px;height:54px;border-radius:12px;background:#EBE5DE;display:flex;align-items:center;justify-content:center;font-size:28px;font-weight:700;color:var(--accent-fg);font-variant-numeric:tabular-nums}
+.inv-digits b{width:46px;height:54px;border-radius:12px;background:var(--fill2);display:flex;align-items:center;justify-content:center;font-size:28px;font-weight:700;color:var(--accent-fg);font-variant-numeric:tabular-nums}
 .inv-code small{font-size:13px;font-weight:500;color:var(--text2)}
 .inv-pair{display:flex;gap:8px}
-.inv-tile{flex:1;min-width:0;height:64px;border:0;border-radius:18px;background:#F6F3EF;font:inherit;font-size:16px;color:var(--text);cursor:pointer}
-.inv-tile:active{background:#EBE5DE}
+.inv-tile{flex:1;min-width:0;height:64px;border:0;border-radius:18px;background:var(--fill);font:inherit;font-size:16px;color:var(--text);cursor:pointer}
+.inv-tile:active{background:var(--fill2)}
 /* 編輯碼四格輸入：透明輸入框蓋在四個格子上 */
 .code-boxes{position:relative;display:flex;justify-content:center;gap:10px;margin-top:2px}
-.code-boxes i{width:52px;height:58px;border-radius:12px;background:#F3EFEA;border:1.5px solid transparent;display:flex;align-items:center;justify-content:center;font-style:normal;font-size:28px;font-weight:700;color:var(--accent-fg);font-variant-numeric:tabular-nums}
+.code-boxes i{width:52px;height:58px;border-radius:12px;background:var(--fill);border:1.5px solid transparent;display:flex;align-items:center;justify-content:center;font-style:normal;font-size:28px;font-weight:700;color:var(--accent-fg);font-variant-numeric:tabular-nums}
 .code-boxes i.cur{border-color:var(--accent-fg);background:#fff}
 .sheet .code-boxes input.code-input{position:absolute;inset:0;width:100%;height:100%;padding:0;border:0;background:transparent;color:transparent;caret-color:transparent;font-size:16px;opacity:.01;outline:none}
-.share-text{margin-top:16px;padding:12px 14px;border-radius:12px;background:#FAF7F3;font-size:14px;line-height:1.6;color:var(--text);word-break:break-all;-webkit-user-select:text;user-select:text}
+.share-text{margin-top:16px;padding:12px 14px;border-radius:12px;background:var(--fill);font-size:14px;line-height:1.6;color:var(--text);word-break:break-all;-webkit-user-select:text;user-select:text}
 .inv-reset{align-self:center;margin-top:2px;padding:6px;border:0;background:none;font:inherit;font-size:12px;color:var(--muted);text-decoration:underline;cursor:pointer}
 .trips-empty{padding:60px 16px;text-align:center;font-size:14px;color:var(--text2);line-height:1.7}
 .trips-empty small{display:block;margin-top:14px;font-size:12px;color:var(--muted)}
@@ -740,7 +739,7 @@ button.ov-stay{width:100%;font:inherit;text-align:left;cursor:pointer}
 .acct-opts{display:flex;flex-direction:column;gap:12px;margin-top:22px}
 .acct-alt{text-align:center;font-size:13px;color:var(--muted)}
 .acct-alt button{padding:4px 0;border:0;background:none;font:inherit;color:var(--text2);text-decoration:underline;text-underline-offset:3px;cursor:pointer}
-.acct-in{display:flex;align-items:center;gap:12px;width:100%;padding:14px;border:0;border-radius:14px;background:#F7F7F7;font:inherit;text-align:left;color:var(--text);cursor:pointer}
+.acct-in{display:flex;align-items:center;gap:12px;width:100%;padding:14px;border:0;border-radius:14px;background:var(--fill);font:inherit;text-align:left;color:var(--text);cursor:pointer}
 .acct-in > i:first-child{flex:none;width:24px;color:var(--text);font-size:22px;display:flex;align-items:center;justify-content:center}
 .acct-in span{flex:1;min-width:0}
 .acct-in b{display:block;font-size:15px}
@@ -759,7 +758,7 @@ button.ov-stay{width:100%;font:inherit;text-align:left;cursor:pointer}
 .am-who > span:last-child{min-width:0}
 .am-item{display:flex;align-items:center;gap:10px;width:100%;padding:10px;border:0;border-radius:10px;background:none;font:inherit;font-size:14px;color:var(--text);text-align:left;cursor:pointer}
 .am-item i{font-size:18px}
-.am-item:active{background:#F7F7F7}
+.am-item:active{background:var(--fill)}
 .am-val{margin-left:auto;color:var(--text2);max-width:9em;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .am-item .am-go{font-size:16px;color:var(--muted);margin-left:-4px}
 .acct-pic{flex:none;width:32px;height:32px;border-radius:50%;overflow:hidden;background:var(--other-bg);color:var(--text2);display:flex;align-items:center;justify-content:center}
@@ -777,11 +776,11 @@ button.ov-stay{width:100%;font:inherit;text-align:left;cursor:pointer}
 .wiz-prog span.on{background:var(--accent-fg)}
 .wiz-h{margin:18px 0 2px;font-size:20px;font-weight:700}
 .wiz-p{margin:0;font-size:14px;color:var(--text2);line-height:1.5}
-.wiz input[type=text]{display:block;width:100%;min-height:44px;font-size:16px;padding:10px 12px;border:1px solid var(--border);
-  border-radius:10px;background:#fff;color:var(--text);font-family:inherit;-webkit-appearance:none;appearance:none;text-align:left}
-.wiz input:focus{outline:2px solid var(--accent-bg);border-color:var(--accent-fg)}
+.wiz input[type=text]{display:block;width:100%;min-height:44px;font-size:16px;padding:10px 12px;border:1.5px solid transparent;
+  border-radius:12px;background:var(--fill);color:var(--text);font-family:inherit;-webkit-appearance:none;appearance:none;text-align:left}
+.wiz input:focus{outline:none;background:#fff;border-color:var(--accent-fg)}
 /* 日期：自己畫的月曆，第一下點出發、第二下點回程（iPhone 內建的日期選擇器一點開就會自動填今天） */
-.cal{margin-top:2px;padding:10px 10px 6px;border:1px solid var(--border);border-radius:14px;background:#fff}
+.cal{margin-top:2px;padding:10px 10px 6px;border:0;border-radius:12px;background:var(--fill)}
 .cal-h{display:flex;align-items:center;justify-content:space-between;margin-bottom:6px}
 .cal-h b{font-size:15px;font-variant-numeric:tabular-nums}
 .cal-h button{width:34px;height:34px;border:0;border-radius:50%;background:none;color:var(--text2);font-size:18px;display:flex;align-items:center;justify-content:center;cursor:pointer}
@@ -792,13 +791,13 @@ button.ov-stay{width:100%;font:inherit;text-align:left;cursor:pointer}
 .cal-d span{position:relative;z-index:1;display:inline-flex;width:36px;height:36px;border-radius:50%;align-items:center;justify-content:center}
 .cal-d.past{color:var(--muted)}
 .cal-d.today span{box-shadow:inset 0 0 0 1px var(--border)}
-.cal-d.in::before,.cal-d.s.has-e::before,.cal-d.e::before{content:"";position:absolute;top:2px;bottom:2px;left:0;right:0;background:var(--accent-bg)}
+.cal-d.in::before,.cal-d.s.has-e::before,.cal-d.e::before{content:"";position:absolute;top:2px;bottom:2px;left:0;right:0;background:rgba(154,74,37,.12)}   /* 範圍：陶土橘淡一點（灰底上淡橘底會髒）*/
 .cal-d.s.has-e::before{left:50%}
 .cal-d.e::before{right:50%}
 .cal-d.s span,.cal-d.e span{background:var(--accent-fg);color:#fff;font-weight:600;box-shadow:none}
 .wiz-note{margin-top:10px;font-size:13px;color:var(--text2);line-height:1.5}
 .wiz-note.err{color:#C2412D}
-.wiz-stay{margin-top:16px;padding:14px;border-radius:14px;background:#FAF7F3}
+.wiz-stay{margin-top:16px;padding:14px;border-radius:14px;background:var(--fill)}
 .wiz-stay .ed-field:first-child{margin-top:0}
 .wiz-stay-h{display:flex;align-items:center;justify-content:space-between;font-size:13px;font-weight:600;color:var(--text2);margin-bottom:10px}
 .wiz-stay-h button{border:0;background:none;color:var(--muted);font-size:18px;padding:0;cursor:pointer}
@@ -812,7 +811,7 @@ button.ov-stay{width:100%;font:inherit;text-align:left;cursor:pointer}
 .dr-head{position:relative;display:flex;align-items:baseline;min-height:20px}
 .dr-head .ed-lab{margin:0}
 .dr-val{position:absolute;left:50%;bottom:0;transform:translateX(-50%);white-space:nowrap;font-size:15px;font-weight:600;color:var(--text);font-variant-numeric:tabular-nums}
-.dr-win{position:relative;margin-top:8px;border-radius:12px;background:#F7F7F7}
+.dr-win{position:relative;margin-top:8px;border-radius:12px;background:var(--fill)}
 .dr-scroll{overflow-x:auto;overflow-y:hidden;scrollbar-width:none;scroll-snap-type:x mandatory;scroll-padding-left:50%;-webkit-overflow-scrolling:touch;overscroll-behavior-x:contain;touch-action:pan-x;
   -webkit-mask-image:linear-gradient(to right,transparent,#000 18%,#000 82%,transparent);mask-image:linear-gradient(to right,transparent,#000 18%,#000 82%,transparent)}
 .dr-scroll::-webkit-scrollbar{display:none}
@@ -836,12 +835,12 @@ button.ov-stay{width:100%;font:inherit;text-align:left;cursor:pointer}
 .ed-fold [hidden]{display:none!important}   /* 住宿列表下面的「＋ 加入住處」靠右 */
 .wiz-add{display:flex;align-items:center;gap:6px;margin-top:12px;padding:0;border:0;background:none;font:inherit;font-size:15px;color:var(--accent-fg);cursor:pointer}
 .wiz-opts{display:flex;flex-direction:column;gap:8px;margin-top:16px}
-.wiz-opt{display:flex;align-items:center;gap:12px;width:100%;padding:13px 14px;border:1px solid var(--border);border-radius:14px;background:#fff;font:inherit;text-align:left;color:var(--text);cursor:pointer}
-.wiz-opt > i{flex:none;width:36px;height:36px;border-radius:50%;background:#F3EFEA;color:var(--text2);font-size:19px;display:flex;align-items:center;justify-content:center}
+.wiz-opt{display:flex;align-items:center;gap:12px;width:100%;padding:13px 14px;border:1.5px solid transparent;border-radius:12px;background:var(--fill);font:inherit;text-align:left;color:var(--text);cursor:pointer}
+.wiz-opt > i{flex:none;width:auto;height:auto;color:var(--text);font-size:20px;display:flex;align-items:center;justify-content:center}
 .wiz-opt b{display:block;font-size:15px}
 .wiz-opt small{display:block;margin-top:1px;font-size:12px;color:var(--text2)}
-.wiz-opt.on{border-color:var(--accent-fg);background:#FFFBF8}
-.wiz-opt.on > i{background:var(--accent-bg);color:var(--accent-fg)}
+.wiz-opt.on{border-color:var(--accent-fg);color:var(--accent-fg)}   /* 大選項選中：灰底＋陶土橘框 */
+.wiz-opt.on > i{color:var(--accent-fg)}
 .wiz-opts.grid{display:grid;grid-template-columns:1fr 1fr;margin-top:0}
 .wiz-opts.grid .wiz-opt{padding:10px 12px;gap:8px}
 .wiz-opts.grid .wiz-opt > i{width:30px;height:30px;font-size:16px}
@@ -862,17 +861,17 @@ button.ov-stay{width:100%;font:inherit;text-align:left;cursor:pointer}
 .pin-in.linked input{padding-left:38px}
 .sheet .af-search input{padding-left:38px}
 /* 加入地點：搜尋框、方塊都是灰底，不要框線 */
-.sheet .af-search input{background:#F3EFEA;border-color:transparent}
+.sheet .af-search input{background:var(--fill);border-color:transparent}
 .sheet .af-search input:focus{background:#fff}
 .sheet .af-search:has(.af-candbtn) input{padding-right:42px}
 .sheet .af-search input::placeholder{font-size:14.5px}
 /* 搜尋框尾巴：從備選挑 */
 /* 貼上的 Google 地圖連結：搜尋框裡換成小標籤，下面一行狀態（讀取中、讀不到、是清單） */
 .af-search.has-link > i{color:var(--accent-fg)}
-.af-linkchip{display:flex;align-items:center;gap:6px;height:41px;padding:0 6px 0 38px;border-radius:10px;background:#F3EFEA;font-size:15px;color:var(--text)}
+.af-linkchip{display:flex;align-items:center;gap:6px;height:41px;padding:0 6px 0 38px;border-radius:10px;background:var(--fill);font-size:15px;color:var(--text)}
 .af-linkchip span{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .af-linkx{flex:none;width:32px;height:32px;border:0;border-radius:50%;background:none;color:var(--muted);font-size:16px;display:flex;align-items:center;justify-content:center;cursor:pointer}
-.af-linkst{display:flex;align-items:center;gap:10px;margin-top:10px;padding:10px 12px;border-radius:12px;background:#FAF7F3;font-size:14px;color:var(--text)}
+.af-linkst{display:flex;align-items:center;gap:10px;margin-top:10px;padding:10px 12px;border-radius:12px;background:var(--fill);font-size:14px;color:var(--text)}
 .af-linkst > i{flex:none;font-size:18px;color:var(--accent-fg)}
 .af-linkst > span{flex:1;min-width:0}
 .af-linkst small{display:block;font-size:12px;color:var(--text2)}
@@ -880,10 +879,10 @@ button.ov-stay{width:100%;font:inherit;text-align:left;cursor:pointer}
 .af-linkst.err{color:var(--danger,#B3261E)}
 .af-linkst.err > i{color:inherit}
 .af-candbtn{position:absolute;right:4px;top:50%;transform:translateY(-50%);z-index:1;width:34px;height:34px;border:0;border-radius:10px;background:none;color:var(--accent-fg);font-size:20px;display:flex;align-items:center;justify-content:center;cursor:pointer}
-.af-candbtn.on{background:var(--accent-bg)}
+.af-candbtn.on{background:var(--accent-fg);color:#fff}
 /* 唯一獨立的按鈕：回飯店（長條） */
-.af-home{display:flex;align-items:center;gap:12px;width:100%;margin-top:16px;padding:10px 12px;border:0;border-radius:14px;background:#F3EFEA;font:inherit;text-align:left;color:var(--text);cursor:pointer}
-.af-home > i:first-child{flex:none;width:32px;height:32px;border-radius:50%;background:#fff;color:var(--accent-fg);font-size:17px;display:flex;align-items:center;justify-content:center}
+.af-home{display:flex;align-items:center;gap:12px;width:100%;margin-top:16px;padding:12px 14px;border:0;border-radius:12px;background:var(--fill);font:inherit;text-align:left;color:var(--text);cursor:pointer}
+.af-home > i:first-child{flex:none;width:24px;height:24px;color:var(--text);font-size:21px;display:flex;align-items:center;justify-content:center}
 .af-home > span{flex:1;min-width:0;font-size:15px;font-weight:500}
 .af-home small{display:block;font-size:12px;font-weight:400;color:var(--text2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .af-home > i:last-child{flex:none;color:var(--muted);font-size:18px}
@@ -895,8 +894,8 @@ button.ov-stay{width:100%;font:inherit;text-align:left;cursor:pointer}
 .af-drop .cp-filter{flex:none}
 .af-drop .cand-empty{padding:24px 12px;text-align:center;font-size:13px;color:var(--muted)}
 .af-plain[hidden]{display:none}
-.af-plain{display:flex;align-items:center;gap:12px;width:100%;margin-top:12px;padding:12px 14px;border:1px solid var(--border);border-radius:14px;background:#fff;font:inherit;text-align:left;color:var(--text);cursor:pointer}
-.af-plain > i{flex:none;width:32px;height:32px;border-radius:50%;background:#F3EFEA;color:var(--text2);font-size:17px;display:flex;align-items:center;justify-content:center}
+.af-plain{display:flex;align-items:center;gap:12px;width:100%;margin-top:12px;padding:12px 14px;border:0;border-radius:12px;background:var(--fill);font:inherit;text-align:left;color:var(--text);cursor:pointer}
+.af-plain > i{flex:none;width:24px;height:24px;color:var(--text);font-size:21px;display:flex;align-items:center;justify-content:center}
 .af-plain small{display:block;font-size:12px;color:var(--text2)}
 .af-cands{display:flex;flex-wrap:wrap;gap:6px}
 .af-panel{margin-top:10px}
@@ -915,7 +914,7 @@ button.ov-stay{width:100%;font:inherit;text-align:left;cursor:pointer}
 .af-tag span{min-width:0;overflow:hidden;text-overflow:ellipsis}
 .af-tag i{flex:none;width:9px;height:9px;border-radius:50%}
 .af-me{position:absolute;width:16px;height:16px;margin:-8px 0 0 -8px;border-radius:50%;background:#2F7BF5;border:3px solid #fff;box-shadow:0 0 0 6px rgba(47,123,245,.18),0 1px 3px rgba(0,0,0,.3);pointer-events:none}
-.af-map{position:relative;height:170px;background:#EFEBE5}
+.af-map{position:relative;height:170px;background:var(--fill2)}
 .af-map.nomap::after{content:"地圖載入不了，位置以 Google 的資料為準";position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:12px;color:var(--muted)}
 .af-pin{position:absolute;transform:translate(-50%,-100%);font-size:34px;line-height:1;color:var(--accent-fg);filter:drop-shadow(0 2px 2px rgba(0,0,0,.25));pointer-events:none}
 .af-recenter{position:absolute;right:10px;bottom:10px;z-index:2;width:36px;height:36px;border:0;border-radius:50%;background:#fff;color:var(--accent-fg);font-size:18px;display:flex;align-items:center;justify-content:center;box-shadow:0 1px 4px rgba(0,0,0,.2);cursor:pointer}
@@ -930,7 +929,7 @@ button.ov-stay{width:100%;font:inherit;text-align:left;cursor:pointer}
 .ps-list{position:absolute;left:0;right:0;top:100%;z-index:30;margin-top:4px;padding:4px;border:1px solid var(--border);border-radius:12px;background:#fff;box-shadow:0 8px 24px rgba(60,40,20,.14)}
 .ps-list[hidden]{display:none}
 .ps-list button{display:flex;align-items:center;gap:10px;width:100%;padding:9px 10px;border:0;border-radius:8px;background:none;font:inherit;text-align:left;color:var(--text);cursor:pointer}
-.ps-list button:active,.ps-list button:hover{background:#FAF7F3}
+.ps-list button:active,.ps-list button:hover{background:var(--fill)}
 .ps-list i{flex:none;color:var(--muted);font-size:17px}
 .ps-list span{min-width:0}
 .ps-list b{display:block;font-size:15px;font-weight:600}
@@ -960,7 +959,7 @@ button.ov-stay{width:100%;font:inherit;text-align:left;cursor:pointer}
 .chips.sm.cand-filter .chip{flex:none;padding:0 10px;font-size:12px}
 .cand-sep{flex:none;width:1px;height:20px;margin:0 8px;background:var(--border)}
 .cand-chips:empty + .cand-sep{display:none}   /* 標籤往左滑時被這條線擋住，不會蓋到切換鈕 */
-.cand-sortbtn{flex:none;width:34px;margin-left:auto;padding:0;border:1px solid var(--border);border-radius:999px;background:#fff;color:var(--text);font-size:14px;display:flex;align-items:center;justify-content:center;cursor:pointer}
+.cand-sortbtn{flex:none;width:34px;margin-left:auto;padding:0;border:0;border-radius:999px;background:var(--fill);color:var(--text);font-size:14px;display:flex;align-items:center;justify-content:center;cursor:pointer}
 .cand-sortbtn i{line-height:1}
 .cand-sortbtn.flip i{animation:sortSpin .3s ease}
 @keyframes sortSpin{from{transform:rotate(-90deg) scale(.6);opacity:0}to{transform:none;opacity:1}}
@@ -968,14 +967,14 @@ button.ov-stay{width:100%;font:inherit;text-align:left;cursor:pointer}
 .clr-wrap{position:relative;display:block;flex:1;min-width:0}
 .sheet .clr-wrap input{padding-right:40px}
 .clr-btn{position:absolute;top:50%;right:4px;width:32px;height:32px;margin-top:-16px;border:0;border-radius:50%;background:transparent;color:var(--muted);font-size:15px;display:grid;place-items:center;cursor:pointer}
-.clr-btn:active{background:var(--line)}
+.clr-btn:active{background:var(--fill2)}
 .clr-wrap input:placeholder-shown + .clr-btn,.clr-wrap input:disabled + .clr-btn{display:none}
 .cand-grp{display:flex;align-items:center;gap:6px;margin:14px 0 6px;font-size:13px;font-weight:600;color:var(--c-fg);background:none}
 .cand-grp b{font-size:11px;font-weight:600;color:var(--muted)}
 .im-list{display:flex;flex-direction:column;gap:10px;margin-top:16px}
 .im-list:empty{display:none}
-.im-row{position:relative;padding:10px;border:1px solid var(--border);border-radius:12px;display:flex;flex-direction:column;gap:6px}
-.im-row input[type=text],.im-row select{width:100%;height:38px;padding:0 10px;border:1px solid var(--border);border-radius:8px;font:inherit;font-size:16px;background:#fff;color:inherit;min-width:0}
+.im-row{position:relative;padding:10px;border:0;border-radius:12px;background:var(--fill);display:flex;flex-direction:column;gap:6px}
+.im-row input[type=text],.im-row select{width:100%;height:38px;padding:0 10px;border:1.5px solid transparent;border-radius:10px;font:inherit;font-size:16px;background:#fff;color:inherit;min-width:0}
 .im-top{display:flex;align-items:center;gap:8px}
 .im-top .im-use{flex:none;width:20px;height:20px;accent-color:var(--accent-fg)}
 .im-top .im-name{font-weight:600}
@@ -1032,10 +1031,10 @@ button.ov-stay{width:100%;font:inherit;text-align:left;cursor:pointer}
 .cp-name{min-width:0;font-size:14px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .cp-dur{flex:none;font-size:12px;opacity:.7}
 .day-pick{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px}
-.dp-day{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;min-width:0;height:52px;border:1px solid var(--border);border-radius:10px;background:#fff;font:inherit;color:inherit;cursor:pointer}
+.dp-day{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;min-width:0;height:52px;border:0;border-radius:12px;background:var(--fill);font:inherit;color:inherit;cursor:pointer}
 .dp-day b{font-size:16px}
 .dp-day small{font-size:11px;opacity:.7}
-.dp-day.on{background:var(--accent-fg);border-color:var(--accent-fg);color:#fff}
+.dp-day.on{background:var(--accent-fg);color:#fff}
 .dp-day.on small{opacity:.9}
 .dp-theme{font-size:13px;color:var(--muted);margin-top:8px}
 .dp-theme:empty{display:none}
@@ -1048,7 +1047,7 @@ button.ov-stay{width:100%;font:inherit;text-align:left;cursor:pointer}
 .dp-row.hit{box-shadow:inset 0 0 0 2px #E24B4A}
 .dp-row.hit .tag{color:#E24B4A}
 .chips.sm.day-chips .chip.cand{flex:0 0 auto;padding:0 10px}   /* 「備選」兩個字，不跟數字一樣窄 */
-.step{width:40px;height:40px;border-radius:50%;border:1px solid var(--border);background:#fff;color:var(--text);font-size:16px;
+.step{width:40px;height:40px;border-radius:50%;border:0;background:var(--fill);color:var(--text);font-size:16px;
   display:flex;align-items:center;justify-content:center;cursor:pointer}
 .ed-check{display:flex;align-items:center;gap:8px;margin-top:14px;font-size:15px}
 .ed-check input{width:20px;height:20px;accent-color:var(--accent-fg)}
@@ -1066,20 +1065,20 @@ button.ov-stay{width:100%;font:inherit;text-align:left;cursor:pointer}
 .ed-push .ed-switch{opacity:0;transition:opacity .14s ease}
 .ed-push.on .ed-switch{opacity:1;transition:opacity .3s ease .1s}
 @media (prefers-reduced-motion:reduce){.ed-push,.ed-push .ed-switch{transition:none}}
-input.sw{-webkit-appearance:none;appearance:none;width:44px;height:26px;margin:0;border-radius:13px;background:var(--border);position:relative;flex:none;cursor:pointer;transition:background .2s}
+input.sw{-webkit-appearance:none;appearance:none;width:44px;height:26px;margin:0;border-radius:13px;background:#E3E3E3;position:relative;flex:none;cursor:pointer;transition:background .2s}
 input.sw::after{content:"";position:absolute;top:3px;left:3px;width:20px;height:20px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.2);transition:transform .2s}
 input.sw:checked{background:var(--accent-fg)}
 input.sw:checked::after{transform:translateX(18px)}
 input.sw:focus-visible{outline:2px solid var(--accent-bg);outline-offset:2px}
 .ed-lock,.ed-hint{margin-top:12px;padding:9px 12px;border-radius:10px;font-size:13px;line-height:1.5}
 .ed-lock{background:#FFF1E2;color:#8A4B22}
-.ed-hint{background:var(--line);color:var(--text2)}
+.ed-hint{background:var(--fill);color:var(--text2)}
 .err{color:#C2412D;font-size:13px;margin-top:6px}
 .ed-actions{position:sticky;z-index:5;bottom:calc(-24px - env(safe-area-inset-bottom));display:flex;gap:8px;margin:20px -18px 0;
   padding:12px 18px calc(12px + env(safe-area-inset-bottom));background:#fff;border-top:1px solid var(--line)}
 .btn{height:44px;padding:0 16px;border-radius:12px;font-size:16px;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:4px;justify-content:center}
-.btn.ghost{border:1px solid var(--border);background:#fff;color:var(--text)}
-.btn.danger{color:#C2412D;border-color:#F2C9C0}
+.btn.ghost{border:0;background:var(--fill);color:var(--text)}
+.btn.danger{color:#C2412D}
 .btn.primary{flex:1;border:0;background:var(--accent-fg);color:#fff}
 </style>
 </head>
