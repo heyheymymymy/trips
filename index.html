@@ -487,7 +487,8 @@ html.on-map:not(.sheet-lock),html.on-map:not(.sheet-lock) body{background:#f4f0e
 .chip{height:34px;padding:0 14px;border-radius:999px;border:0;background:var(--fill);font-size:14px;color:var(--text2);cursor:pointer}
 .chip.on{background:var(--accent-fg);color:#fff;font-weight:600}   /* 小標籤選中：陶土橘實心白字 */
 .pick-chips{margin-top:8px}
-.pick-chips .pick-other{display:inline-flex;align-items:center;gap:4px}
+.pick-chips .pick-other{display:inline-flex;align-items:center;gap:4px;border:1px dashed var(--border);background:none}   /* 跟「＋加入新旅伴」一樣的虛線框 */
+.pick-chips .pick-other.on{border-color:transparent;background:var(--accent-fg)}
 .pick-chips .pick-other i{font-size:14px}
 .chip.on.eat{background:var(--eat-bg);color:var(--eat-fg)}.chip.on.spa{background:var(--spa-bg);color:var(--spa-fg)}
 .chip.on.cafe{background:var(--cafe-bg);color:var(--cafe-fg)}.chip.on.shop{background:var(--shop-bg);color:var(--shop-fg)}
@@ -724,7 +725,8 @@ button.ov-stay{width:100%;font:inherit;text-align:left;cursor:pointer}
 .inv-digits b{width:46px;height:54px;border-radius:12px;background:var(--fill2);display:flex;align-items:center;justify-content:center;font-size:28px;font-weight:700;color:var(--accent-fg);font-variant-numeric:tabular-nums}
 .inv-code small{font-size:13px;font-weight:500;color:var(--text2)}
 .inv-pair{display:flex;gap:8px}
-.inv-tile{flex:1;min-width:0;height:64px;border:0;border-radius:18px;background:var(--fill);font:inherit;font-size:16px;color:var(--text);cursor:pointer}
+.inv-tile{flex:1;min-width:0;height:64px;display:flex;align-items:center;justify-content:center;gap:6px;border:0;border-radius:18px;background:var(--fill);font:inherit;font-size:14px;font-weight:600;color:var(--text);cursor:pointer}   /* 字跟上面「分享編輯碼」一樣大 */
+.inv-tile i{font-size:18px}
 .inv-tile:active{background:var(--fill2)}
 /* 編輯碼四格輸入：透明輸入框蓋在四個格子上 */
 .code-boxes{position:relative;display:flex;justify-content:center;gap:10px;margin-top:2px}
@@ -758,6 +760,12 @@ button.ov-stay{width:100%;font:inherit;text-align:left;cursor:pointer}
 .g-btn{display:flex;justify-content:center;min-height:44px;align-items:center;margin-top:18px}
 .g-note{margin-top:16px;font-size:12px;color:var(--muted);text-align:center;line-height:1.6}
 .g-note a{color:var(--text2)}
+.sheet.center .sh-head{text-align:center}
+.sheet.dlg.center{padding:28px 20px 26px}   /* 沒有底部按鈕列：上下多留一點 */
+.sheet.center .g-btn{margin-top:24px}
+.sheet.center .g-note{margin-top:18px}
+.g-note a{white-space:nowrap}
+.sheet.center .sh-head > div{padding-left:40px}   /* 右邊有關閉鈕，左邊空一樣寬，標題才會在正中間 */
 .g-skip{display:block;margin:10px auto 0;padding:6px 4px;border:0;background:none;font:inherit;font-size:13px;color:var(--text2);text-decoration:underline;text-underline-offset:3px;cursor:pointer}
 .acct-btn.anon{color:#B5B5B5;font-size:20px}   /* 沒登入：灰色的頭 */
 .trips-carry button{display:inline-flex;align-items:center;gap:6px;height:38px;padding:0 14px;border:1px solid var(--border);border-radius:999px;background:#fff;font:inherit;font-size:14px;color:var(--text);cursor:pointer}
@@ -799,6 +807,56 @@ button.ov-stay{width:100%;font:inherit;text-align:left;cursor:pointer}
 .chips.nights::-webkit-scrollbar{display:none}
 .chips.nights .chip{flex:none;height:32px;padding:0 12px;font-size:13px;font-variant-numeric:tabular-nums}
 .ov-stay-add{width:fit-content;margin-left:auto}
+/* 機票卡片：去程／回程切換、起降機場大字、中間進度條（飛行中照時間往前跑）、下面航空公司／航班／艙等；點開看登機資訊 */
+.ov-sec1{margin-top:6px}
+.fl-card{padding:14px 16px 10px;border-radius:16px;background:var(--fill)}
+.fl-seg{background:var(--fill2)}
+.fl-card .fl-seg{margin-bottom:6px}
+.fl-seg .seg-thumb{width:calc((100% - 6px) / 2)}
+.fl-seg[data-i="1"] .seg-thumb{transform:translateX(100%)}
+.fl-one{font-size:12px;font-weight:600;color:var(--text2);margin-bottom:2px}
+.fl-leg{cursor:pointer}
+.fl-route{display:flex;align-items:flex-end;gap:10px;padding:14px 0 12px}
+.fl-end{flex:none;display:flex;flex-direction:column;min-width:0}
+.fl-end.r{text-align:right;align-items:flex-end}
+.fl-end small{font-size:12px;color:var(--muted)}
+.fl-end b{font-size:30px;font-weight:700;line-height:1.1;letter-spacing:.5px}
+.fl-end span{margin-top:3px;font-size:12px;color:var(--text2);font-variant-numeric:tabular-nums;white-space:nowrap}
+.fl-mid{flex:1;min-width:0;display:flex;flex-direction:column;align-items:center;gap:8px;padding-bottom:24px}
+.fl-badge{padding:2px 9px;border-radius:999px;background:var(--spa-bg);color:var(--spa-fg);font-size:12px;font-weight:600;white-space:nowrap}
+.fl-badge.live{background:var(--accent-fg);color:#fff}
+.fl-badge.bad{background:#FBE3DF;color:#C2412D}
+.fl-bar{display:block;width:100%;height:5px;border-radius:3px;background:#fff;overflow:hidden}
+.fl-bar i{display:block;height:100%;border-radius:3px;background:var(--text);transition:width .6s ease}
+.fl-info{display:flex;padding:10px 0;border-radius:12px;background:#fff}
+.fl-info span{flex:1;min-width:0;display:flex;flex-direction:column;align-items:center;gap:2px;padding:0 6px}
+.fl-info span + span{border-left:1px solid var(--line)}
+.fl-info small{font-size:11px;color:var(--muted)}
+.fl-info b{font-size:14px;font-weight:600;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.fl-det{display:grid;grid-template-rows:0fr;transition:grid-template-rows .26s cubic-bezier(.2,.8,.3,1)}
+.fl-det > div{overflow:hidden;min-height:0}
+.fl-leg.open .fl-det{grid-template-rows:1fr}
+.fl-row{display:flex;align-items:center;gap:10px;padding:9px 2px;border-bottom:1px solid var(--fill2);font-size:14px}
+.fl-row:first-child{margin-top:6px}
+.fl-row small{flex:none;width:64px;font-size:12px;color:var(--muted)}
+.fl-row span{flex:1;min-width:0;-webkit-user-select:text;user-select:text;word-break:break-all}
+.fl-row.empty{color:var(--muted);font-size:13px}
+.fl-copy{flex:none;width:30px;height:30px;border:0;border-radius:8px;background:none;color:var(--text2);font-size:16px;cursor:pointer}
+.fl-hint{margin-top:8px;font-size:12px;color:var(--muted)}
+.fl-edit{width:100%;margin:10px 0 4px;height:40px;font-size:14px;background:#fff}
+.fl-lay{display:flex;align-items:center;justify-content:center;gap:6px;margin:10px 0 0;padding:6px;border-radius:10px;background:var(--fill2);font-size:12px;color:var(--text2)}
+.fl-src{margin-top:10px;font-size:11px;color:var(--muted);text-align:center}
+.fe-q{display:flex;gap:10px}
+.fe-q .ed-field{flex:1;min-width:0}
+.fe-two{display:flex;gap:10px}
+.fe-two .ed-field{flex:1;min-width:0}
+.fe-look{width:100%;margin-top:12px;gap:6px}
+.fe-hit{margin-top:12px;padding:12px 14px;border-radius:12px;border:1.5px solid var(--accent-fg);display:flex;flex-direction:column;gap:3px}
+.fe-hit b{font-size:15px}
+.fe-hit span{font-size:14px;color:var(--text);font-variant-numeric:tabular-nums}
+.fe-hit small{font-size:12px;color:var(--muted)}
+.fe-man{display:block;margin:10px auto 0;padding:4px;border:0;background:none;font:inherit;font-size:13px;color:var(--text2);text-decoration:underline;text-underline-offset:3px;cursor:pointer}
+.sheet input[type=date],.sheet input[type=datetime-local]{width:100%;font-size:16px;padding:10px 12px;border:1.5px solid transparent;border-radius:12px;background:var(--fill);color:var(--text);font-family:inherit;-webkit-appearance:none;appearance:none;min-height:44px;box-sizing:border-box}
 /* 編輯卡片裡收起來的欄位（區域）：一行「區域　📍古城　⌄」，點了展開輸入框 */
 /* 停留多久的刻度尺 */
 .dr{margin-top:14px}
@@ -1259,12 +1317,13 @@ function loadGis() {
 function openLogin(opts = {}) {
   openSheet(`
     <div class="sh-head"><div style="flex:1;min-width:0"><div class="sh-title" id="shTitle">${opts.then ? '建立旅程前，先登入嗎？' : '用 Google 登入'}</div>
-      <div class="sh-sub">登入後「我的旅程」存在你的 Google 帳號，手機、電腦登入同一個帳號就看得到一樣的旅程，換手機也不會不見</div></div>
+      <div class="sh-sub">旅程會存在你的 Google 帳號，切換任何裝置都能同步！</div></div>
       <button class="sh-close" aria-label="關閉"><i class="ti ti-x"></i></button></div>
     ${inLine() ? `<div class="ed-hint"><i class="ti ti-info-circle"></i> LINE 裡沒辦法用 Google 登入：請點右上角「⋯」或右下角的分享圖示，選「用預設瀏覽器開啟」（Safari），再登入一次</div>`
       : '<div class="g-btn" id="gBtn"><span class="st-al-wait"><i class="ti ti-loader-2 spin"></i> 載入中…</span></div><div class="err" id="gErr" hidden></div>'}
     <div class="g-note">只用來記住你的旅程列表，不會存你的名字和信箱。<a href="privacy.html" target="_blank" rel="noopener">隱私權說明</a></div>
-    ${opts.then ? '<button type="button" class="g-skip" id="gSkip">先不登入，直接建立</button>' : ''}`);
+    ${opts.then ? '<button type="button" class="g-skip" id="gSkip">先不登入，直接建立</button>' : ''}`, null, true);
+  sheet.classList.add('center');   // 中間彈出、內容左右置中
   sheet.querySelector('#gSkip')?.addEventListener('click', () => {
     try { localStorage.setItem(LOGIN_SKIP_KEY, '1'); } catch {}
     closeSheet(); opts.then();
@@ -1274,7 +1333,7 @@ function openLogin(opts = {}) {
   loadGis().then(() => {
     google.accounts.id.initialize({ client_id: GOOGLE_CLIENT_ID, callback: onGoogleLogin, use_fedcm_for_prompt: true });
     box.innerHTML = '';
-    google.accounts.id.renderButton(box, { theme: 'outline', size: 'large', shape: 'pill', text: 'signin_with', locale: 'zh-TW', width: Math.min(320, box.clientWidth || 300) });
+    google.accounts.id.renderButton(box, { theme: 'outline', size: 'large', shape: 'pill', text: 'signin_with', logo_alignment: 'center', locale: 'zh-TW', width: Math.min(320, box.clientWidth || 300) });
   }).catch(() => { box.innerHTML = ''; err('Google 登入載入失敗，請檢查網路再試一次'); });
   async function onGoogleLogin(resp) {
     box.innerHTML = '<span class="st-al-wait"><i class="ti ti-loader-2 spin"></i> 登入中…</span>';
@@ -1289,7 +1348,7 @@ function openLogin(opts = {}) {
       const n = Object.values(r.items).filter(x => !x.gone).length;
       toast(`已登入${p.name ? ' ' + p.name : ''}，${n} 趟旅程已存到帳號`);
     } catch (e) {
-      box.innerHTML = ''; google.accounts.id.renderButton(box, { theme: 'outline', size: 'large', shape: 'pill', text: 'signin_with', locale: 'zh-TW' });
+      box.innerHTML = ''; google.accounts.id.renderButton(box, { theme: 'outline', size: 'large', shape: 'pill', text: 'signin_with', logo_alignment: 'center', locale: 'zh-TW' });
       err(e.code === 'network' ? '連不上雲端，請檢查網路' : e.message);
     }
   }
@@ -1350,7 +1409,7 @@ function nickFieldHtml(id, label, hint, enter) {
 }
 // 從同行的人裡點選一個名字（開始編輯的「你是誰？」、待辦的「指派給誰」）：選的值放在 input；最後一顆「other」展開 input 自己填
 function pickChipsHtml(names, sel, other) {
-  return `<div class="chips pick-chips">${names.map(n => `<button type="button" class="chip${n === sel ? ' on' : ''}" data-pick="${esc(n)}">${esc(n)}</button>`).join('')}<button type="button" class="chip pick-other" data-pick-other><i class="ti ti-pencil"></i>${other}</button></div>`;
+  return `<div class="chips pick-chips">${names.map(n => `<button type="button" class="chip${n === sel ? ' on' : ''}" data-pick="${esc(n)}">${esc(n)}</button>`).join('')}<button type="button" class="chip pick-other" data-pick-other><i class="ti ti-plus"></i>${other}</button></div>`;
 }
 // toggle：再點一次同一個名字＝取消（指派用）。自己填的輸入框：包在 label 裡就藏整個欄位，不然藏輸入框本身
 function wirePickChips(box, input, toggle) {
@@ -2240,7 +2299,7 @@ function shortName(t) {
   return m ? m[1] : t;
 }
 // 總覽目前在哪一頁（每天／住宿／待辦清單），記在這支手機
-const OV_TABS = [['days', '每天'], ['stay', '住宿'], ['todo', '待辦清單']];
+const OV_TABS = [['days', '每天'], ['stay', '預訂'], ['todo', '待辦清單']];   // 預訂：機票＋住宿
 let ovTab = 'days';   // 打開網站、從「我的旅程」進來都從「每天」開始；在這趟裡換天數再回總覽才留在原本那頁
 const ovTabIdx = () => OV_TABS.findIndex(([k]) => k === ovTab);
 function renderOverview() {
@@ -2285,6 +2344,12 @@ function renderOverview() {
   } else if (ovTab === 'stay') {
   // 住宿：照片卡片，點了看資訊、長按編輯
   const canEdit = TRIP_ROLE === 'edit';
+  // 機票：去程／回程一張卡片；最上面
+  html += '<div class="ov-sec ov-sec1">機票</div>';
+  if (tripFlights().length) html += flightCardHtml() + (canEdit ? '<button type="button" class="wiz-add ov-stay-add" id="flightAdd"><i class="ti ti-plus"></i>加入機票</button>' : '');
+  else if (canEdit) html += '<button type="button" class="ov-stay add" id="flightAdd"><i class="ti ti-plane"></i><span><b>加入機票</b><small>輸入航班號碼，自動帶入時間和航廈</small></span><i class="ti ti-plus"></i></button>';
+  else html += '<div class="ov-empty">還沒有機票</div>';
+  html += '<div class="ov-sec">住宿</div>';
   if (!tripStays().length && !canEdit) html += '<div class="ov-empty">還沒有住處</div>';
   if (!tripStays().length && canEdit) html += '<button type="button" class="ov-stay add" id="staysAdd"><i class="ti ti-bed"></i><span><b>加入住處</b><small>每天第一段交通從住處算，加入行程可以一鍵回住處</small></span><i class="ti ti-plus"></i></button>';
   if (tripStays().length) html += stayListHtml()
@@ -2304,7 +2369,7 @@ function renderOverview() {
     html += `<button type="button" class="inv-btn trip-set" id="tripSet"><i class="ti ti-settings"></i><span><b>旅程設定</b><small>名稱、目的地、日期、交通、封面、同行的人</small></span><i class="ti ti-chevron-right"></i></button>`;
     if (TRIP_ROLE === 'edit' && TRIP.code) html += `<div class="inv">
       ${codeCardHtml('分享編輯碼', TRIP.code, '拿到連結的人都能看，輸入編輯碼才能編輯')}
-      <div class="inv-pair"><button type="button" class="inv-tile" data-invite="edit">邀請一起規劃</button><button type="button" class="inv-tile" data-invite="view">分享行程</button></div></div>`;
+      <div class="inv-pair"><button type="button" class="inv-tile" data-invite="edit"><i class="ti ti-users"></i>邀請一起規劃</button><button type="button" class="inv-tile" data-invite="view"><i class="ti ti-send"></i>分享行程</button></div></div>`;
     // 還沒輸入編輯碼的人：本來就有連結，可以轉傳給別人看；要一起編輯就輸入編輯碼
     else html += `<div class="inv">
       <button type="button" class="inv-btn" data-invite="view"><i class="ti ti-link"></i><span><b>分享這趟旅程</b><small>只能看，不能修改</small></span><i class="ti ti-share-2"></i></button>
@@ -2312,7 +2377,8 @@ function renderOverview() {
     html += '</div>';
   }
   ovEl.innerHTML = html;
-  if (TRIP_ROLE === 'edit' && ovEl.querySelector('.st-row')) stayPhotos();   // 住處還沒照片的，有編輯碼的人打開時順手補
+  if (TRIP_ROLE === 'edit' && ovEl.querySelector('.st-row')) stayPhotos();
+  if (ovTab === 'stay' && tripFlights().length) refreshFlights();   // 出發前兩天、航班當天：查最新時間、航廈   // 住處還沒照片的，有編輯碼的人打開時順手補
 }
 // 總覽最上面的封面：照片（沒有就是淺陶土色底＋英文目的地），疊上旅程名稱和日期；可以編輯的人點了換封面
 function heroHtml() {
@@ -2789,6 +2855,246 @@ function openStayInfo(i) {
 }
 // 雲端硬碟縮圖偶爾載入失敗：隔一下重試一次，再失敗才換回床的圖示
 const PH_RETRY = "if(!this.dataset.r){this.dataset.r=1;setTimeout(()=>{this.src=this.src+(this.src.includes('?')?'&':'?')+'r=1'},1500)}else this.remove()";
+// ---------- 機票 ----------
+// TRIP.flights：每一段一筆 { id, dir: out 去程／back 回程, number, date, airline, dep, arr, cls, seat, pnr, ticket, bag, note }
+// dep、arr：{ iata, name, city, tz, terminal, sched: { utc: '2026-11-04 23:20Z', local: '2026-11-05 07:20+08:00' } }（查 AeroDataBox 帶入；手動輸入的只有 local）
+const tripFlights = () => TRIP?.flights || [];
+const AIRPORT_ZH = { TPE: '桃園', TSA: '松山', KHH: '高雄', RMQ: '台中', CNX: '清邁', BKK: '曼谷', DMK: '曼谷廊曼', HKT: '普吉', USM: '蘇美島', KIX: '大阪關西', ITM: '大阪伊丹', NRT: '東京成田', HND: '東京羽田', ICN: '首爾仁川', GMP: '首爾金浦', PUS: '釜山', CJU: '濟州', OKA: '沖繩', FUK: '福岡', CTS: '札幌', NGO: '名古屋', HKG: '香港', MFM: '澳門', SIN: '新加坡', KUL: '吉隆坡', SGN: '胡志明市', HAN: '河內', DAD: '峴港', MNL: '馬尼拉', CEB: '宿霧', DPS: '峇里島', REP: '暹粒', PNH: '金邊', RGN: '仰光', LPQ: '龍坡邦' };
+const AIRLINE_ZH = { BR: '長榮航空', CI: '中華航空', JX: '星宇航空', IT: '台灣虎航', AE: '華信航空', B7: '立榮航空', TG: '泰國航空', FD: '泰國亞洲航空', SL: '泰國獅子航空', VZ: '泰越捷航空', WE: '泰國微笑航空', PG: '曼谷航空', CX: '國泰航空', UO: '香港快運', JL: '日本航空', NH: '全日空', MM: '樂桃航空', GK: '捷星日本', KE: '大韓航空', OZ: '韓亞航空', '7C': '濟州航空', TW: '德威航空', LJ: '真航空', SQ: '新加坡航空', TR: '酷航', VJ: '越捷航空', VN: '越南航空', AK: '亞洲航空', D7: '全亞洲航空', MH: '馬來西亞航空', PR: '菲律賓航空', '5J': '宿霧太平洋' };
+const airportZh = e => AIRPORT_ZH[e.iata] || e.city || e.name || e.iata;
+const airlineZh = f => AIRLINE_ZH[f.airline?.iata] || f.airline?.name || '';
+const utcMs = s => s ? Date.parse(String(s).replace(' ', 'T')) : NaN;
+// 當地時間字串 → { md: '11/5', hm: '07:20', wd: '週四' }（照字面拆，不換時區）
+function localParts(local) {
+  const m = /^(\d{4})-(\d{2})-(\d{2})[ T](\d{2}):(\d{2})/.exec(local || ''); if (!m) return null;
+  return { md: `${+m[2]}/${+m[3]}`, hm: `${m[4]}:${m[5]}`, wd: '週' + '日一二三四五六'[new Date(+m[1], m[2] - 1, +m[3]).getDay()] };
+}
+const fmtDur = min => min > 0 ? [Math.floor(min / 60) && `${Math.floor(min / 60)}小時`, min % 60 && `${min % 60}分`].filter(Boolean).join('') : '';
+// 航班當天查到的即時狀態（只放在這支手機的記憶體；雲端也存 20 分鐘，大家共用）
+const flightLive = {};
+const liveKey = f => f.number + ':' + f.date;
+// 實際（或最新預估）的起降時間：當天有即時狀態就用，沒有就用表定
+function flightTimes(f) {
+  const lv = flightLive[liveKey(f)];
+  const pick = (end, l) => utcMs(l?.runway?.utc || l?.revised?.utc || l?.predicted?.utc || end.sched?.utc);
+  return { dep: pick(f.dep, lv?.dep), arr: pick(f.arr, lv?.arr), sched: { dep: utcMs(f.dep.sched?.utc), arr: utcMs(f.arr.sched?.utc) }, lv };
+}
+// 進度：起飛前 0、飛行中照時間算、抵達後 1（手動輸入、沒有時區的就不畫）
+function flightProgress(f) {
+  const t = flightTimes(f); if (!(t.dep && t.arr)) return null;
+  return Math.max(0, Math.min(1, (Date.now() - t.dep) / (t.arr - t.dep)));
+}
+// 進度條上面的小標籤：平常是飛行時間；當天變成延誤／飛行中／已抵達
+function flightBadge(f) {
+  const t = flightTimes(f), dur = t.sched.arr - t.sched.dep;
+  const base = fmtDur(Math.round((dur > 0 ? dur : 0) / 60000)) || (f.manual ? '' : '');
+  if (!t.lv || !(t.dep && t.arr)) return { text: base, cls: '' };
+  const now = Date.now(), late = Math.round((t.dep - t.sched.dep) / 60000);
+  if (/cancel/i.test(t.lv.status)) return { text: '取消', cls: 'bad' };
+  if (now >= t.arr) return { text: '已抵達', cls: '' };
+  if (now >= t.dep) return { text: '飛行中', cls: 'live' };
+  if (late >= 15) return { text: `延誤 ${fmtDur(late)}`, cls: 'bad' };
+  return { text: base, cls: '' };
+}
+// 預設顯示：去程抵達之前看去程，之後看回程
+let flightDir = null;
+function defaultFlightDir() {
+  const out = tripFlights().filter(f => f.dir === 'out'), back = tripFlights().filter(f => f.dir === 'back');
+  if (!back.length) return 'out';
+  if (!out.length) return 'back';
+  const lastArr = Math.max(...out.map(f => flightTimes(f).arr || utcMs(f.arr.sched?.local)));
+  return lastArr && Date.now() > lastArr ? 'back' : 'out';
+}
+const legsOf = dir => tripFlights().filter(f => f.dir === dir).sort((a, b) => (utcMs(a.dep.sched?.utc) || 0) - (utcMs(b.dep.sched?.utc) || 0) || (a.dep.sched?.local || '').localeCompare(b.dep.sched?.local || ''));
+let flightOpen = null;   // 點開看登機資訊的那一段
+function flightCardHtml() {
+  const hasOut = legsOf('out').length, hasBack = legsOf('back').length;
+  const dir = flightDir && (flightDir === 'out' ? hasOut : hasBack) ? flightDir : defaultFlightDir();
+  const legs = legsOf(dir), canEdit = TRIP_ROLE === 'edit';
+  const endHtml = (e, r) => { const p = localParts(e.sched?.local); return `<div class="fl-end${r ? ' r' : ''}"><small>${esc(airportZh(e))}</small><b>${esc(e.iata)}</b><span>${p ? `${p.md} ${p.hm}` : ''}${e.terminal ? ` · T${esc(e.terminal)}` : ''}</span></div>`; };
+  const legHtml = (f, i) => {
+    const pr = flightProgress(f), bd = flightBadge(f), open = flightOpen === f.id, lv = flightLive[liveKey(f)];
+    const info = [['航空公司', airlineZh(f) || '—'], ['航班', f.number || '—'], ['艙等', f.cls || '—']];
+    const det = [['訂位代號', f.pnr, 'copy'], ['機票號碼', f.ticket, 'copy'], ['座位', f.seat], ['託運行李', f.bag], ['機型', f.aircraft], ['登機門', lv?.dep?.gate], ['報到櫃檯', lv?.dep?.checkIn], ['備註', f.note]].filter(x => x[1]);
+    const next = legs[i + 1], lay = next ? Math.round((utcMs(next.dep.sched?.utc) - utcMs(f.arr.sched?.utc)) / 60000) : 0;
+    return `<div class="fl-leg${open ? ' open' : ''}" data-fl="${esc(f.id)}">
+      <div class="fl-route">${endHtml(f.dep)}
+        <div class="fl-mid">${bd.text ? `<span class="fl-badge ${bd.cls}">${esc(bd.text)}</span>` : ''}<span class="fl-bar"><i style="width:${pr == null ? 0 : Math.round(pr * 100)}%"></i></span></div>
+        ${endHtml(f.arr, true)}</div>
+      <div class="fl-info">${info.map(([k, v]) => `<span><small>${k}</small><b>${esc(v)}</b></span>`).join('')}</div>
+      <div class="fl-det"><div>
+        ${det.length ? det.map(([k, v, c]) => `<div class="fl-row"><small>${k}</small><span>${esc(v)}</span>${c ? `<button type="button" class="fl-copy" data-copy="${esc(v)}" aria-label="複製${k}"><i class="ti ti-copy"></i></button>` : ''}</div>`).join('') : '<div class="fl-row empty">還沒有登機資訊</div>'}
+        ${!canEdit && TRIP_ROLE ? '<div class="fl-hint">訂位代號、機票號碼要輸入編輯碼才看得到</div>' : ''}
+        ${canEdit ? `<button type="button" class="btn ghost fl-edit" data-fledit="${esc(f.id)}"><i class="ti ti-pencil"></i> 編輯這段機票</button>` : ''}
+      </div></div></div>
+      ${next ? `<div class="fl-lay"><i class="ti ti-transfer"></i>${esc(airportZh(f.arr))}轉機${lay > 0 ? ` ${fmtDur(lay)}` : ''}</div>` : ''}`;
+  };
+  return `<div class="fl-card">
+    ${hasOut && hasBack ? `<div class="seg fl-seg" data-i="${dir === 'out' ? 0 : 1}" style="--n:2"><span class="seg-thumb"></span><button type="button" data-fldir="out"${dir === 'out' ? ' class="on"' : ''}>去程</button><button type="button" data-fldir="back"${dir === 'back' ? ' class="on"' : ''}>回程</button></div>` : `<div class="fl-one">${dir === 'out' ? '去程' : '回程'}</div>`}
+    ${legs.map(legHtml).join('')}
+    <div class="fl-src">航班資料：AeroDataBox．時間以你的機票為準</div></div>`;
+}
+// 航班當天（起飛前 12 小時到抵達後 2 小時）、出發前 2 天內：有編輯碼的人打開時查一次最新狀態
+// 表定時間變了就更新存起來，並提醒大家
+const flightChecked = {};
+async function refreshFlights() {
+  if (!getAuth()) return;
+  const now = Date.now();
+  for (const f of tripFlights()) {
+    if (f.manual || !f.number || !f.date) continue;
+    const dep = utcMs(f.dep.sched?.utc), arr = utcMs(f.arr.sched?.utc); if (!dep) continue;
+    const today = now > dep - 12 * 3600e3 && now < (arr || dep) + 2 * 3600e3, soon = now > dep - 48 * 3600e3 && now < dep;
+    if (!today && !soon) continue;
+    const k = liveKey(f); if (flightChecked[k] && now - flightChecked[k] < (today ? 20 : 360) * 60e3) continue;
+    flightChecked[k] = now;
+    try {
+      const r = await api({ ...getAuth(), action: 'lookupFlight', number: f.number, date: f.date }, 30000);
+      const hit = (r.flights || []).find(x => x.dep.iata === f.dep.iata) || r.flights?.[0]; if (!hit) continue;
+      flightLive[k] = { status: hit.status, dep: hit.dep, arr: hit.arr };
+      // 表定時間或航廈改了：存回去（大家下次打開都看到新的）
+      const ch = hit.dep.sched?.utc !== f.dep.sched?.utc || hit.arr.sched?.utc !== f.arr.sched?.utc || (hit.dep.terminal && hit.dep.terminal !== f.dep.terminal);
+      if (ch) {
+        const was = localParts(f.dep.sched?.local)?.hm, now2 = localParts(hit.dep.sched?.local)?.hm;
+        const list = tripFlights().map(x => x.id === f.id ? { ...x, dep: { ...x.dep, sched: hit.dep.sched, terminal: hit.dep.terminal || x.dep.terminal }, arr: { ...x.arr, sched: hit.arr.sched, terminal: hit.arr.terminal || x.arr.terminal } } : x);
+        saveFlights(list, `${f.number} 有更新：${was !== now2 ? `起飛 ${was} → ${now2}` : '航廈或抵達時間改了'}，以你的機票為準`, 8000);
+      } else if (current === 'overview' && ovTab === 'stay' && !sheet.classList.contains('on')) renderOverview();
+    } catch {}
+  }
+}
+// 飛行中：每分鐘把進度條往前推
+setInterval(() => {
+  if (current !== 'overview' || ovTab !== 'stay') return;
+  ovEl.querySelectorAll('.fl-leg[data-fl]').forEach(el => {
+    const f = tripFlights().find(x => x.id === el.dataset.fl); const pr = f && flightProgress(f);
+    if (pr != null) el.querySelector('.fl-bar i').style.width = Math.round(pr * 100) + '%';
+  });
+}, 60000);
+let flightSeq = 0;
+async function saveFlights(flights, msg, ms = 1500) {
+  const prev = tripFlights(), seq = ++flightSeq;
+  setTrip({ ...TRIP, flights }); cache();
+  if (current) renderPage(current);
+  toast(msg, '', () => {}, ms);
+  try {
+    const r = await api({ ...getAuth(), action: 'saveTrip', flights }, 60000);
+    if (seq !== flightSeq) return;
+    setTrip({ ...TRIP, ...r.trip }); rememberTrip(TRIP, 'edit', TRIP_KEY, TRIP_CODE); cache();
+    if (current && !sheet.classList.contains('on')) renderPage(current);
+  } catch (x) {
+    if (seq !== flightSeq) return;
+    setTrip({ ...TRIP, flights: prev }); cache();
+    if (current && !sheet.classList.contains('on')) renderPage(current);
+    toast(x.code === 'network' ? '機票沒存到：連不上雲端' : '機票沒存到：' + x.message, '重試', () => saveFlights(flights, msg), 8000);
+  }
+}
+// 加入／編輯一段機票：輸入航班號碼＋日期查詢帶入（查不到可以手動輸入），再填登機資訊
+function openFlightEditor(id, dir0) {
+  const cur = tripFlights().find(f => f.id === id);
+  const dates = tripDates(), lastYmd = dates[dates.length - 1]?.ymd || TRIP.start;
+  const fe = cur ? JSON.parse(JSON.stringify(cur)) : { id: 'f' + uid(), dir: dir0 || (legsOf('out').length ? 'back' : 'out'), number: '', date: '', cls: '經濟艙', seat: '', pnr: '', ticket: '', bag: '', note: '' };
+  if (!fe.date) fe.date = fe.dir === 'back' ? lastYmd : TRIP.start;
+  let found = cur ? fe : null, manual = !!cur?.manual, msg = '', busy = false;
+  const CLS = ['經濟艙', '豪華經濟艙', '商務艙', '頭等艙'];
+  const draw = () => {
+    const p = found && !manual ? found : null;
+    const dp = p && localParts(p.dep.sched?.local), ap = p && localParts(p.arr.sched?.local);
+    const ml = (e, k) => (manual && fe[k]?.sched?.local || '').replace(' ', 'T').slice(0, 16);
+    openSheet(`
+      <div class="sh-head"><div style="flex:1;min-width:0"><div class="sh-title" id="shTitle">${cur ? '編輯機票' : '加入機票'}</div></div>
+        <button class="sh-close" aria-label="關閉"><i class="ti ti-x"></i></button></div>
+      <div class="seg fl-seg" data-i="${fe.dir === 'out' ? 0 : 1}" style="margin-top:14px"><span class="seg-thumb"></span><button type="button" data-fedir="out"${fe.dir === 'out' ? ' class="on"' : ''}>去程</button><button type="button" data-fedir="back"${fe.dir === 'back' ? ' class="on"' : ''}>回程</button></div>
+      <div class="fe-q">
+        <label class="ed-field"><span class="ed-lab">航班號碼</span><input id="feNum" type="text" value="${esc(fe.number)}" placeholder="例如：CI851" autocapitalize="characters" autocomplete="off" maxlength="10" enterkeyhint="search"></label>
+        <label class="ed-field"><span class="ed-lab">出發日期 <span class="ed-lab-hint">當地時間</span></span><input id="feDate" type="date" value="${esc(fe.date)}"></label>
+      </div>
+      ${manual ? '' : `<button type="button" class="btn ghost fe-look" id="feLook"${busy ? ' disabled' : ''}>${busy ? '<i class="ti ti-loader-2 spin"></i> 查詢中…' : '<i class="ti ti-search"></i> 查詢航班'}</button>`}
+      ${msg ? `<div class="err">${esc(msg)}</div>` : ''}
+      ${p ? `<div class="fe-hit"><b>${esc(airlineZh(p))} ${esc(p.number)}</b>
+          <span>${dp ? `${dp.md} ${dp.hm}` : ''} ${esc(airportZh(p.dep))} ${esc(p.dep.iata)}${p.dep.terminal ? ` T${esc(p.dep.terminal)}` : ''} → ${ap ? `${ap.md === dp?.md ? '' : ap.md + ' '}${ap.hm}` : ''} ${esc(airportZh(p.arr))} ${esc(p.arr.iata)}${p.arr.terminal ? ` T${esc(p.arr.terminal)}` : ''}</span>
+          <small>表定班表，請對照你的機票</small></div>` : ''}
+      ${manual ? `<div class="fe-manual">
+          <label class="ed-field"><span class="ed-lab">航空公司</span><input id="feAir" type="text" value="${esc(fe.airline?.name || '')}" placeholder="例如：中華航空" maxlength="30"></label>
+          <div class="fe-two"><label class="ed-field"><span class="ed-lab">出發機場代碼</span><input id="feDepI" type="text" value="${esc(fe.dep?.iata || '')}" placeholder="TPE" maxlength="3" autocapitalize="characters"></label>
+            <label class="ed-field"><span class="ed-lab">起飛（當地）</span><input id="feDepT" type="datetime-local" value="${ml(0, 'dep')}"></label></div>
+          <div class="fe-two"><label class="ed-field"><span class="ed-lab">抵達機場代碼</span><input id="feArrI" type="text" value="${esc(fe.arr?.iata || '')}" placeholder="CNX" maxlength="3" autocapitalize="characters"></label>
+            <label class="ed-field"><span class="ed-lab">抵達（當地）</span><input id="feArrT" type="datetime-local" value="${ml(0, 'arr')}"></label></div></div>` : ''}
+      ${!manual && !found ? '<button type="button" class="fe-man" id="feMan">查不到？手動輸入</button>' : manual ? '<button type="button" class="fe-man" id="feAuto">改用航班號碼查詢</button>' : ''}
+      ${found || manual ? `<hr class="ed-sep">
+        <div class="ed-field"><span class="ed-lab">艙等</span><div class="chips" id="feCls">${CLS.map(c => `<button type="button" class="chip${fe.cls === c ? ' on' : ''}" data-v="${c}">${c}</button>`).join('')}</div></div>
+        <div class="fe-two"><label class="ed-field"><span class="ed-lab">訂位代號</span><input id="fePnr" type="text" value="${esc(fe.pnr)}" placeholder="6 碼" autocapitalize="characters" autocomplete="off" maxlength="20"></label>
+          <label class="ed-field"><span class="ed-lab">座位</span><input id="feSeat" type="text" value="${esc(fe.seat)}" placeholder="例如：32A" autocapitalize="characters" autocomplete="off" maxlength="20"></label></div>
+        <label class="ed-field"><span class="ed-lab">機票號碼 <span class="ed-lab-hint">選填</span></span><input id="feTk" type="text" value="${esc(fe.ticket)}" inputmode="numeric" autocomplete="off" maxlength="30"></label>
+        <label class="ed-field"><span class="ed-lab">託運行李 <span class="ed-lab-hint">選填</span></span><input id="feBag" type="text" value="${esc(fe.bag)}" placeholder="例如：23kg × 1" autocomplete="off" maxlength="60"></label>
+        <label class="ed-field"><span class="ed-lab">備註 <span class="ed-lab-hint">選填</span></span><textarea id="feNote" rows="2" placeholder="例如：線上報到 24 小時前開放">${esc(fe.note)}</textarea></label>
+        <div class="ed-hint"><i class="ti ti-lock"></i> 訂位代號、機票號碼只有輸入編輯碼的人看得到</div>` : ''}
+      <div class="ed-actions">
+        ${cur ? '<button type="button" class="btn ghost danger" id="feDel"><i class="ti ti-trash"></i> 刪除</button>' : ''}
+        <button type="button" class="btn ghost ed-cancel">取消</button>
+        <button type="button" class="btn primary" id="feSave"${found || manual ? '' : ' disabled'}>儲存</button>
+      </div>`);
+    sheet.classList.add('soft');
+  };
+  const $ = id => sheet.querySelector('#' + id);
+  // 先把輸入框的值收回 fe，重畫才不會不見
+  const grab = () => {
+    const v = id => $(id)?.value.trim();
+    if ($('feNum')) fe.number = v('feNum').toUpperCase().replace(/\s+/g, '');
+    if ($('feDate')) fe.date = v('feDate');
+    if ($('fePnr')) { fe.pnr = v('fePnr').toUpperCase(); fe.seat = v('feSeat').toUpperCase(); fe.ticket = v('feTk'); fe.bag = v('feBag'); fe.note = v('feNote'); }
+    if (manual && $('feDepI')) {
+      const t = s => s ? s.replace('T', ' ') : '';
+      fe.airline = { name: v('feAir'), iata: (fe.number.match(/^[A-Z0-9]{2}/) || [''])[0] };
+      fe.dep = { iata: v('feDepI').toUpperCase(), sched: { utc: '', local: t(v('feDepT')) } };
+      fe.arr = { iata: v('feArrI').toUpperCase(), sched: { utc: '', local: t(v('feArrT')) } };
+    }
+  };
+  const look = async () => {
+    grab(); msg = '';
+    if (!/^[A-Z0-9]{2,3}\d{1,4}[A-Z]?$/.test(fe.number)) { msg = '航班號碼格式不對，例如 CI851'; draw(); return; }
+    if (!fe.date) { msg = '請選出發日期'; draw(); return; }
+    busy = true; draw();
+    try {
+      const r = await api({ ...getAuth(), action: 'lookupFlight', number: fe.number, date: fe.date }, 30000);
+      const hit = r.flights?.[0];
+      if (!hit) { found = null; msg = '查不到這班飛機，請確認航班號碼和日期，或手動輸入'; }
+      else { found = { ...fe, number: hit.number.replace(/\s+/g, ''), airline: hit.airline, aircraft: hit.aircraft, dep: hit.dep, arr: hit.arr, manual: false }; Object.assign(fe, found); }
+    } catch (e) { msg = e.code === 'network' ? '連不上雲端，請檢查網路' : e.message; }
+    busy = false; draw();
+  };
+  draw();
+  // 監聽掛在面板上：之後換成別的面板、或又開一次這個視窗，舊的就自己拿掉
+  const token = sheet._fe = {};
+  const alive = () => sheet._fe === token && !!$('feSave');
+  sheet.addEventListener('click', function h(e) {
+    if (!alive()) { sheet.removeEventListener('click', h); return; }
+    const d = e.target.closest('[data-fedir]'); if (d) { grab(); const was = fe.dir; fe.dir = d.dataset.fedir; if (!cur && !found && was !== fe.dir) fe.date = fe.dir === 'back' ? lastYmd : TRIP.start; draw(); return; }
+    if (e.target.closest('#feLook')) { look(); return; }
+    if (e.target.closest('#feMan')) { grab(); manual = true; msg = ''; fe.manual = true; fe.dep = fe.dep || {}; fe.arr = fe.arr || {}; draw(); return; }
+    if (e.target.closest('#feAuto')) { grab(); manual = false; fe.manual = false; found = null; draw(); return; }
+    const c = e.target.closest('#feCls .chip'); if (c) { fe.cls = fe.cls === c.dataset.v ? '' : c.dataset.v; sheet.querySelectorAll('#feCls .chip').forEach(x => x.classList.toggle('on', x.dataset.v === fe.cls)); return; }
+    if (e.target.closest('#feDel')) {
+      if (!confirm(`刪除 ${fe.number || '這段'} 機票？`)) return;
+      sheet.removeEventListener('click', h); closeSheet(); saveFlights(tripFlights().filter(f => f.id !== fe.id), '已刪除機票'); return;
+    }
+    if (e.target.closest('#feSave')) {
+      grab();
+      if (manual) {
+        if (!/^[A-Z]{3}$/.test(fe.dep.iata) || !/^[A-Z]{3}$/.test(fe.arr.iata)) { msg = '機場代碼是 3 個英文字母，例如 TPE'; draw(); return; }
+        if (!fe.dep.sched.local || !fe.arr.sched.local) { msg = '請填起飛和抵達時間'; draw(); return; }
+        fe.date = fe.dep.sched.local.slice(0, 10);
+      }
+      const { manual: _m, ...rest } = fe;
+      const item = { ...rest, manual };
+      const list = cur ? tripFlights().map(f => f.id === fe.id ? item : f) : [...tripFlights(), item];
+      flightDir = fe.dir; flightOpen = null;
+      sheet.removeEventListener('click', h); closeSheet(); saveFlights(list, cur ? '已更新機票' : '已加入機票');
+    }
+  });
+  sheet.addEventListener('keydown', function k(e) {
+    if (!alive()) { sheet.removeEventListener('keydown', k); return; }
+    if (e.key === 'Enter' && !e.isComposing && (e.target.id === 'feNum' || e.target.id === 'feDate') && !manual) { e.preventDefault(); look(); }
+  });
+}
 function stayListHtml() {
   const list = tripStays().map((h, i) => ({ h, i, first: tripDates().findIndex(x => (h.nights || []).includes(x.md)) })).sort((a, b) => (a.first < 0 ? 99 : a.first) - (b.first < 0 ? 99 : b.first));
   return `<div class="st-list">${list.map(({ h, i }, n) => { const c = STAY_COLORS[n % STAY_COLORS.length], ph = NOTES[h.name]?.photo;
@@ -3048,6 +3354,11 @@ ovEl.addEventListener('click', e => {
   if (stayPressed) { stayPressed = false; e.preventDefault(); return; }   // 長按放開的那一下不要再打開資訊
   const sr = e.target.closest('.st-row[data-stay]'); if (sr) { openStayInfo(+sr.dataset.stay); return; }
   if (e.target.closest('#staysAdd')) { withAuth(() => openStayEditor(null)); return; }
+  if (e.target.closest('#flightAdd')) { withAuth(() => openFlightEditor(null)); return; }
+  const fd = e.target.closest('[data-fldir]'); if (fd) { flightDir = fd.dataset.fldir; flightOpen = null; renderOverview(); return; }
+  const fed = e.target.closest('[data-fledit]'); if (fed) { withAuth(() => openFlightEditor(fed.dataset.fledit)); return; }
+  const cp = e.target.closest('.fl-copy'); if (cp) { navigator.clipboard?.writeText(cp.dataset.copy).then(() => toast('已複製'), () => {}); return; }
+  const fl = e.target.closest('.fl-leg'); if (fl && !e.target.closest('.fl-det')) { flightOpen = flightOpen === fl.dataset.fl ? null : fl.dataset.fl; fl.classList.toggle('open', flightOpen === fl.dataset.fl); ovEl.querySelectorAll('.fl-leg.open').forEach(x => x !== fl && x.classList.remove('open')); return; }
   const su = e.target.closest('[data-setup]'); if (su) { runSetup(su.dataset.setup); return; }
   if (e.target.closest('#ovHero')) { if (TRIP_ROLE === 'edit') withAuth(openCover); else if (!TRIP.cover) openAuth(); return; }
   if (ckSuppress) { ckSuppress = false; e.preventDefault(); e.stopPropagation(); return; }   // 剛拖曳完放開的那一下，不算點擊
@@ -3835,7 +4146,7 @@ const sheet = document.getElementById('sheet'), sheetBg = document.getElementByI
 let lastFocus = null;
 function openSheet(html, focusSel, dialog) {
   sheet.innerHTML = '<div class="grab"></div>' + html;
-  sheet.classList.remove('soft');   // 要淺色表單樣式的面板（旅程設定、編輯卡片）打開後自己加
+  sheet.classList.remove('soft', 'center');   // 要淺色表單樣式（旅程設定、編輯卡片）、內容置中（Google 登入）的面板打開後自己加
   sheet._infoId = null;   // 換成別的面板：背景查好時不要蓋掉
   sheet._photoJob = null;
   lastFocus = document.activeElement;
@@ -4040,7 +4351,7 @@ function openAuth(then) {
     <div class="sh-head"><div style="flex:1;min-width:0"><div class="sh-title" id="shTitle">開始編輯</div>
       <div class="sh-sub">${needCode ? '編輯碼問一下揪團的人（在總覽頁最下面）' : '填一次就好，這支手機會記住'}</div></div>
       <button class="sh-close" aria-label="關閉"><i class="ti ti-x"></i></button></div>
-    ${mates.length ? `<div class="ed-field"><span class="ed-lab">你是誰？ <span class="ed-lab-hint">點你的名字</span></span>${pickChipsHtml(mates, mine, '我不在裡面')}</div>
+    ${mates.length ? `<div class="ed-field"><span class="ed-lab">你是誰？</span>${pickChipsHtml(mates, mine, '我不在裡面')}</div>
       <label class="ed-field" hidden><span class="ed-lab">暱稱 <span class="ed-lab-hint">修改紀錄會顯示是誰改的</span></span>
       <input id="auNick" type="text" value="${esc(mine)}" placeholder="例如：小明" autocomplete="nickname" maxlength="20" enterkeyhint="${needCode ? 'next' : 'done'}"></label>`
       : nickFieldHtml('auNick', '暱稱', '修改紀錄會顯示是誰改的', needCode ? 'next' : 'done')}
@@ -6036,7 +6347,9 @@ function toast(msg, actionText, action, ms) {
 }
 
 // 旅行期間打開網站一律到今天（加到主畫面的捷徑會記住當時那一頁，所以不看網址）；其他時候照網址，沒有就到總覽
-let shownToday = tripNow()?.day || null;
+// 例外：網址停在「我的旅程」、建立旅程，或是按重新整理（留在原本那頁）
+const reloaded = performance.getEntriesByType?.('navigation')?.[0]?.type === 'reload';
+let shownToday = /^#(trips|new)$/.test(location.hash) || reloaded ? null : tripNow()?.day || null;
 if (shownToday) history.replaceState(null, '', '#' + shownToday);
 if (TRIP_ID && TRIP && TRIP_ROLE) rememberTrip(TRIP, TRIP_ROLE, TRIP_KEY, TRIP_CODE);
 showPage(shownToday || location.hash.slice(1) || (TRIP_ID ? 'overview' : 'trips'), false);
