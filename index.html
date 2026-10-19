@@ -4704,7 +4704,7 @@ function openAuth(then) {
     // 四格：真正的輸入框透明蓋在上面（貼上、簡訊自動填入都照常），格子顯示數字；正在打的那格框起來
     const boxes = [...sheet.querySelectorAll('.code-boxes i')], inp = $('auCode');
     const paint = () => { const v = inp.value, f = document.activeElement === inp; boxes.forEach((b, i) => { b.textContent = v[i] || ''; b.classList.toggle('cur', f && i === Math.min(v.length, 3)); }); };
-    inp.addEventListener('input', e => { e.target.value = e.target.value.replace(/\D/g, '').slice(0, 4); paint(); if (e.target.value.length === 4 && $('auNick').value.trim()) go(); });
+    inp.addEventListener('input', e => { e.target.value = e.target.value.replace(/\D/g, '').slice(0, 4); paint(); if (e.target.value.length === 4) inp.blur(); });   // 打滿四碼收鍵盤，讓人自己按「加入旅程」
     inp.addEventListener('focus', () => { const n = inp.value.length; inp.setSelectionRange(n, n); paint(); });
     inp.addEventListener('blur', paint);
     paint();
