@@ -95,9 +95,33 @@ header{position:sticky;top:0;z-index:10;background:var(--page);padding:calc(12px
 .ov-place{display:flex;align-items:center;gap:8px;min-width:0;font-size:14px;font-weight:600;line-height:1.35}
 .ov-place .nm{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .ov-row .ov-dot{width:8px;height:8px;border-radius:50%;flex:none;background:var(--c-bd)}
-.ov-ok{flex:none;font-size:14px;color:var(--spa-fg)}
+.ov-booked{flex:none;display:inline-flex;align-items:center;gap:2px;padding:0 6px 0 4px;height:20px;border-radius:6px;font-size:11px;font-weight:600;color:var(--spa-fg);background:var(--spa-bg)}
+.ov-booked i{font-size:12px}
 .ov-row .ti-chevron-right{flex:none;color:var(--muted);margin-top:1px}
 .ov-stats{display:flex;flex-wrap:wrap;gap:6px}
+/* 總覽「每天」：旅程標題、每類一張照片、一句話、展開行程、地圖 */
+.ov-intro{padding:6px 0 2px}
+.ov-title{margin:0;font-family:"Noto Serif TC",serif;font-size:34px;font-weight:600;line-height:1.2;letter-spacing:.5px;color:var(--text);word-break:break-word}
+.ov-pics{display:flex;justify-content:center;margin:22px -4px 18px;padding:0 4px}
+.ov-pic{flex:none;width:21%;max-width:96px;aspect-ratio:1;margin:0 -2.5%;padding:3px;border-radius:12px;background:#fff;box-shadow:0 2px 10px rgba(60,40,20,.18);transform:rotate(var(--r));border:0;cursor:pointer}
+.ov-pic img{display:block;width:100%;height:100%;object-fit:cover;border-radius:9px;background:var(--fill)}
+.ov-pic.empty{box-shadow:none;border:1.5px dashed var(--border);background:var(--page);display:flex;align-items:center;justify-content:center;color:var(--muted);font-size:20px}
+.ov-pics-hint{text-align:center;font-size:12px;color:var(--muted);margin:-8px 0 14px}
+.ov-meta{font-size:14px;color:var(--text);font-variant-numeric:tabular-nums}
+.ov-line{margin:12px 0 0;font-family:"Noto Serif TC",serif;font-size:17px;line-height:1.65;color:var(--text)}
+.ov-expand{display:flex;align-items:center;justify-content:center;gap:4px;width:100%;height:44px;margin:20px 0 6px;border:0;border-radius:12px;background:var(--fill);font:inherit;font-size:15px;font-weight:600;color:var(--text);cursor:pointer}
+.ov-expand i{font-size:18px;transition:transform .25s}
+.ov-expand.on i{transform:rotate(180deg)}
+.ov-days{display:grid;grid-template-rows:0fr;transition:grid-template-rows .3s ease}
+.ov-days.on{grid-template-rows:1fr}
+.ov-days > div{overflow:hidden;min-height:0}
+.ov-mapwrap{margin-top:22px}
+.ov-maphead{display:flex;align-items:baseline;justify-content:space-between;font-size:12px;font-weight:600;color:var(--muted);margin-bottom:8px}
+.ov-maphead span{color:var(--accent-fg)}
+.ov-map{position:relative;height:260px;border-radius:16px;overflow:hidden;background:#f4f0e9;box-shadow:0 0 0 4px #fff,0 2px 12px rgba(60,40,20,.16);margin:0 4px;cursor:pointer}
+.ov-map .gm{position:absolute;inset:0}
+.ov-map .msg{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:13px;color:var(--text2);pointer-events:none}
+.ov-map .ov-pin{position:absolute;width:14px;height:14px;margin:-7px 0 0 -7px;border-radius:50%;background:var(--c-fg,var(--accent-fg));border:2.5px solid #fff;color:transparent;box-shadow:0 1px 4px rgba(0,0,0,.3)}
 .ov-stat{display:flex;align-items:baseline;gap:4px;padding:6px 10px;border-radius:10px;background:var(--c-bg);color:var(--c-fg);font-size:12px}
 .ov-stat b{font-size:17px;font-weight:700;font-variant-numeric:tabular-nums}
 .ov-chips{display:flex;flex-wrap:wrap;gap:6px}
@@ -2491,20 +2515,15 @@ function renderOverview() {
   html += `<div class="ov-segbar"><div class="seg ov-seg" data-i="${ovTabIdx()}"><span class="seg-thumb"></span>
     ${OV_TABS.map(([k, t]) => `<button type="button" data-ovtab="${k}"${ovTab === k ? ' class="on"' : ''}>${t}</button>`).join('')}</div></div>`;
   if (ovTab === 'days') {
+  html += ovIntroHtml(days, count, today);
+  html += `<button type="button" class="ov-expand${ovOpen ? ' on' : ''}" id="ovExpand">${ovOpen ? '收起行程' : '展開行程'}<i class="ti ti-chevron-down"></i></button><div class="ov-days${ovOpen ? ' on' : ''}"><div>`;
   html += days.map(d => {
     const places = d.items.filter(listed).map(it => `
-      <span class="ov-place"><span class="ov-dot ${it.cls || 'eat'}"></span><span class="nm">${esc(it.t)}</span>${it.booked ? '<i class="ti ti-circle-check ov-ok"></i>' : ''}</span>`).join('');
+      <span class="ov-place"><span class="ov-dot ${it.cls || 'eat'}"></span><span class="nm">${esc(it.t)}</span>${it.booked ? '<span class="ov-booked"><i class="ti ti-check"></i>已訂位</span>' : ''}</span>`).join('');
     return `<button type="button" class="ov-row${d.k === today ? ' today' : ''}" data-go="${d.k}"><span class="ov-when"><b>${d.info.date} ${d.info.wd}${d.k === today ? '<span class="ov-today">今天</span>' : ''}</b>${esc(d.info.zh || '')}</span>
       <span class="ov-places">${places || '<span class="ov-empty">還沒有行程</span>'}</span><i class="ti ti-chevron-right"></i></button>`;
   }).join('');
-  if (Object.keys(count).length) html += '<div class="ov-sec">這趟旅程</div><div class="ov-stats">' + TYPES.filter(([k]) => count[k]).map(([k, n]) =>
-    `<span class="ov-stat ${k}">${n}<b>${count[k]}</b>${unit[k] || '個'}</span>`).join('') + '</div>';
-  // 已訂位：用標籤，點了跳到那一天
-  const booked = days.flatMap(d => d.items.filter(it => it.booked).map(it => ({ d, it })));
-  html += '<div class="ov-sec">已訂位</div>' + (booked.length
-    ? '<div class="ov-chips">' + booked.map(({ d, it }) =>
-      `<button type="button" class="ov-chip ${it.cls || 'eat'}" data-go="${d.k}"><b>${d.info.date} ${T(it.s)}</b> ${esc(shortName(it.t))}</button>`).join('') + '</div>'
-    : '<div class="ov-empty">還沒有勾「已訂位」的行程</div>');
+  html += '</div></div>' + ovMapHtml(today);
   } else if (ovTab === 'stay') {
   // 住宿：照片卡片，點了看資訊、長按編輯
   const canEdit = TRIP_ROLE === 'edit';
@@ -2541,8 +2560,111 @@ function renderOverview() {
     html += '</div>';
   }
   ovEl.innerHTML = html;
+  if (ovTab === 'days') { loadSerif((TRIP?.name || '') + ovLineText); drawOvMap(today); }
   if (TRIP_ROLE === 'edit' && ovEl.querySelector('.st-row')) stayPhotos();
   if (ovTab === 'stay' && tripFlights().length) refreshFlights();   // 出發前兩天、航班當天：查最新時間、航廈   // 住處還沒照片的，有編輯碼的人打開時順手補
+}
+// ---------- 總覽「每天」上半部：旅程標題、每類一張照片、一句有趣的話；行程預設收起來，下面是地圖 ----------
+let ovOpen = false, ovLineText = '';
+// 標題用思源宋體：只下載用到的字（Google Fonts 的 text=），很小
+const serifDone = new Set();
+function loadSerif(text) {
+  const t = [...new Set(String(text || '') + '0123456789.／–—・天夜')].join('');
+  if (!t || serifDone.has(t)) return; serifDone.add(t);
+  const l = document.createElement('link'); l.rel = 'stylesheet';
+  l.href = 'https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@600&display=swap&text=' + encodeURIComponent(t);
+  document.head.appendChild(l);
+}
+// 每個類型各挑一張照片（照天數順序第一個有照片的，行程裡沒有再看備選），最多 5 張
+function ovPics() {
+  const got = {};
+  for (const k of [...DAY_KEYS, 'cand']) for (const it of k === 'cand' ? DATA.cand || [] : [...(DATA[k] || [])].sort((a, b) => m(a.s) - m(b.s))) {
+    const cls = it.cls || 'eat'; if (cls === 'other') continue;
+    const keys = it.group || it.alts?.length ? (it.stops || it.alts || []).map(subNoteKey) : [it.note || it.t];
+    for (const x of keys) { const src = NOTES[x]?.photo; if (!src) continue; (got[cls] ||= { go: k === 'cand' ? 'cand' : k, name: it.t, srcs: [] }); if (got[cls].srcs.length < 6 && !got[cls].srcs.includes(src)) got[cls].srcs.push(src); }
+  }
+  return TYPES.map(([k]) => got[k] && { ...got[k], cls: k }).filter(Boolean).slice(0, 5);
+}
+// 照片網址失效（例如 IG 的圖片過期）：換同類型的下一張，都不行就拿掉
+function ovPicErr(img) {
+  const b = img.parentNode, rest = JSON.parse(b.dataset.srcs || '[]');
+  if (!rest.length) { b.remove(); return; }
+  const p = splitPhoto(rest.shift()); b.dataset.srcs = JSON.stringify(rest);
+  img.style.objectPosition = `${p.x}% ${p.y}%`; img.src = p.src;
+}
+const OV_ROT = ['-7deg', '4deg', '-3deg', '6deg', '-5deg'];
+// 一句話：出發前／旅行中／回來後各有幾句，每次打開隨機挑一句（資料不夠的句子跳過）
+function ovLine(days, count, today) {
+  const n = DAY_KEYS.length, all = Object.values(count).reduce((a, b) => a + b, 0), cand = (DATA.cand || []).length;
+  const c = k => count[k] || 0;
+  const start = TRIP?.start ? new Date(TRIP.start + 'T00:00') : null, now = new Date(Date.now() + NOW_SHIFT); now.setHours(0, 0, 0, 0);
+  const until = start ? Math.round((start - now) / 864e5) : null;
+  const pick = a => { a = a.filter(Boolean); return a.length ? a[Math.floor(Math.random() * a.length)] : ''; };
+  if (!all) return pick([cand ? `候選清單裡已經有 ${cand} 個地方在排隊，挑幾個排進行程吧。` : '', '行程還是一張白紙，先從最想吃的那一家開始排吧。']);
+  if (today) {
+    const d = days.find(x => x.k === today), its = d.items.filter(it => it.cls !== 'other'), first = its[0];
+    const dn = dayNum(today), done = days.filter(x => dayNum(x.k) < dn).reduce((a, x) => a + x.items.filter(it => it.cls !== 'other').length, 0);
+    return pick([
+      its.length ? `第 ${dn} 天。今天要去 ${its.length} 個地方${first ? `，第一站 ${T(first.s)} ${shortName(first.t)}` : ''}。` : `第 ${dn} 天，今天沒有排行程，隨便走走也很好。`,
+      done ? `已經去了 ${done} 個地方，旅程進度 ${Math.round((dn - 1) / n * 100)}%。` : '',
+      dn === n ? '最後一天了，記得留時間買伴手禮。' : '',
+    ]);
+  }
+  if (until !== null && until < 0) return pick([
+    `回來第 ${-until - n + 1 > 0 ? -until - n + 1 : 1} 天了。這趟去了 ${all} 個地方，下一趟要去哪？`,
+    c('eat') ? `這趟吃了 ${c('eat')} 家${c('cafe') ? `、喝了 ${c('cafe')} 家咖啡` : ''}，體重計先不要站上去。` : '',
+  ]);
+  return pick([
+    until > 0 ? `還有 ${until} 天出發。${c('eat') ? `目前排了 ${c('eat')} 家吃的` : `目前排了 ${all} 個地方`}${c('spa') ? `、${c('spa')} 次按摩，胃和肩膀都準備好了嗎？` : '，肚子準備好了嗎？'}` : '',
+    until === 0 ? '就是明天了！護照、充電器、好心情都帶了嗎？' : '',
+    `${n} 天 ${n - 1} 夜，${all} 個地方${cand ? `，還有 ${cand} 個在候選清單排隊中` : ''}。`,
+    c('shop') ? `排了 ${c('shop')} 個購物點，行李箱記得留空間。` : '',
+    c('cafe') >= 3 ? `${c('cafe')} 家咖啡店，這趟應該不會睡太多。` : '',
+  ]);
+}
+function ovIntroHtml(days, count, today) {
+  const n = DAY_KEYS.length, pics = ovPics(), year = (TRIP?.start || '').slice(0, 4);
+  const places = Object.values(count).reduce((a, b) => a + b, 0);
+  const meta = [year, `${dayInfo('d1').date}–${dayInfo(lastDay()).date}`, `${n} 天`, places ? `${places} 個地點` : ''].filter(Boolean).join(' — ');
+  const picsHtml = pics.length
+    ? pics.map((p, i) => `<button type="button" class="ov-pic" style="--r:${OV_ROT[i]}" data-go="${p.go}" data-srcs="${esc(JSON.stringify(p.srcs.slice(1)))}" aria-label="${esc(p.name)}">${photoImg(p.srcs[0], ' onerror="ovPicErr(this)"')}</button>`).join('')
+    : OV_ROT.slice(0, 4).map(r => `<span class="ov-pic empty" style="--r:${r}"><i class="ti ti-photo"></i></span>`).join('');
+  return `<div class="ov-intro"><h2 class="ov-title">${esc(TRIP?.name || '')}</h2>
+    <div class="ov-pics">${picsHtml}</div>${pics.length ? '' : '<div class="ov-pics-hint">加入地點後，照片會出現在這裡</div>'}
+    <div class="ov-meta">${meta}</div><p class="ov-line">${esc(ovLineText = ovLine(days, count, today))}</p></div>`;
+}
+// 地圖：旅行中只標今天的地點，其他時候標全部；只能看、不能拖（才不會捲頁面時卡住），點了進到那一天的地圖
+let ovMap = null, ovMapEl = null, ovPins = [], OvPin = null;
+function ovMapHtml(today) {
+  return `<div class="ov-mapwrap"><div class="ov-maphead">${today ? `第 ${dayNum(today)} 天的地點` : '這趟的地點'}<span>打開地圖 ›</span></div><div class="ov-map" id="ovMapSlot" data-mapgo="${today || 'd1'}"></div></div>`;
+}
+async function drawOvMap(today) {
+  const slot = ovEl.querySelector('#ovMapSlot'); if (!slot) return;
+  if (!MAPS_KEY) { slot.innerHTML = '<div class="msg">地圖還沒設定好</div>'; return; }
+  if (!ovMapEl) { ovMapEl = document.createElement('div'); ovMapEl.className = 'gm'; }
+  slot.appendChild(ovMapEl);
+  try { await loadMaps(MAPS_KEY); } catch { slot.innerHTML = '<div class="msg">地圖載入失敗</div>'; return; }
+  if (!ovMapEl.isConnected) return;
+  if (!OvPin) OvPin = class extends google.maps.OverlayView {
+    constructor(p, el) { super(); this.p = p; this.el = el; }
+    onAdd() { this.getPanes().overlayLayer.appendChild(this.el); }
+    draw() { const q = this.getProjection().fromLatLngToDivPixel(new google.maps.LatLng(this.p)); if (q) { this.el.style.left = q.x + 'px'; this.el.style.top = q.y + 'px'; } }
+    onRemove() { this.el.remove(); }
+  };
+  if (!ovMap) ovMap = new google.maps.Map(ovMapEl, { center: tripCenter(), zoom: 12, styles: MAP_STYLE, disableDefaultUI: true, gestureHandling: 'none', clickableIcons: false, keyboardShortcuts: false });
+  ovPins.forEach(v => v.setMap(null)); ovPins = [];
+  const pts = (today ? [today] : DAY_KEYS).flatMap(k => mapPoints(k));
+  slot.querySelector('.msg')?.remove();
+  if (!pts.length) { ovMap.setCenter(tripCenter()); ovMap.setZoom(12); slot.insertAdjacentHTML('beforeend', `<div class="msg">${today ? '今天還沒有標上位置的地點' : '加入地點後，會標在這裡'}</div>`); return; }
+  for (const pt of pts) { const el = document.createElement('span'); el.className = 'ov-pin ' + pt.cls; const v = new OvPin(pt.p, el); v.setMap(ovMap); ovPins.push(v); }
+  if (pts.length === 1) { ovMap.setCenter(pts[0].p); ovMap.setZoom(15); }
+  else {
+    // 太遠的零星地點（例如郊區一日遊）不算進縮放範圍，地圖才不會拉太遠；離中心超過一般距離 3 倍的算太遠
+    const med = a => [...a].sort((x, y) => x - y)[a.length >> 1];
+    const c = { lat: med(pts.map(p => p.p.lat)), lng: med(pts.map(p => p.p.lng)) }, dist = p => Math.hypot(p.p.lat - c.lat, p.p.lng - c.lng);
+    const lim = Math.max(med(pts.map(dist)) * 3, 0.01), near = pts.filter(p => dist(p) <= lim);
+    const b = new google.maps.LatLngBounds(); (near.length > 1 ? near : pts).forEach(p => b.extend(p.p)); ovMap.fitBounds(b, 28);
+  }
 }
 // 總覽最上面的封面：照片（沒有就是淺陶土色底＋英文目的地），疊上旅程名稱和日期；可以編輯的人點了換封面
 function heroHtml() {
@@ -3651,6 +3773,14 @@ ovEl.addEventListener('click', e => {
   if (e.target.closest('#ovHero')) { if (TRIP_ROLE === 'edit') withAuth(openCover); else if (!TRIP.cover) openAuth(); return; }
   if (ckSuppress) { ckSuppress = false; e.preventDefault(); e.stopPropagation(); return; }   // 剛拖曳完放開的那一下，不算點擊
   const b = e.target.closest('[data-go]'); if (b) { showPage(b.dataset.go); return; }
+  if (e.target.closest('#ovExpand')) {
+    ovOpen = !ovOpen; const x = e.target.closest('#ovExpand');
+    x.classList.toggle('on', ovOpen); x.firstChild.textContent = ovOpen ? '收起行程' : '展開行程';
+    ovEl.querySelector('.ov-days').classList.toggle('on', ovOpen);
+    return;
+  }
+  const mg = e.target.closest('[data-mapgo]');
+  if (mg) { mapMode = true; try { sessionStorage.setItem('cm-map', '1'); } catch {} showPage(mg.dataset.mapgo); return; }
   const tab = e.target.closest('[data-ovtab]');
   if (tab) {
     if (tab.dataset.ovtab === ovTab) return;
