@@ -2131,15 +2131,21 @@ function computeRange() {
   baseH = (END - START) * 60 * PX + 20;
 }
 const y = s => (m(s) - START * 60) * PX;
-// 「＋ 加入行程」：放在這天最後一張卡片下面；這天還沒有行程就放在時間軸中間
+// 「＋ 加入行程」：放在這天最後一張卡片下面；這天還沒有行程就放在時間軸上方
+// 航班卡片（自動產生）也要避開：還沒有行程但有航班時，航班前面放得下就放上面，放不下就放航班下面
 function addButton(page) {
-  const items = DATA[page] || [], last = items.reduce((mx, it) => Math.max(mx, m(it.e)), 0);
-  const b = document.createElement('button'); b.type = 'button'; b.className = 'tl-add' + (items.length ? '' : ' empty');
-  b.innerHTML = items.length ? '<i class="ti ti-plus"></i> 加入行程' : '<i class="ti ti-plus"></i> 加入第一個行程<small>從搜尋店家、景點開始</small>';
+  const real = DATA[page] || [], items = withFlights(real, page), last = items.reduce((mx, it) => Math.max(mx, m(it.e)), 0);
+  const b = document.createElement('button'); b.type = 'button'; b.className = 'tl-add' + (real.length ? '' : ' empty');
+  b.innerHTML = real.length ? '<i class="ti ti-plus"></i> 加入行程' : '<i class="ti ti-plus"></i> 加入第一個行程<small>從搜尋店家、景點開始</small>';
   // 很短的行程卡片會比時間長度高（有最小高度），所以也看實際畫出來的卡片底部，取比較下面的
   const drawn = [...(curLayer || tl).children].filter(el => el.classList.contains('mv') && el.classList.contains('blk') || el.classList.contains('grp'))
     .reduce((mx, el) => Math.max(mx, (+el.dataset.t || 0) + el.offsetHeight), 0);
-  const top = items.length ? Math.max(y(hhmm(last)) + 14, drawn ? drawn + 10 : 0) : 40;
+  let top = items.length ? Math.max(y(hhmm(last)) + 14, drawn ? drawn + 10 : 0) : 40;
+  if (!real.length && items.length) {
+    (curLayer || tl).appendChild(b); const h = b.offsetHeight;
+    const first = Math.min(...items.map(it => y(it.s)));
+    if (40 + h + 12 <= first) top = 40;
+  }
   b.style.top = top + 'px'; b.classList.add('mv'); b.dataset.t = top; movable.push(b);   // 展開合併區塊時跟著往下移
   b.addEventListener('click', e => { e.stopPropagation(); withAuth(() => openAddFlow(page)); });
   (curLayer || tl).appendChild(b);
