@@ -2560,7 +2560,10 @@ function renderOverview() {
     html += '</div>';
   }
   ovEl.innerHTML = html;
-  if (ovTab === 'days') { loadSerif((TRIP?.name || '') + ovLineText); drawOvMap(today); }
+  if (ovTab === 'days') {
+    const pe = ovEl.querySelector('.ov-pics');
+    if (pe) { if (ovPicsNode && pe.dataset.sig === ovPicsSig) pe.replaceWith(ovPicsNode); else { ovPicsNode = pe; ovPicsSig = pe.dataset.sig; } }
+    loadSerif((TRIP?.name || '') + ovLineText); drawOvMap(today); }
   if (TRIP_ROLE === 'edit' && ovEl.querySelector('.st-row')) stayPhotos();
   if (ovTab === 'stay' && tripFlights().length) refreshFlights();   // 出發前兩天、航班當天：查最新時間、航廈   // 住處還沒照片的，有編輯碼的人打開時順手補
 }
@@ -2581,12 +2584,18 @@ function ovPics() {
   for (const k of [...DAY_KEYS, 'cand']) for (const it of k === 'cand' ? DATA.cand || [] : [...(DATA[k] || [])].sort((a, b) => m(a.s) - m(b.s))) {
     const cls = it.cls || 'eat'; if (cls === 'other') continue;
     const keys = it.group || it.alts?.length ? (it.stops || it.alts || []).map(subNoteKey) : [it.note || it.t];
-    for (const x of keys) { const src = NOTES[x]?.photo; if (!src) continue; (got[cls] ||= { go: k === 'cand' ? 'cand' : k, name: it.t, srcs: [] }); if (got[cls].srcs.length < 6 && !got[cls].srcs.includes(src)) got[cls].srcs.push(src); }
+    for (const x of keys) { const src = NOTES[x]?.photo; if (!src || ovBad.has(splitPhoto(ovThumb(src)).src)) continue; (got[cls] ||= { go: k === 'cand' ? 'cand' : k, name: it.t, srcs: [] }); if (got[cls].srcs.length < 6 && !got[cls].srcs.includes(src)) got[cls].srcs.push(src); }
   }
   return TYPES.map(([k]) => got[k] && { ...got[k], cls: k }).filter(Boolean).slice(0, 5);
 }
 // 照片網址失效（例如 IG 的圖片過期）：換同類型的下一張，都不行就拿掉
+// 雲端硬碟的照片只要小圖（總覽一張不到 100px，原本存的是 1200px）
+const ovThumb = u => u.replace(/^(https:\/\/drive\.google\.com\/thumbnail\?[^#]*?sz=)w\d+/, '$1w300');
+// 照片不要每次回總覽都重新載入：同一組照片就把上次的那排（已經載好的 img）原封不動放回去；載不出來的網址記下來，之後直接跳過
+const ovBad = new Set();
+let ovPicsNode = null, ovPicsSig = '';
 function ovPicErr(img) {
+  ovBad.add(img.getAttribute('src'));
   const b = img.parentNode, rest = JSON.parse(b.dataset.srcs || '[]');
   if (!rest.length) { b.remove(); return; }
   const p = splitPhoto(rest.shift()); b.dataset.srcs = JSON.stringify(rest);
@@ -2627,10 +2636,10 @@ function ovIntroHtml(days, count, today) {
   const places = Object.values(count).reduce((a, b) => a + b, 0);
   const meta = [year, `${dayInfo('d1').date}–${dayInfo(lastDay()).date}`, `${n} 天`, places ? `${places} 個地點` : ''].filter(Boolean).join(' — ');
   const picsHtml = pics.length
-    ? pics.map((p, i) => `<button type="button" class="ov-pic" style="--r:${OV_ROT[i]}" data-go="${p.go}" data-srcs="${esc(JSON.stringify(p.srcs.slice(1)))}" aria-label="${esc(p.name)}">${photoImg(p.srcs[0], ' onerror="ovPicErr(this)"')}</button>`).join('')
+    ? pics.map((p, i) => `<button type="button" class="ov-pic" style="--r:${OV_ROT[i]}" data-go="${p.go}" data-srcs="${esc(JSON.stringify(p.srcs.slice(1).map(ovThumb)))}" aria-label="${esc(p.name)}">${photoImg(ovThumb(p.srcs[0]), ' onerror="ovPicErr(this)"')}</button>`).join('')
     : OV_ROT.slice(0, 4).map(r => `<span class="ov-pic empty" style="--r:${r}"><i class="ti ti-photo"></i></span>`).join('');
   return `<div class="ov-intro"><h2 class="ov-title">${esc(TRIP?.name || '')}</h2>
-    <div class="ov-pics">${picsHtml}</div>${pics.length ? '' : '<div class="ov-pics-hint">加入地點後，照片會出現在這裡</div>'}
+    <div class="ov-pics" data-sig="${esc(JSON.stringify(pics.map(p => [p.go, p.srcs])))}">${picsHtml}</div>${pics.length ? '' : '<div class="ov-pics-hint">加入地點後，照片會出現在這裡</div>'}
     <div class="ov-meta">${meta}</div><p class="ov-line">${esc(ovLineText = ovLine(days, count, today))}</p></div>`;
 }
 // 地圖：旅行中只標今天的地點，其他時候標全部；只能看、不能拖（才不會捲頁面時卡住），點了進到那一天的地圖
