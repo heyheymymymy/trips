@@ -487,6 +487,20 @@ html.on-map:not(.sheet-lock),html.on-map:not(.sheet-lock) body{background:#f4f0e
 .chip{height:34px;padding:0 14px;border-radius:999px;border:0;background:var(--fill);font-size:14px;color:var(--text2);cursor:pointer}
 .chip.on{background:var(--accent-fg);color:#fff;font-weight:600}   /* 小標籤選中：陶土橘實心白字 */
 .pick-chips{margin-top:8px}
+.chip.ty-add{display:inline-flex;align-items:center;gap:3px;border:1px dashed var(--border);background:none;flex:none}
+.ty-form{margin-top:10px;padding:12px;border-radius:12px;background:var(--fill);animation:dropIn .16s ease}
+.ty-form .ty-name{background:#fff !important}
+.ty-colors{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
+.ty-c{width:34px;height:34px;border-radius:50%;border:2px solid transparent;background:var(--bg);color:var(--fg);font-size:16px;display:flex;align-items:center;justify-content:center;cursor:pointer;padding:0}
+.ty-c i{opacity:0}
+.ty-c.on{border-color:var(--fg)}
+.ty-c.on i{opacity:1}
+.ty-acts{display:flex;gap:8px;margin-top:12px}
+.ty-acts .btn{height:38px;font-size:14px}
+.ty-acts .btn.ghost{background:#fff}
+.ts-types .chip.editing{box-shadow:0 0 0 2px currentColor}
+.ts-ty-form{margin-top:10px;padding:12px;border-radius:12px;background:var(--fill);animation:dropIn .16s ease}
+.ts-ty-form input{background:#fff !important}
 .pick-chips .pick-other{display:inline-flex;align-items:center;gap:4px;border:1px dashed var(--border);background:none}   /* 跟「＋加入新旅伴」一樣的虛線框 */
 .pick-chips .pick-other.on{border-color:transparent;background:var(--accent-fg)}
 .pick-chips .pick-other i{font-size:14px}
@@ -1209,7 +1223,63 @@ const MIN_NAV_H = 40;                // 區塊夠高才直接放導航鈕
 const COMPACT_H = 46;                // 低於這個高度，時間改放在標題同一行
 // 地圖欄位可以貼 Google 地圖網址，也可以只寫店名
 const mapHref = q => /^https?:\/\//.test(q) ? q : 'https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent(q);
-const TYPES = [['eat', '吃'], ['spa', '按摩'], ['cafe', '咖啡'], ['bar', '酒吧'], ['shop', '購物'], ['see', '景點'], ['other', '其他']];
+const BASE_TYPES = [['eat', '吃'], ['spa', '按摩'], ['cafe', '咖啡'], ['bar', '酒吧'], ['shop', '購物'], ['see', '景點'], ['other', '其他']];
+// 類型＝內建 7 種＋這趟旅程自己加的（放在「其他」前面）。TYPES、TYPE_NAME 換旅程或改自訂類型時原地更新
+const TYPES = [...BASE_TYPES], TYPE_NAME = Object.fromEntries(TYPES);
+// 自訂類型的 8 個預設色：[名稱, 淡底, 邊框, 深字]
+const TYPE_COLORS = { pink: ['粉紅', '#FBE6EF', '#E9A9C3', '#8E3A5E'], yellow: ['鵝黃', '#FBF1D3', '#E5C76B', '#7A5F12'], teal: ['湖水綠', '#DDF1EE', '#8CCBC2', '#24645B'], coral: ['珊瑚紅', '#FDE4DE', '#F0A595', '#9A3B28'],
+  cocoa: ['可可棕', '#EFE5DF', '#C3A797', '#5E4033'], slate: ['灰藍', '#E6EAF0', '#A9B5C6', '#3E4C61'], olive: ['橄欖綠', '#ECEFD9', '#BCC48E', '#4F5A22'], sky: ['天藍', '#E0F0FB', '#93C3E6', '#1F5F8B'] };
+const tripTypes = () => TRIP?.types || [];
+// 類型標籤列最後面的「＋ 新增類型」（有編輯碼才有）和點了展開的小表單：名稱＋8 個顏色
+const typeAddChip = () => TRIP_ROLE === 'edit' ? '<button type="button" class="chip pick-other ty-add"><i class="ti ti-plus"></i>新增類型</button>' : '';
+const typeColorsHtml = sel => `<div class="ty-colors">${Object.entries(TYPE_COLORS).map(([c, [n, bg, bd, fg]]) => `<button type="button" class="ty-c${c === sel ? ' on' : ''}" data-c="${c}" style="--bg:${bg};--fg:${fg}" aria-label="${n}"><i class="ti ti-check"></i></button>`).join('')}</div>`;
+const typeFormHtml = () => TRIP_ROLE === 'edit' ? `<div class="ty-form" hidden><input type="text" class="ty-name" placeholder="類型名稱，例如：甜點" maxlength="6" autocomplete="off" enterkeyhint="done">${typeColorsHtml('pink')}
+  <div class="ty-acts"><button type="button" class="btn ghost ty-cancel">取消</button><button type="button" class="btn primary ty-ok">加入</button></div></div>` : '';
+const newTypeKey = () => { let k; do { k = 'u' + Array.from({ length: 5 }, () => 'abcdefghijklmnopqrstuvwxyz'[Math.floor(Math.random() * 26)]).join(''); } while (TYPES.some(([x]) => x === k)); return k; };
+// 存自訂類型：先改畫面，背景存到雲端
+async function saveTypes(types) {
+  const prev = tripTypes();
+  setTrip({ ...TRIP, types }); cache();
+  try { const r = await api({ ...getAuth(), action: 'saveTrip', types }, 30000); setTrip({ ...TRIP, ...r.trip }); cache(); }
+  catch (x) { setTrip({ ...TRIP, types: prev }); cache(); toast('類型沒存到：' + (x.code === 'network' ? '連不上雲端' : x.message), '知道了', () => {}, 6000); }
+}
+// 面板裡任何一排類型標籤：點「＋ 新增類型」展開表單；加入後新標籤插在「新增類型」前面，並自動選它（觸發原本那排的點擊處理）
+// 面板（sheet）在後面才宣告，所以包成函式，宣告完再接上
+function wireTypeForms() {
+sheet.addEventListener('click', e => {
+  const add = e.target.closest('.ty-add');
+  const form = (add || e.target).closest('.ed-field, .ed-fold')?.querySelector('.ty-form'); if (!form) return;
+  if (add) { e.stopPropagation(); form.hidden = !form.hidden; if (!form.hidden) form.querySelector('.ty-name').focus(); return; }
+  const c = e.target.closest('.ty-c'); if (c && form.contains(c)) { form.querySelectorAll('.ty-c').forEach(x => x.classList.toggle('on', x === c)); return; }
+  if (e.target.closest('.ty-cancel') && form.contains(e.target)) { form.hidden = true; return; }
+  if (e.target.closest('.ty-ok') && form.contains(e.target)) {
+    const inp = form.querySelector('.ty-name'), n = inp.value.trim().slice(0, 6);
+    if (!n) { inp.focus(); return; }
+    if (TYPES.some(([, x]) => x === n)) { toast(`已經有「${n}」這個類型了`); return; }
+    const t = { k: newTypeKey(), n, c: form.querySelector('.ty-c.on')?.dataset.c || 'pink' };
+    saveTypes([...tripTypes(), t]);
+    const row = form.parentNode.querySelector('.chips'), chip = document.createElement('button');
+    chip.type = 'button'; chip.className = 'chip ' + t.k; chip.dataset.v = t.k; chip.textContent = n;
+    row.insertBefore(chip, row.querySelector('[data-v="other"]') || row.querySelector('.ty-add'));   // 跟 TYPES 一樣排在「其他」前面
+    form.hidden = true; inp.value = '';
+    chip.click(); chip.scrollIntoView({ inline: 'nearest', block: 'nearest' });
+  }
+}, true);
+sheet.addEventListener('keydown', e => { if (e.key === 'Enter' && !e.isComposing && e.target.classList?.contains('ty-name')) { e.preventDefault(); e.target.closest('.ty-form').querySelector('.ty-ok').click(); } });
+}
+// 用到某個類型的行程有幾個（卡片、合併區塊的每一站、多選一的每個選項都算）
+function typeUseCount(k) { let n = 0; for (const key of ALL_KEYS) for (const it of DATA[key] || []) { if (it.cls === k) n++; (it.stops || []).concat(it.alts || []).forEach(x => { if (x.cls === k) n++; }); } return n; }
+function retypeItems(keys) { let n = 0; for (const key of ALL_KEYS) for (const it of DATA[key] || []) { if (keys.includes(it.cls)) { it.cls = 'other'; n++; } (it.stops || []).concat(it.alts || []).forEach(x => { if (keys.includes(x.cls)) { x.cls = 'other'; n++; } }); } return n; }
+function applyCustomTypes() {
+  const list = tripTypes();
+  TYPES.length = 0; TYPES.push(...BASE_TYPES.slice(0, -1), ...list.map(t => [t.k, t.n]), BASE_TYPES[BASE_TYPES.length - 1]);
+  Object.keys(TYPE_NAME).forEach(k => delete TYPE_NAME[k]); Object.assign(TYPE_NAME, Object.fromEntries(TYPES));
+  // 每個自訂類型一組顏色變數＋class，跟內建的 .eat、.spa 一樣用法（卡片、標籤、地圖標點）
+  let el = document.getElementById('customTypes');
+  if (!el) { el = document.createElement('style'); el.id = 'customTypes'; document.head.appendChild(el); }
+  el.textContent = list.map(t => { const [, bg, bd, fg] = TYPE_COLORS[t.c] || TYPE_COLORS.slate;
+    return `:root{--${t.k}-bg:${bg};--${t.k}-bd:${bd};--${t.k}-fg:${fg}}.${t.k}{background:${bg};border-color:${bd};color:${fg};--c-bg:${bg};--c-bd:${bd};--c-fg:${fg}}.chip.on.${t.k}{background:${bg};color:${fg}}`; }).join('\n');
+}
 
 // 筆記資料（從試算表的 Notes 分頁載入）：orig＝原文名稱，points＝重點整理，links＝參考連結
 let NOTES = {};
@@ -1249,6 +1319,7 @@ function setTrip(t, role) {
   }
   document.documentElement.classList.toggle('view-only', TRIP_ROLE === 'view');
   document.title = t.name || '行程';
+  applyCustomTypes();
 }
 // 目的地的城市名（查地點、Google 地圖搜尋時加在店名後面）、地圖起始位置
 const tripCity = () => String(TRIP?.dest || '').split(/[,，]/)[0].trim();
@@ -2055,6 +2126,33 @@ function buildLayer(page, isLive) {
   target = null; live = true;
   return layer;
 }
+// 時間線上的提醒：營業時間平常不顯示（點開看得到），只有排的時間不在營業時間內、或那天公休才提醒
+// x：卡片／一站／選項（有 hours＝[[星期, 開門分鐘, 打烊分鐘]…] 或提醒文字裡的「營業 08:30–16:30」），s、e：排的開始、結束
+// 只把「營業 08:00–22:00」「07:00–15:30」「週三公休」這種當成營業時間；「05:20 集合」「18:00 回來」這種自己寫的提醒照常顯示
+const HR_PART = /^(營業.*|\d{1,2}:\d{2}\s*[–\-~～]\s*\d{1,2}:\d{2}|(週[日一二三四五六、]+)?(公休|休息))$/;
+function timelineAlert(x, day, s, e) {
+  const parts = String(x.alert || '').split(/\s*[・·]\s*/).filter(Boolean);
+  const keep = parts.filter(p => !HR_PART.test(p));
+  const warn = hoursWarn(x, day, s, e, parts.filter(p => HR_PART.test(p)).join(' '));
+  return [warn, ...keep].filter(Boolean).join('・');
+}
+function hoursWarn(x, day, s, e, text) {
+  const ymd = isDay(day) && tripDates()[dayNum(day) - 1]?.ymd; if (!ymd || isNaN(s) || isNaN(e)) return '';
+  const wd = new Date(ymd + 'T00:00').getDay(), fmt = v => hhmm(v % (24 * 60));
+  let hrs = []; try { hrs = JSON.parse(x.hours || '[]'); } catch {}
+  if (Array.isArray(hrs) && hrs.length) {
+    const today = hrs.filter(h => h[0] === wd);
+    if (!today.length) return '當天公休';
+    if (today.some(h => s >= h[1] && e <= h[2])) return '';
+    return `不在營業時間（${today.map(h => `${fmt(h[1])}–${fmt(h[2])}`).join('、')}）`;
+  }
+  // 沒有詳細營業時間：從提醒文字抓「週三公休」「08:30–16:30」
+  const off = /週([日一二三四五六、]+)(公休|休息)/.exec(text || '');
+  if (off && off[1].includes('日一二三四五六'[wd])) return '當天公休';
+  const mm = /(\d{1,2}):(\d{2})\s*[–\-~～]\s*(\d{1,2}):(\d{2})/.exec(text || ''); if (!mm) return '';
+  const o = +mm[1] * 60 + +mm[2]; let c = +mm[3] * 60 + +mm[4]; if (c <= o) c += 24 * 60;
+  return s >= o && e <= c ? '' : `不在營業時間（${mm[1]}:${mm[2]}–${mm[3]}:${mm[4]}）`;
+}
 function renderCards(items, day) {
   // 時間重疊的卡片標紅框提醒
   const clash = new Set();
@@ -2101,18 +2199,19 @@ function renderCards(items, day) {
       const g = div('grp ' + (it.cls || 'eat') + extra);
       g.dataset.id = it.id;
       g.setAttribute('role', 'button'); g.tabIndex = 0;
-      const tags = (it.booked ? ' · <i class="ti ti-circle-check"></i> 已訂位' : '') + (it.alert ? ` · <i class="ti ti-alert-triangle"></i> ${esc(it.alert)}` : '');
+      const gal = timelineAlert(it, day, m(it.s), m(it.e));
+      const tags = (it.booked ? ' · <i class="ti ti-circle-check"></i> 已訂位' : '') + (gal ? ` · <i class="ti ti-alert-triangle"></i> ${esc(gal)}` : '');
       const rows = pick
         ? `<div class="cap">這幾間都可以去，到時候再一起選一間</div>${it.alts.map((a, i) => `
           <div class="stop" data-kind="alt" data-idx="${i}"><div class="num pick"></div>
             <div style="flex:1;min-width:0"><div class="n">${esc(a.name)}</div>${a.desc ? `<div class="o">${esc(a.desc)}</div>` : ''}
-              ${a.alert || +a.dur ? `<div class="m">${+a.dur ? `<i class="ti ti-clock"></i> ${T(it.s)} · ${durLabel(+a.dur)}` : ''}${a.alert && +a.dur ? '　' : ''}${esc(a.alert || '')}</div>` : ''}</div>
+              ${(() => { const aal = timelineAlert(a, day, m(it.s), m(it.s) + (+a.dur || m(it.e) - m(it.s))); return aal || +a.dur ? `<div class="m">${+a.dur ? `<i class="ti ti-clock"></i> ${T(it.s)} · ${durLabel(+a.dur)}` : ''}${aal && +a.dur ? '　' : ''}${esc(aal)}</div>` : ''; })()}</div>
             ${a.map ? navBtn(a.map, a.name) : ''}${subEditIc}
           </div>`).join('')}<button type="button" class="add-sub" data-kind="alt"><i class="ti ti-plus"></i> 新增選項</button>`
         : `${it.stops.map((st, i) => `
           <div class="stop${i < it.stops.length - 1 ? ' chain' : ''}" data-kind="stop" data-idx="${i}"><div class="num">${i + 1}</div>
             <div style="flex:1;min-width:0"><div class="n">${esc(st.name)}</div>${st.orig ? `<div class="o">${esc(st.orig)}</div>` : ''}${st.desc ? `<div class="o">${esc(st.desc)}</div>` : ''}
-              <div class="m"><i class="ti ti-clock"></i> ${T(st.s)} · ${durLabel(st.dur)}${st.area ? `　<i class="ti ti-map-pin"></i> ${esc(st.area)}` : ''}${st.alert ? `　${esc(st.alert)}` : ''}</div></div>
+              <div class="m"><i class="ti ti-clock"></i> ${T(st.s)} · ${durLabel(st.dur)}${st.area ? `　<i class="ti ti-map-pin"></i> ${esc(st.area)}` : ''}${(sal => sal ? `　${esc(sal)}` : '')(timelineAlert(st, day, m(st.s), m(st.s) + (+st.dur || 0)))}</div></div>
             ${st.map ? navBtn(st.map, st.name) : ''}${subEditIc}
           </div>`).join('')}<button type="button" class="add-sub" data-kind="stop"><i class="ti ti-plus"></i> 新增一站</button>`;
       g.innerHTML = `
@@ -2131,8 +2230,9 @@ function renderCards(items, day) {
     // 描述：標題＋時間之外還放得下至少一行才顯示（半小時左右的小卡片就不顯示）
     const descLines = (it, h) => { const n = Math.floor((h - 52) / 16); return it.desc && it.desc !== PENDING && n >= 1 ? `<div class="d" style="-webkit-line-clamp:${n}">${esc(it.desc)}</div>` : ''; };
     const compact = h < COMPACT_H;
+    const al = timelineAlert(it, day, m(it.s), m(it.e));
     const tags = (it.booked ? ' · <span class="tag-ok"><i class="ti ti-circle-check"></i> 已訂位</span>' : '') +
-                 (it.alert ? ` · <i class="ti ti-alert-triangle"></i> ${esc(it.alert)}` : '') +
+                 (al ? ` · <i class="ti ti-alert-triangle"></i> ${esc(al)}` : '') +
                  (it.desc === PENDING ? ' · <span class="tag-q"><i class="ti ti-loader-2 spin"></i> 查詢資訊中</span>' : '');   // 剛加入、背景還在查（小卡片看不到描述，放在時間這一行）
     const b = div('blk ' + it.cls + (showNav ? ' has-nav' : '') + (compact ? ' compact' : '') + extra,
       compact
@@ -2310,7 +2410,6 @@ candEl.addEventListener('click', e => {
 
 // ---------- 總覽 ----------
 const ovEl = document.getElementById('ov');
-const TYPE_NAME = Object.fromEntries(TYPES);
 // 標籤用短一點的名字：去掉括號裡的補充；「英文店名 中文說明」只留英文店名
 function shortName(t) {
   t = t.replace(/[（(][^）)]*[）)]\s*$/, '').trim();
@@ -2368,7 +2467,7 @@ function renderOverview() {
   if (!tripStays().length && canEdit) html += '<button type="button" class="ov-stay add" id="staysAdd"><i class="ti ti-bed"></i><span><b>加入住處</b><small>每天第一段交通從住處算，加入行程可以一鍵回住處</small></span><i class="ti ti-plus"></i></button>';
   if (tripStays().length) html += stayListHtml()
     + (canEdit ? '<button type="button" class="ov-add-full" id="staysAdd"><i class="ti ti-plus"></i>加入住處</button>' : '');
-  // 機票：去程／回程一張卡片；放在住宿下面
+  // 機票：去程／回程一張卡片；放在住宿下面（國內線也可能搭，所以一律顯示）
   html += '<div class="ov-sec">機票</div>';
   if (tripFlights().length) html += flightCardHtml() + (canEdit ? '<button type="button" class="ov-add-full" id="flightAdd"><i class="ti ti-plus"></i>加入機票</button>' : '');
   else if (canEdit) html += '<button type="button" class="ov-stay add" id="flightAdd"><i class="ti ti-plane"></i><span><b>加入機票</b><small>輸入航班號碼，自動帶入時間和航廈</small></span><i class="ti ti-plus"></i></button>';
@@ -2579,7 +2678,7 @@ function openTripSettings(keep) {
   const n0 = DAY_KEYS.length, end0 = (() => { const d = new Date(TRIP.start + 'T00:00'); d.setDate(d.getDate() + n0 - 1); return ymd(d); })();
   // 交通方式：還沒自己選過（開始規劃的「選交通方式」還沒完成）就先不選，選開車才算完成那一步
   const cv0 = splitPhoto(TRIP.cover);
-  const st = keep || { dayStart: TRIP.day_start || '10:00', cover: { src: cv0.src, x: cv0.x, y: cv0.y, busy: false }, name: TRIP.name, dest: TRIP.dest, modes: getSetup().mode || tripMode() !== 'drive' || tripModeList().length > 1 ? tripModeList() : [], start: TRIP.start, end: end0, cal: TRIP.start.slice(0, 7), members: [...(TRIP.members || [])], memDraft: '' };
+  const st = keep || { dayStart: TRIP.day_start || '10:00', cover: { src: cv0.src, x: cv0.x, y: cv0.y, busy: false }, name: TRIP.name, dest: TRIP.dest, modes: getSetup().mode || tripMode() !== 'drive' || tripModeList().length > 1 ? tripModeList() : [], start: TRIP.start, end: end0, cal: TRIP.start.slice(0, 7), members: [...(TRIP.members || [])], memDraft: '', types: JSON.parse(JSON.stringify(tripTypes())), tyEdit: null };
   const canMem = canDeleteTrip();   // 建立的人才能新增、移除同行的人   // 住處另外在總覽的「住宿」管理
   const nDays = () => { const a = parseD(st.start), b = parseD(st.end); return a && b && b >= a ? Math.round((b - a) / 864e5) + 1 : 0; };
   // 改日期的提醒：少掉的那幾天的行程會移到備選；改出發日時行程跟著「第幾天」走
@@ -2611,6 +2710,10 @@ function openTripSettings(keep) {
       <div class="ed-field"><span class="ed-lab">同行的人 <span class="ed-lab-hint">${canMem ? '有人改過行程也會自動加進來' : '只有建立旅程的人可以新增、移除'}</span></span>
         <div class="ov-members ts-mem">${st.members.map((n, i) => `<span>${esc(n)}${canMem ? `<button type="button" class="ts-mem-x" data-mrm="${i}" aria-label="移除 ${esc(n)}"><i class="ti ti-x"></i></button>` : ''}</span>`).join('') || (canMem ? '' : '<span class="ov-empty">還沒有人</span>')}${canMem && !st.memOpen ? '<button type="button" class="ts-mem-new" id="tsMemNew"><i class="ti ti-plus"></i>加入新旅伴</button>' : ''}</div>
         ${canMem && st.memOpen ? `<div class="ts-mem-add"><input id="tsMemIn" type="text" value="${esc(st.memDraft)}" placeholder="輸入暱稱，例如：小明" maxlength="20" autocomplete="off" enterkeyhint="done"><button type="button" class="btn ghost" id="tsMemAdd">加入</button></div>` : ''}</div>
+      <div class="ed-field"><span class="ed-lab">自訂類型 <span class="ed-lab-hint">吃、按摩這些以外，自己加的類型</span></span>
+        <div class="chips ts-types">${st.types.map(t => { const [, bg, , fg] = TYPE_COLORS[t.c] || TYPE_COLORS.slate; return `<button type="button" class="chip${st.tyEdit === t.k ? ' editing' : ''}" data-tyedit="${t.k}" style="background:${bg};color:${fg}">${esc(t.n)}</button>`; }).join('')}<button type="button" class="chip pick-other" id="tsTyNew"><i class="ti ti-plus"></i>新增類型</button></div>
+        ${st.tyEdit ? (() => { const t = st.types.find(x => x.k === st.tyEdit) || { n: '', c: 'pink' }; return `<div class="ts-ty-form"><input type="text" id="tsTyName" value="${esc(t.n)}" placeholder="類型名稱，例如：甜點" maxlength="6" autocomplete="off">${typeColorsHtml(t.c)}
+          <div class="ty-acts">${st.types.some(x => x.k === st.tyEdit) && t.n ? '<button type="button" class="btn ghost danger" id="tsTyDel"><i class="ti ti-trash"></i> 刪除</button>' : ''}<button type="button" class="btn primary" id="tsTyOk">完成</button></div></div>`; })() : ''}</div>
       <div class="ed-field"><span class="ed-lab">每天通常幾點出門 <span class="ed-lab-hint">空白的那天從這個時間開始排</span></span>
         <input id="tsDayStart" class="ts-time" type="time" step="900" value="${st.dayStart}"></div>
       <div class="ts-more">
@@ -2678,6 +2781,18 @@ function openTripSettings(keep) {
     if (b.id === 'tsDel') { openDeleteTrip(); return; }
     if (b.id === 'tsMemAdd') { addMem(); return; }
     if (b.id === 'tsMemNew') { st.memOpen = true; draw(); body.querySelector('#tsMemIn')?.focus(); return; }
+    // 自訂類型：點標籤展開改名、換色、刪除；「新增類型」先加一個空的再填
+    const tyName = () => body.querySelector('#tsTyName')?.value.trim().slice(0, 6) || '';
+    const keepName = () => { const t = st.types.find(x => x.k === st.tyEdit); if (t && tyName()) t.n = tyName(); };
+    if (b.dataset.tyedit) { keepName(); st.types = st.types.filter(x => x.n); st.tyEdit = st.tyEdit === b.dataset.tyedit ? null : b.dataset.tyedit; draw(); return; }
+    if (b.id === 'tsTyNew') { keepName(); st.types = st.types.filter(x => x.n); const t = { k: newTypeKey(), n: '', c: 'pink' }; st.types.push(t); st.tyEdit = t.k; draw(); body.querySelector('#tsTyName')?.focus(); return; }
+    if (b.classList.contains('ty-c')) { const t = st.types.find(x => x.k === st.tyEdit); if (t) { keepName(); t.c = b.dataset.c; draw(); } return; }
+    if (b.id === 'tsTyOk') { const n = tyName(), t = st.types.find(x => x.k === st.tyEdit); if (t) { if (!n) st.types = st.types.filter(x => x !== t); else t.n = n; } st.tyEdit = null; draw(); return; }
+    if (b.id === 'tsTyDel') {
+      const k = st.tyEdit, used = typeUseCount(k);
+      if (used && !confirm(`有 ${used} 個行程是這個類型，刪除後會改成「其他」，確定嗎？`)) return;
+      st.types = st.types.filter(x => x.k !== k); st.tyEdit = null; draw(); return;
+    }
     // 修改紀錄、換編輯碼：同一張面板往右推進去，返回時設定改到一半的還在
     const back = () => sheetSlide(-1, () => openTripSettings(st));
     if (b.id === 'tsHistory') { sheetSlide(1, () => openHistory({ back })); return; }
@@ -2710,6 +2825,10 @@ function openTripSettings(keep) {
     if (st.start !== TRIP.start || n !== n0) Object.assign(changes, { start: st.start, days: n });
     if (canMem && st.memDraft.trim() && !st.members.includes(st.memDraft.trim())) st.members.push(st.memDraft.replace(/,/g, ' ').trim());   // 打了名字忘了按加入
     if (st.dayStart !== (TRIP.day_start || '10:00')) changes.day_start = st.dayStart;
+    { const t = st.types.find(x => x.k === st.tyEdit), n = body.querySelector('#tsTyName')?.value.trim().slice(0, 6); if (t && n) t.n = n; }   // 改到一半直接按儲存
+    const types = st.types.filter(x => x.n);
+    if (JSON.stringify(types) !== JSON.stringify(tripTypes())) changes.types = types;
+    const goneTypes = tripTypes().filter(t => !types.some(x => x.k === t.k)).map(t => t.k);
     if (canMem && st.members.join(',') !== (TRIP.members || []).join(',')) Object.assign(changes, { members: st.members, owner: myTrips().find(x => x.id === TRIP_ID)?.owner || '' });
     if (!Object.keys(changes).length) { if (st.modes.length && !getSetup().mode) { markSetup('mode'); renderPage(current); } closeSheet(); return; }   // 選了跟原本一樣的開車：也算選好了
     if (changes.days && n < n0 && DAY_KEYS.slice(n).some(k => (DATA[k] || []).length) && !confirm(dateNote() + '，確定要改嗎？')) return;
@@ -2722,6 +2841,7 @@ function openTripSettings(keep) {
       if (changes.days) { closeSheet(); if (isDay(current) && dayNum(current) > n) showPage('overview'); await load(true); }
       else {
         setTrip({ ...TRIP, ...r.trip }); rememberTrip(TRIP, 'edit', TRIP_KEY, TRIP_CODE); cache();
+        if (goneTypes.length && retypeItems(goneTypes)) saveData('刪除類型');   // 刪掉的類型：用到的行程改成「其他」
         closeSheet(); updateHeader(current); if (current) renderPage(current);
       }
       if (st.modes.length) markSetup('mode');
@@ -4265,6 +4385,7 @@ tl.addEventListener('touchcancel', () => endSwipe(true));
 
 // ---------- 下方滑出的面板（筆記和編輯共用） ----------
 const sheet = document.getElementById('sheet'), sheetBg = document.getElementById('sheetBg');
+wireTypeForms();
 let lastFocus = null;
 function openSheet(html, focusSel, dialog) {
   sheet.innerHTML = '<div class="grab"></div>' + html;
@@ -5232,7 +5353,7 @@ function drawAdd() {
   const fixedCls = !!(af.pick || af.cand || af.home);
   body.innerHTML = head(isAlt ? '停留多久？' : '什麼時候？', where) + `
     <label class="ed-field"><span class="ed-lab">名稱</span><input type="text" id="afName" value="${esc(af.name)}" placeholder="例如：自由活動、機場接送、整理行李" autocomplete="off" maxlength="60"></label>
-    ${fixedCls ? '' : `<div class="ed-field"><span class="ed-lab">類型</span><div class="chips" id="afCls">${TYPES.map(([k, n]) => `<button type="button" class="chip ${k}${k === af.cls ? ' on' : ''}" data-v="${k}">${n}</button>`).join('')}</div></div>`}
+    ${fixedCls ? '' : `<div class="ed-field"><span class="ed-lab">類型</span><div class="chips" id="afCls">${TYPES.map(([k, n]) => `<button type="button" class="chip ${k}${k === af.cls ? ' on' : ''}" data-v="${k}">${n}</button>`).join('')}${typeAddChip()}</div>${typeFormHtml()}</div>`}
     ${af.day === 'cand' ? '' : `<div class="ed-field"><span class="ed-lab">時間${isAlt ? ' <span class="ed-lab-hint">每一家同一個開始時間</span>' : ''}</span>
       <div class="ed-time af-time"><input type="time" id="afS" step="300" value="${T(hhmm(af.s))}" aria-label="開始時間"${isAlt ? ' disabled' : ''}><span class="ed-arrow">→</span><span class="ed-endbox" id="afEnd" aria-label="結束時間（自動算）">${T(hhmm(Math.min(af.s + af.dur, DAY_END)))}</span></div>
       ${durRulerHtml('afRuler')}</div>
@@ -5472,7 +5593,7 @@ function openEditor(id, startAt, toDay, replaceId) {
     ${ed.group ? '<div class="ed-hint"><i class="ti ti-info-circle"></i> 這是合併區塊。要改裡面的店家，請展開後直接點那一家</div>' : `
     <div class="ed-field ed-fold"><button type="button" class="ed-fold-h" aria-expanded="false"><span class="ed-lab">類型</span><span class="ed-fold-v" id="edClsV">${esc((TYPES.find(([k]) => k === ed.cls) || [, ''])[1])}</span><i class="ti ti-chevron-down"></i></button>
       <div class="chips" id="edCls" hidden>
-      ${TYPES.map(([k, n]) => `<button type="button" class="chip ${k}${k === ed.cls ? ' on' : ''}" data-v="${k}">${n}</button>`).join('')}</div></div>`}
+      ${TYPES.map(([k, n]) => `<button type="button" class="chip ${k}${k === ed.cls ? ' on' : ''}" data-v="${k}">${n}</button>`).join('')}${typeAddChip()}</div>${typeFormHtml()}</div>`}
     <div class="ed-field"${old ? ' hidden' : ''}><span class="ed-lab">日期 <span class="ed-lab-hint">選別天就搬過去，時間不變</span></span>
       <div class="chips sm day-chips" id="edDay">${ALL_KEYS.map(k => `<button type="button" class="chip${k === ed.day ? ' on' : ''}${k === 'cand' ? ' cand' : ''}" data-v="${k}">${k === 'cand' ? '備選' : dayNum(k)}</button>`).join('')}</div></div>
     <div class="ed-field"><span class="ed-lab">時間</span>
@@ -6345,7 +6466,7 @@ function openSubEditor(cardId, kind, idx, fromCand, replace) {
 </div>
       ${durRulerHtml('sbRuler')}</div>`}
     <div class="ed-field"><span class="ed-lab">類型 <span class="ed-lab-hint">拆成獨立卡片時用這個顏色</span></span><div class="chips" id="sbCls">
-      ${TYPES.map(([k, n]) => `<button type="button" class="chip ${k}${k === sed.cls ? ' on' : ''}" data-v="${k}">${n}</button>`).join('')}</div></div>
+      ${TYPES.map(([k, n]) => `<button type="button" class="chip ${k}${k === sed.cls ? ' on' : ''}" data-v="${k}">${n}</button>`).join('')}${typeAddChip()}</div>${typeFormHtml()}</div>
     <label class="ed-field"><span class="ed-lab">重點提醒</span>
       <input id="sbAlert" type="text" value="${esc(sub.alert || '')}" placeholder="例如：只收現金、16:30 關門" autocomplete="off"></label>
     <label class="ed-field"><span class="ed-lab">地圖 <span class="ed-lab-hint">貼上 Google 地圖的分享連結最準確</span></span>
