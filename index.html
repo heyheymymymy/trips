@@ -465,6 +465,24 @@ html.on-map:not(.sheet-lock),html.on-map:not(.sheet-lock) body{background:#f4f0e
 .ed-field{display:block;margin-top:16px}
 .ed-lab{display:block;font-size:12px;font-weight:600;color:var(--muted);margin-bottom:6px}
 .ed-lab-hint{font-weight:400;margin-left:4px}
+.au{text-align:center;padding:16px 4px 6px}
+.au-hi{display:flex;align-items:center;justify-content:center;gap:6px;font-size:28px;font-weight:700;line-height:1}
+.au-box{display:inline-flex;align-items:center;justify-content:center;min-width:120px;max-width:70%;transition:width .15s;height:58px;padding:0 16px;border:2px dashed var(--accent-fg);border-radius:14px;box-sizing:border-box}
+.au-box #auName{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.au-box.typing #auName{display:none}
+.sheet .au-box input[type=text],.sheet .au-box input[type=text]:focus{width:4.5em;min-height:0;height:auto;padding:0;border:0;border-radius:0;background:none;font:inherit;font-size:28px;font-weight:700;text-align:center;outline:none}   /* 跟「安安，」一樣大 */
+.sheet .au-box input::placeholder{font-size:28px;color:var(--muted)}
+.au .au-chips{justify-content:center;gap:8px;margin-top:16px}   /* 跟「編輯碼」到四個格子一樣的距離（要寫 .au，不然會被 .pick-chips 的 8px 蓋掉） */
+.au-chips .chip{height:40px;padding:0 20px;font-size:16px;font-weight:600;color:var(--text)}
+.au-chips .chip.on{color:#fff}
+.au-chips .pick-other{color:var(--text2);font-weight:500}
+.au-chg{margin:12px auto 0;padding:4px;border:0;background:none;font:inherit;font-size:13px;color:var(--text2);text-decoration:underline;text-underline-offset:3px;cursor:pointer;display:block}
+.au-sep{border:0;border-top:1px solid var(--line);margin:30px -20px 24px}
+.sheet.dlg.center:has(.au){padding-bottom:0}   /* 按鈕列自己有下方留白，不要再多一截 */
+.sheet.dlg:has(.au) .ed-actions{margin-top:22px;padding:8px 20px 14px;border-top:0}   /* 開始編輯：拿掉上面的分隔線，按鈕貼近卡片底部 */
+.au-lab{font-size:15px;font-weight:700;margin-bottom:14px}
+.au-hint{margin-top:16px;font-size:13px;color:var(--text2)}
+.au .err{text-align:center}
 .nick-as{display:flex;align-items:center;gap:6px;margin-top:14px;font-size:14px;color:var(--text2)}
 .nick-as b{color:var(--text)}
 .nick-as span{flex:1;min-width:0}
@@ -4616,30 +4634,49 @@ document.getElementById('editCancel').addEventListener('click', () => {
 function openAuth(then) {
   if (!TRIP_ROLE) { toast('行程還在載入，請稍等'); return; }
   const needCode = TRIP_ROLE !== 'edit' || !TRIP_CODE;
-  // 同行的人有名單：讓他點自己的名字（名字跟名單一致，不會多出重複的人）；登入又有暱稱的照舊
-  const mates = nickFolded() ? [] : (TRIP?.members || []), mine = mates.includes(getNick()) ? getNick() : '';
-  openSheet(`
-    <div class="sh-head"><div style="flex:1;min-width:0"><div class="sh-title" id="shTitle">開始編輯</div>
-      <div class="sh-sub">${needCode ? '編輯碼問一下揪團的人（在總覽頁最下面）' : '填一次就好，這支手機會記住'}</div></div>
-      <button class="sh-close" aria-label="關閉"><i class="ti ti-x"></i></button></div>
-    ${mates.length ? `<div class="ed-field"><span class="ed-lab">你是誰？</span>${pickChipsHtml(mates, mine, '我不在裡面')}</div>
-      <label class="ed-field" hidden><span class="ed-lab">暱稱 <span class="ed-lab-hint">修改紀錄會顯示是誰改的</span></span>
-      <input id="auNick" type="text" value="${esc(mine)}" placeholder="例如：小明" autocomplete="nickname" maxlength="20" enterkeyhint="${needCode ? 'next' : 'done'}"></label>`
-      : nickFieldHtml('auNick', '暱稱', '修改紀錄會顯示是誰改的', needCode ? 'next' : 'done')}
-    ${needCode ? `<label class="ed-field"><span class="ed-lab">編輯碼 <span class="ed-lab-hint">4 位數字</span></span>
-      <span class="code-boxes"><input id="auCode" type="text" inputmode="numeric" pattern="[0-9]*" maxlength="4" autocomplete="one-time-code" class="code-input" enterkeyhint="done" aria-label="編輯碼">${'<i></i>'.repeat(4)}</span></label>` : ''}
-    <div class="err" id="auErr" hidden></div>
+  // 「安安，［名字］」：同行的人有名單就點名字（名字跟名單一致，不會多出重複的人），名單外的「＋ 自行輸入」直接在框框裡打；
+  // 沒有名單＝框框就是輸入框；登入又有暱稱＝框框裡是暱稱，下面「改名」
+  const folded = nickFolded(), mates = folded ? [] : (TRIP?.members || []), mine = folded ? getNick() : mates.includes(getNick()) ? getNick() : '';
+  const typing = !folded && !mates.length;   // 一開始就是打字模式
+  openSheet(`<div class="au">
+    <div class="au-hi" id="shTitle">安安，<span class="au-box${mine ? ' on' : ''}${typing ? ' typing' : ''}" id="auBox"><span id="auName">${esc(mine)}</span>
+      <input id="auNick" type="text" value="${esc(typing ? getNick() : mine)}" placeholder="你的名字" autocomplete="nickname" maxlength="6" enterkeyhint="${needCode ? 'next' : 'done'}" aria-label="暱稱"${typing ? '' : ' hidden'}></span></div>
+    ${mates.length ? `<div class="chips pick-chips au-chips">${mates.map(n => `<button type="button" class="chip${n === mine ? ' on' : ''}" data-pick="${esc(n)}">${esc(n)}</button>`).join('')}<button type="button" class="chip pick-other" data-pick-other><i class="ti ti-plus"></i>自行輸入</button></div>` : ''}
+    ${folded ? `<button type="button" class="nick-chg au-chg">不是 ${esc(mine)}？改名</button>` : ''}
+    ${needCode ? `<hr class="au-sep"><div class="au-lab">編輯碼</div>
+      <span class="code-boxes"><input id="auCode" type="text" inputmode="numeric" pattern="[0-9]*" maxlength="4" autocomplete="one-time-code" class="code-input" enterkeyhint="done" aria-label="編輯碼">${'<i></i>'.repeat(4)}</span>
+      <div class="au-hint">問一下揪團的人，在總覽頁最下面</div>` : ''}
+    <div class="err" id="auErr" hidden></div></div>
     <div class="ed-actions">
       <button type="button" class="btn ghost ed-cancel">取消</button>
-      <button type="button" class="btn primary" id="auGo">開始編輯</button>
-    </div>`, mates.length ? (mine && needCode ? '#auCode' : null) : getNick() && needCode ? '#auCode' : nickFolded() ? null : '#auNick', true);
+      <button type="button" class="btn primary" id="auGo">加入旅程</button>
+    </div>`, null, true);   // 不自動跳鍵盤：點編輯碼格子才跳
+  sheet.classList.add('center');
   const $ = id => sheet.querySelector('#' + id);
   wireNickField(sheet, () => openAuth(then));
-  if (mates.length) wirePickChips(sheet, $('auNick'));
+  // 自己打的名字：框框跟著字的長度變寬變窄（最多 6 個字）
+  const fitName = () => {
+    const inp = $('auNick'); if (!inp || inp.hidden) return;
+    if (!fitName.cx) fitName.cx = document.createElement('canvas').getContext('2d');
+    const cs = getComputedStyle(inp); fitName.cx.font = `${cs.fontWeight} ${cs.fontSize} ${cs.fontFamily}`;
+    inp.style.width = Math.ceil(fitName.cx.measureText(inp.value || inp.placeholder).width) + 4 + 'px';
+  };
+  $('auNick').addEventListener('input', e => { if (!e.isComposing && e.target.value.length > 6) e.target.value = e.target.value.slice(0, 6); fitName(); });
+  $('auNick').addEventListener('compositionend', e => { if (e.target.value.length > 6) e.target.value = e.target.value.slice(0, 6); fitName(); });
+  fitName();
+  // 點名字：框框裡換成那個名字；「自行輸入」：框框變成輸入框
+  sheet.querySelector('.au-chips')?.addEventListener('click', e => {
+    const c = e.target.closest('.chip'); if (!c) return;
+    sheet.querySelectorAll('.au-chips .chip').forEach(x => x.classList.toggle('on', x === c));
+    const box = $('auBox'), inp = $('auNick');
+    if (c.hasAttribute('data-pick-other')) { box.classList.add('typing'); box.classList.remove('on'); inp.hidden = false; inp.value = ''; fitName(); inp.focus(); }
+    else { box.classList.remove('typing'); box.classList.add('on'); inp.hidden = true; inp.value = c.dataset.pick; $('auName').textContent = c.dataset.pick; }
+    $('auErr').hidden = true; placeDialog();
+  });
   const go = async () => {
     const nick = $('auNick').value.trim(), code = needCode ? $('auCode').value.replace(/\D/g, '') : TRIP_CODE;
     const err = msg => { $('auErr').textContent = msg; $('auErr').hidden = false; placeDialog(); };
-    if (!nick) return err(mates.length ? '請點你的名字，或選「我不在裡面」自己填' : '請填暱稱');
+    if (!nick) return err(mates.length ? '請點你的名字，或按「自行輸入」' : '請填你的名字');
     if (code.length !== 4) return err('編輯碼是 4 位數字');
     $('auGo').disabled = true; $('auGo').textContent = '確認中…'; $('auErr').hidden = true;
     try {
@@ -4655,7 +4692,7 @@ function openAuth(then) {
       sync();   // 之前沒存上去的修改，現在補存
     } catch (e) {
       err(e.code === 'network' ? '連不上雲端，請檢查網路' : e.message);
-      $('auGo').disabled = false; $('auGo').textContent = '開始編輯';
+      $('auGo').disabled = false; $('auGo').textContent = '加入旅程';
     }
   };
   $('auGo').addEventListener('click', go);
