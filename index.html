@@ -1260,8 +1260,8 @@ input.sw:focus-visible{outline:2px solid var(--accent-bg);outline-offset:2px}
   </header>
   <div class="tl" id="tl"></div>
   <div class="ov" id="ov" hidden></div>
-  <div class="cand-page" id="cand" hidden></div>
-  <div class="trips-page" id="trips" hidden></div>
+  <div class="cand-page" id="candPage" hidden></div>
+  <div class="trips-page" id="tripsPage" hidden></div>
   <div class="wiz" id="wiz" hidden></div>
   <div class="map-view" id="mapView" hidden><div class="gmap" id="gmap"></div><div class="map-msg" id="mapMsg"></div>
     <div class="map-cover" aria-hidden="true"></div>
@@ -1376,6 +1376,8 @@ const PAGES = { overview: { en: 'Overview', sub: '總覽' }, cand: { en: 'Maybe'
 // 打開時先顯示上次存在手機裡的資料，背景再抓最新的；修改後畫面先更新，背景再存到雲端
 // 新版本（多旅程）的 API；還沒部署前用 ?api= 指到測試伺服器
 const APP_API = 'https://script.google.com/macros/s/AKfycbyJUSrcZOWxNrEI9JGRL4szYuFqI-zh_0XcCz08lu9EBAVBDETShetfXbODzJ4byx5y0A/exec';
+// 重新整理時瀏覽器會自己捲回上次的位置（而且是在內容還沒畫好前），我的旅程第一張卡片會被切到；捲動位置一律由網頁自己決定
+try { history.scrollRestoration = 'manual'; } catch {}
 const QS = new URLSearchParams(location.search);
 const API = QS.get('api') || APP_API;
 // 用 ?api= 指到測試伺服器時，手機裡的資料分開存，不會跟正式的混在一起
@@ -2417,7 +2419,7 @@ function renderPage(page) {
 
 // ---------- 備選景點 ----------
 // 跟每天一樣的彩色卡片，沒有時間軸、由上往下排。編輯時「日期」選某一天就排進去
-const candEl = document.getElementById('cand');
+const candEl = document.getElementById('candPage');
 // 篩選類型、排列方式（最新加入／分類）記在這支手機
 const CAND_VIEW_KEY = 'cm-cand-view';
 let candView = { f: '', sort: 'new' };
@@ -3956,7 +3958,7 @@ function slideTo(page, dir) {
 
 // ---------- 我的旅程 ----------
 // 列出這支手機打開過的旅程（存在手機裡），打開頁面時再跟雲端要最新的名稱、日期、同行的人
-const tripsEl = document.getElementById('trips');
+const tripsEl = document.getElementById('tripsPage');   // id 不能跟網址 #trips 一樣，不然重新整理時瀏覽器會自己捲到這裡
 const mdOf = d => `${d.getMonth() + 1}/${d.getDate()}`;
 function tripState(start, days) {
   const s = new Date(start + 'T00:00'), e = new Date(s); e.setDate(s.getDate() + days - 1);
