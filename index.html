@@ -853,11 +853,6 @@ body.trips-none .trip-new{display:none !important}
 .sheet.dlg:has(.tin) .ed-actions{margin-top:20px;border-top:0;padding-top:0}
 .tin-skip{display:block;margin:2px auto 4px;padding:8px;border:0;background:none;font:inherit;font-size:13px;color:var(--muted);cursor:pointer}
 @media (prefers-reduced-motion:reduce){.tin-c.b,.tin-hand{animation:none}}
-.tut-frame{position:fixed;inset:0;z-index:200;background:var(--page);animation:tutIn .26s ease}
-.tut-frame.out{animation:tutOut .26s ease forwards}
-.tut-frame iframe{display:block;width:100%;height:100%;border:0}
-@keyframes tutIn{from{transform:translateY(24px);opacity:0}}
-@keyframes tutOut{to{transform:translateY(24px);opacity:0}}
 html.tut .tabs{display:none}
 html.tut #mapBtn,html.tut #acctBtn,html.tut #routeFab,html.tut .sync{visibility:hidden}
 .tut-ui{position:fixed;inset:0;z-index:70;pointer-events:none}
@@ -900,8 +895,8 @@ html.tut .sheet:not(.dlg){max-height:calc(100vh - 176px - env(safe-area-inset-to
 .tut-ring{position:absolute;left:-22px;top:-22px;width:44px;height:44px;border-radius:50%;border:3px solid var(--accent-fg);opacity:0}
 .tut-hand.g-tap{animation:tutTap 1.6s ease-in-out infinite}
 .tut-hand.g-tap .tut-ring{animation:tutTapRing 1.6s ease-out infinite}
-@keyframes tutTap{0%,100%{transform:translate(14px,18px)}35%,45%{transform:translate(0,0)}}
-@keyframes tutTapRing{0%,35%{opacity:0;transform:scale(.4)}40%{opacity:.9;transform:scale(.6)}75%,100%{opacity:0;transform:scale(1.4)}}
+@keyframes tutTap{0%,100%{transform:translate(7px,9px)}30%,55%{transform:translate(0,0)}}   /* 小按鈕也看得出是點在哪裡：只稍微抬起，停久一點 */
+@keyframes tutTapRing{0%,30%{opacity:0;transform:scale(.4)}36%{opacity:.9;transform:scale(.6)}75%,100%{opacity:0;transform:scale(1.4)}}
 .tut-hand.g-press{animation:tutPress 2.4s ease-in-out infinite}
 .tut-hand.g-press .tut-ring{animation:tutPressRing 2.4s linear infinite}
 @keyframes tutPress{0%,100%{transform:translate(14px,18px)}15%,75%{transform:translate(0,0)}}
@@ -1567,7 +1562,7 @@ function loadGis() {
 // opts.then：建立旅程前問的（下面有「先不登入，直接建立」；登入好或略過都接著建立）
 function openLogin(opts = {}) {
   openSheet(`
-    <div class="sh-head"><div style="flex:1;min-width:0"><div class="sh-title" id="shTitle">${opts.then ? '建立旅程前，先登入嗎？' : '用 Google 登入'}</div>
+    <div class="sh-head"><div style="flex:1;min-width:0"><div class="sh-title" id="shTitle">${opts.title || (opts.then ? '建立旅程前，先登入嗎？' : '用 Google 登入')}</div>
       <div class="sh-sub">旅程會存在你的 Google 帳號，切換任何裝置都能同步！</div></div>
       <button class="sh-close" aria-label="關閉"><i class="ti ti-x"></i></button></div>
     ${inLine() ? `<div class="ed-hint"><i class="ti ti-info-circle"></i> LINE 裡沒辦法用 Google 登入：請點右上角「⋯」或右下角的分享圖示，選「用預設瀏覽器開啟」（Safari），再登入一次</div>`
@@ -1595,7 +1590,7 @@ function openLogin(opts = {}) {
       if (r.nick) setNick(r.nick); else if (!getNick()) setNick(acctNick());   // 帳號已經有暱稱就用帳號的
       applyMine(r.items);
       closeSheet(); tripsFetched = false; if (current === 'trips') renderTrips();
-      opts.then?.();
+      opts.then?.(); opts.after?.();
       const n = Object.values(r.items).filter(x => !x.gone).length;
       toast(`已登入${p.name ? ' ' + p.name : ''}，${n} 趟旅程已存到帳號`);
     } catch (e) {
@@ -2166,7 +2161,7 @@ async function load(force) {
     if (editing && !force) { deferred = r; return; }         // 編輯中不要整頁換掉，按「完成」後再套用
     const first = !TRIP;
     applyServer(r); refreshView(); resumeLookups(); setTimeout(locateMissing, 3000);
-    if (justCreated && TRIP?.code) { justCreated = false; setTimeout(() => { openSaveTrip(); whenSheetClosed(openTutIntro); }, 400); }   // 剛建好：提醒存連結
+    if (justCreated && TRIP?.code) { justCreated = false; setTimeout(openTutIntro, 400); }   // 剛建好：提醒存連結
     // 從「我的旅程」長按選了旅程設定／刪除：載入後打開（手機裡有舊資料時一打開就有 TRIP，所以不能只看第一次載入）
     { let o = ''; try { o = sessionStorage.getItem('trip-act') || ''; sessionStorage.removeItem('trip-act'); } catch {}
       const [oid, act] = o.split(':'); if (oid === TRIP_ID && TRIP_ROLE === 'edit') setTimeout(() => runTripAct(act), 300); }
@@ -2816,9 +2811,10 @@ function setupSteps() {
   return [
     ['first', 'ti-calendar-plus', '加入第一個行程', '搜尋想去的店或景點，排進第 1 天', DAY_KEYS.some(k => (DATA[k] || []).length)],
     ['import', 'ti-map-pin-plus', '匯入想去的地方', '貼 Google 地圖清單，放進備選', (DATA.cand || []).length > 0 || !!f.import],
-    ['stay', 'ti-bed', '加入住處', '每天第一段交通從住處算', tripStays().length > 0],
-    ['mode', 'ti-route', '選交通方式', `現在是「${tripModeList().map(modeName).join('、')}」`, !!f.mode || tripMode() !== 'drive'],
-    ['invite', 'ti-user-plus', '邀請旅伴', '分享連結和編輯碼', (TRIP.members || []).length > 1 || !!f.invite],
+    ['stay', 'ti-bed', '加入住處', '加入後，快速建立回家卡片', tripStays().length > 0],
+    ['mode', 'ti-route', '選交通方式', '自動推估交通時間', !!f.mode || tripMode() !== 'drive'],
+    // 沒登入：旅程只記在這支手機，提醒登入 Google 保存（登入後打勾；一開始就登入的人不會出現）
+    ...(!getAccount() || f.save ? [['save', 'ti-cloud-upload', '登入 Google 保存旅程', '現在只存在這支手機，登入後換手機也找得回來', !!getAccount()]] : []),
   ];
 }
 function setupHtml() {
@@ -2842,6 +2838,13 @@ function runSetup(k) {
   else if (k === 'import') { markSetup('import'); location.hash = 'cand'; setTimeout(() => withAuth(() => openAddFlow('cand')), 350); }
   else if (k === 'invite') { markSetup('invite'); shareTrip('edit'); setTimeout(renderOverview, 600); }
   else if (k === 'first') withAuth(() => { showPage('d1'); openAddFlow('d1'); });   // 到第 1 天，打開「加入行程」
+  else if (k === 'save') {
+    if (getAccount()) return;
+    markSetup('save');   // 登入後這一項留著打勾，不要直接消失
+    // LINE、IG 裡不能用 Google 登入：改成複製連結和編輯碼傳給自己
+    if (inLine() || /Instagram|FBAN|FBAV/i.test(navigator.userAgent)) openSaveTrip();
+    else openLogin({ title: '登入 Google 保存旅程', after: () => { renderOverview(); toast('已登入，這趟旅程存在你的 Google 帳號了'); } });
+  }
 }
 // 換封面：上傳照片，或從這趟筆記裡已有的照片挑一張；可以拖曳選要顯示的範圍
 function openCover() {
@@ -7117,7 +7120,12 @@ function tutRun() {
   document.body.appendChild(ui);
   const ghost = ui.querySelector('.tut-ghost'), hand = ui.querySelector('.tut-hand'), box = ui.querySelector('.tut-box'), txt = ui.querySelector('.tut-txt'), dots = ui.querySelector('.tut-dots');
   let i = 0, phase = 'do', touching = false, shown = '', afterAt = 0;
-  const leave = kind => { try { parent.postMessage({ tut: kind }, location.origin); } catch {} };
+  // 練完或略過：記下來不再主動問，回到打開練習之前的那一頁（沒有就回我的旅程）
+  const leave = kind => {
+    try { localStorage.setItem(TUT_DONE_KEY, '1'); sessionStorage.setItem('tut-result', kind); } catch {}
+    let back = ''; try { back = sessionStorage.getItem('tut-return') || ''; sessionStorage.removeItem('tut-return'); } catch {}
+    location.replace(back && new URL(back, location.href).origin === location.origin ? back : location.pathname + (QS.get('api') ? '?api=' + encodeURIComponent(QS.get('api')) : '') + '#trips');
+  };
   ui.querySelector('.tut-skip').addEventListener('click', () => leave('skip'));
   addEventListener('touchstart', () => { touching = true; }, { passive: true, capture: true });
   addEventListener('touchend', () => { touching = false; }, { passive: true, capture: true });
@@ -7185,22 +7193,16 @@ if (TUT) {
   if (location.hash !== '#d1') history.replaceState(null, '', '#d1');
   tutRun();
 }
-// 從網站打開練習：全螢幕 iframe（同一個網頁加 ?tutorial=1），練完或略過就關掉，記下來不再主動問
+// 從網站打開練習：整頁換到同一個網頁加 ?tutorial=1（iPhone 的 iframe 裡固定位置的東西會跑掉，所以不用 iframe）
 const TUT_DONE_KEY = 'cm-tut-done';
 function openTutorial() {
-  if (TUT || document.querySelector('.tut-frame')) return;
-  const f = document.createElement('div'); f.className = 'tut-frame';
-  f.innerHTML = `<iframe title="操作練習" src="${location.pathname}?tutorial=1&t=tut&k=tut&nick=${encodeURIComponent(getNick() || '我')}#d1"></iframe>`;
-  document.body.appendChild(f); lockPage(true);
-  const onMsg = e => {
-    if (e.origin !== location.origin || !e.data?.tut) return;
-    try { localStorage.setItem(TUT_DONE_KEY, '1'); } catch {}
-    removeEventListener('message', onMsg);
-    f.classList.add('out'); setTimeout(() => { f.remove(); lockPage(false); }, 260);
-    if (e.data.tut === 'done') toast('練習完成，開始排你的行程吧！');
-  };
-  addEventListener('message', onMsg);
+  if (TUT) return;
+  try { sessionStorage.setItem('tut-return', location.href); } catch {}
+  const api = QS.get('api');   // 測試站：練完回來還是接測試的雲端（練習本身不連雲端）
+  location.href = `${location.pathname}?tutorial=1&t=tut&k=tut&nick=${encodeURIComponent(getNick() || '我')}${api ? '&api=' + encodeURIComponent(api) : ''}#d1`;
 }
+// 練完回來：說一聲
+if (!TUT) try { const r = sessionStorage.getItem('tut-result'); sessionStorage.removeItem('tut-result'); if (r === 'done') setTimeout(() => toast('練習完成，開始排你的行程吧！'), 900); } catch {}
 // 剛建好旅程（存連結的視窗關掉之後）：中間跳出「給我 30 秒，學會編輯」，下一步直接進練習
 function whenSheetClosed(fn) { const t = setInterval(() => { if (!sheet.classList.contains('on')) { clearInterval(t); setTimeout(fn, 350); } }, 300); }
 function openTutIntro() {
