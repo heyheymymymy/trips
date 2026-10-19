@@ -1814,7 +1814,9 @@ function splitPhoto(url) {
   return m ? { src: url.slice(0, m.index), x: +m[1], y: +m[2] } : { src: url || '', x: 50, y: 50 };
 }
 const joinPhoto = (src, x, y) => !src || (Math.round(x) === 50 && Math.round(y) === 50) ? src : `${src}#p=${Math.round(x)},${Math.round(y)}`;
-const photoImg = (url, attrs = '') => { const p = splitPhoto(url); return `<img src="${esc(p.src)}" alt="" style="object-position:${p.x}% ${p.y}%"${attrs}>`; };
+// 雲端硬碟的照片：drive.google.com/thumbnail 每次都要先轉址（而且轉址不能存快取），直接換成轉過去的 lh3 網址，手機可以存一天，重新整理不用再下載
+const fastSrc = (u, w) => { const mm = /^https:\/\/drive\.google\.com\/thumbnail\?id=([\w-]+)(?:&sz=w(\d+))?$/.exec(u || ''); return mm ? `https://lh3.googleusercontent.com/d/${mm[1]}=w${w || mm[2] || 1200}` : u; };
+const photoImg = (url, attrs = '', w) => { const p = splitPhoto(url); p.src = fastSrc(p.src, w); return `<img src="${esc(p.src)}" alt="" style="object-position:${p.x}% ${p.y}%"${attrs}>`; };
 // 上傳照片的樣子（所有放照片的地方都一樣）：還沒有照片＝虛線框，點了上傳；有照片＝右下角一個小圓圈，點了換一張
 const PH_PICK = '<span class="ph-pick"><i class="ti ti-photo-plus"></i>點這裡上傳照片</span>';
 const PH_CAM = '<button type="button" class="ph-cam" aria-label="換一張照片"><i class="ti ti-camera"></i></button>';
@@ -2590,7 +2592,7 @@ function ovPics() {
 }
 // 照片網址失效（例如 IG 的圖片過期）：換同類型的下一張，都不行就拿掉
 // 雲端硬碟的照片只要小圖（總覽一張不到 100px，原本存的是 1200px）
-const ovThumb = u => u.replace(/^(https:\/\/drive\.google\.com\/thumbnail\?[^#]*?sz=)w\d+/, '$1w300');
+const ovThumb = u => { const p = splitPhoto(u); return joinPhoto(fastSrc(p.src, 300), p.x, p.y); };
 // 照片不要每次回總覽都重新載入：同一組照片就把上次的那排（已經載好的 img）原封不動放回去；載不出來的網址記下來，之後直接跳過
 const ovBad = new Set();
 let ovPicsNode = null, ovPicsSig = '';
