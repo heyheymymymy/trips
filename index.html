@@ -3986,10 +3986,19 @@ acctMenu.addEventListener('click', e => {
 });
 addEventListener('click', e => { if (!acctMenu.hidden && !e.target.closest('#acctMenu')) acctMenuClose(); });
 addEventListener('hashchange', acctMenuClose);
+const AUTO_COVER_KEY = 'trip-autocover' + TEST_SUFFIX;
+let autoCovers = {}; try { autoCovers = JSON.parse(localStorage.getItem(AUTO_COVER_KEY)) || {}; } catch {}
+// 整個重畫時，已經載好的照片（同一個網址）把舊的 img 搬回去，不會閃一下重新出現
+function keepImgs(box, html) {
+  const old = {}; box.querySelectorAll('img').forEach(i => { if (i.complete && i.naturalWidth) old[i.getAttribute('src')] = i; });
+  box.innerHTML = html;
+  box.querySelectorAll('img').forEach(i => { const o = old[i.getAttribute('src')]; if (o) { o.style.cssText = i.style.cssText; i.replaceWith(o); delete old[i.getAttribute('src')]; } });
+}
 function renderTrips() {
   const all = myTrips(), list = all.filter(t => t.start).map(t => {
-    // 正在看的這趟：封面沒設定就用筆記裡第一張照片
-    const cover = t.cover || (t.id === TRIP_ID ? Object.values(NOTES).map(n => n.photo).find(Boolean) : '');
+    // 正在看的這趟：封面沒設定就用筆記裡第一張照片；記在手機裡，下次打開不用等行程載入就有
+    let cover = t.cover || '';
+    if (!cover) { const auto = t.id === TRIP_ID ? Object.values(NOTES).map(n => n.photo).find(Boolean) : ''; if (auto && auto !== autoCovers[t.id]) { autoCovers[t.id] = auto; try { localStorage.setItem(AUTO_COVER_KEY, JSON.stringify(autoCovers)); } catch {} } cover = auto || autoCovers[t.id] || ''; }
     return { ...t, cover, ...tripState(t.start, t.days) };
   });
   const card = t => `<button type="button" class="trip-card${t.state === 'past' ? ' past' : ''}" data-trip="${esc(t.id)}">
@@ -4001,8 +4010,8 @@ function renderTrips() {
     return g.length ? `<div class="ov-sec">${label}</div>${g.map(card).join('')}` : '';
   });
   const waiting = all.length - list.length;
-  tripsEl.innerHTML = (list.length ? groups.join('') : waiting ? '' : `<div class="trips-empty"><div class="en">Bon voyage.</div>還沒有旅程<br>按右下角「建立旅程」開始規劃，或打開朋友傳給你的旅程連結<br><small>在別的手機或 LINE 裡有旅程？點左上角的頭像，兩邊登入同一個 Google 帳號就看得到</small></div>`)
-    + (waiting ? `<div class="ov-empty">正在載入 ${waiting} 趟旅程…</div>` : '');
+  keepImgs(tripsEl, (list.length ? groups.join('') : waiting ? '' : `<div class="trips-empty"><div class="en">Bon voyage.</div>還沒有旅程<br>按右下角「建立旅程」開始規劃，或打開朋友傳給你的旅程連結<br><small>在別的手機或 LINE 裡有旅程？點左上角的頭像，兩邊登入同一個 Google 帳號就看得到</small></div>`)
+    + (waiting ? `<div class="ov-empty">正在載入 ${waiting} 趟旅程…</div>` : ''));
   updateAcctBtn();
   if (!tripsFetched && all.length) refreshTrips();
   if (getAccount() && !syncMine.done) { syncMine.done = true; syncMine(); }   // 每次打開網站跟帳號同步一次
