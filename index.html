@@ -507,6 +507,7 @@ html.on-map:not(.sheet-lock),html.on-map:not(.sheet-lock) body{background:#f4f0e
 .au-lab{font-size:15px;font-weight:700;margin-bottom:14px}
 .au-hint{margin-top:16px;font-size:13px;color:var(--text2)}
 .au .err{text-align:center}
+.sheet .au-x{position:absolute;top:14px;right:14px;z-index:1}
 .nick-as{display:flex;align-items:center;gap:6px;margin-top:14px;font-size:14px;color:var(--text2)}
 .nick-as b{color:var(--text)}
 .nick-as span{flex:1;min-width:0}
@@ -837,6 +838,83 @@ button.ov-stay{width:100%;font:inherit;text-align:left;cursor:pointer}
 .te-note svg{position:absolute;left:10px;top:0;width:36px;height:56px;color:var(--text)}
 .te-note span{display:block;transform:rotate(-12deg);font-size:14px;font-weight:600;line-height:1.5;color:var(--accent-fg)}
 body.trips-none .trip-new{display:none !important}
+/* 操作教學：外層全螢幕 iframe；裡面的練習畫面加上提示框和手指動畫 */
+.tin{text-align:center;padding:8px 4px 0}
+.tin-ill{position:relative;width:150px;height:118px;margin:4px auto 14px}
+.tin-c{position:absolute;left:12px;right:12px;height:30px;border-radius:9px}
+.tin-c.a{top:6px;background:var(--eat-bg)}
+.tin-c.b{top:44px;background:var(--cafe-bg);box-shadow:0 4px 12px rgba(60,40,20,.14);animation:tinCard 2.8s ease-in-out infinite}
+.tin-c.c{top:82px;background:var(--spa-bg)}
+.tin-hand{position:absolute;left:80px;top:56px;width:36px;height:40px;color:var(--text);animation:tinHand 2.8s ease-in-out infinite}
+@keyframes tinCard{0%,25%{transform:none}55%,80%{transform:translateY(22px) scale(1.03)}100%{transform:none}}
+@keyframes tinHand{0%{transform:translate(12px,14px)}15%,25%{transform:none}55%,80%{transform:translateY(22px)}100%{transform:translate(12px,14px)}}
+.tin-t{font-size:24px;font-weight:700;line-height:1.3;color:var(--text)}
+.tin p{margin:8px 0 0;font-size:14px;line-height:1.6;color:var(--text2)}
+.sheet.dlg:has(.tin) .ed-actions{margin-top:20px;border-top:0;padding-top:0}
+.tin-skip{display:block;margin:2px auto 4px;padding:8px;border:0;background:none;font:inherit;font-size:13px;color:var(--muted);cursor:pointer}
+@media (prefers-reduced-motion:reduce){.tin-c.b,.tin-hand{animation:none}}
+.tut-frame{position:fixed;inset:0;z-index:200;background:var(--page);animation:tutIn .26s ease}
+.tut-frame.out{animation:tutOut .26s ease forwards}
+.tut-frame iframe{display:block;width:100%;height:100%;border:0}
+@keyframes tutIn{from{transform:translateY(24px);opacity:0}}
+@keyframes tutOut{to{transform:translateY(24px);opacity:0}}
+html.tut .tabs{display:none}
+html.tut #mapBtn,html.tut #acctBtn,html.tut #routeFab,html.tut .sync{visibility:hidden}
+.tut-ui{position:fixed;inset:0;z-index:70;pointer-events:none}
+.tut-box{position:fixed;left:12px;right:12px;top:calc(10px + env(safe-area-inset-top));max-width:456px;height:150px;display:flex;flex-direction:column;margin:0 auto;padding:16px 20px 0;border-radius:22px;background:#fff;
+  box-shadow:0 6px 24px rgba(60,40,20,.18),0 0 0 1px var(--line);pointer-events:auto;transition:top .2s,bottom .2s}
+html.tut header{position:relative;padding-top:calc(172px + env(safe-area-inset-top))}   /* 不黏在上面：往下捲時讓出畫面給卡片 */
+html.tut .sheet:not(.dlg){max-height:calc(100vh - 176px - env(safe-area-inset-top))}   /* 面板不要蓋到提示框 */   /* 提示框固定在最上面，標題列往下讓出位置 */
+.tut-top{display:flex;align-items:center;gap:12px}
+.tut-dots{display:flex;align-items:center;gap:5px;flex:1}
+.tut-dots i{flex:1;height:5px;border-radius:3px;background:var(--fill2);transition:flex-grow .3s,background .3s}
+.tut-dots i.on{flex-grow:2.6;background:var(--accent-fg)}
+.tut-dots i.ok{background:#D9B8A6}
+.tut-dots small{flex:none;margin-left:8px;font-size:13px;color:var(--text2);font-variant-numeric:tabular-nums}
+.tut-skip{padding:4px 0;border:0;background:none;font:inherit;font-size:13px;color:var(--text2);text-decoration:underline;text-underline-offset:3px;cursor:pointer}
+.tut-txt{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;padding:4px 0;text-align:center;text-wrap:balance;font-size:17px;font-weight:600;line-height:1.5;color:var(--text)}   /* 置中在進度列下面到框底的空間 */
+.tut-txt > span,.tut-txt > div{display:block}
+.tut-oki{font-size:28px;font-weight:400;line-height:1}
+.tut-box.ok .tut-txt{color:var(--spa-fg)}
+.tut-warn{color:#B4532A}
+.tut-box.ok{animation:tutPop .3s ease}
+.tut-ui.done .tut-box{height:auto;padding-bottom:16px}
+@keyframes tutPop{40%{transform:scale(1.03)}}
+.tut-win{text-align:center;padding:6px 2px 2px}
+.tut-win > i{font-size:40px;color:var(--spa-fg)}
+.tut-win > b{display:block;margin:2px 0 8px;font-size:20px}
+.tut-win ul{margin:0 0 14px;padding:0;list-style:none;text-align:left;font-size:14px;color:var(--text2);line-height:1.6}
+.tut-win li{padding:6px 0;border-top:1px solid var(--line)}
+.tut-win li b{color:var(--text)}
+.tut-win .btn{width:100%}
+.tut-ui.done{background:rgba(20,20,18,.35);pointer-events:auto}
+.tut-ui.done .tut-box{top:50%;transform:translateY(-50%)}
+.tut-hand{position:fixed;width:0;height:0}
+/* 拖曳示範：跟真的拖曳一樣只有虛線框，跟著手指移到目的地 */
+.tut-ui .tut-ghost{position:fixed;box-sizing:border-box;border:2px dashed var(--accent-fg);border-radius:8px;opacity:0;pointer-events:none;animation:tutGhost 3s ease-in-out infinite}
+.tut-ghost .tut-tag{position:absolute;right:8px;top:-12px;padding:2px 9px;border-radius:999px;background:var(--accent-fg);color:#fff;font-size:12px;font-weight:700;opacity:0;animation:tutTag 3s ease-in-out infinite}
+@keyframes tutGhost{0%,15%{opacity:0;transform:none}22%,35%{opacity:1;transform:none}75%,85%{opacity:1;transform:translate(var(--dx),var(--dy))}100%{opacity:0;transform:translate(var(--dx),var(--dy))}}
+@keyframes tutTag{0%,60%{opacity:0}72%,88%{opacity:1}100%{opacity:0}}
+.hand-svg{display:block;width:100%;height:100%;overflow:visible}
+.tut-hand .hand-svg{position:absolute;left:-5px;top:-3px;width:34px;height:37px;color:#2b2622}
+.tut-ring{position:absolute;left:-22px;top:-22px;width:44px;height:44px;border-radius:50%;border:3px solid var(--accent-fg);opacity:0}
+.tut-hand.g-tap{animation:tutTap 1.6s ease-in-out infinite}
+.tut-hand.g-tap .tut-ring{animation:tutTapRing 1.6s ease-out infinite}
+@keyframes tutTap{0%,100%{transform:translate(14px,18px)}35%,45%{transform:translate(0,0)}}
+@keyframes tutTapRing{0%,35%{opacity:0;transform:scale(.4)}40%{opacity:.9;transform:scale(.6)}75%,100%{opacity:0;transform:scale(1.4)}}
+.tut-hand.g-press{animation:tutPress 2.4s ease-in-out infinite}
+.tut-hand.g-press .tut-ring{animation:tutPressRing 2.4s linear infinite}
+@keyframes tutPress{0%,100%{transform:translate(14px,18px)}15%,75%{transform:translate(0,0)}}
+@keyframes tutPressRing{0%,15%{opacity:0;transform:scale(.5)}20%{opacity:.9;transform:scale(.5)}70%{opacity:.9;transform:scale(1.25)}80%,100%{opacity:0;transform:scale(1.25)}}
+.tut-hand.g-drag{animation:tutDrag 3s ease-in-out infinite}
+.tut-hand.g-drag .tut-ring{animation:tutDragRing 3s linear infinite}
+@keyframes tutDrag{0%{transform:translate(14px,18px);opacity:0}8%{opacity:1}15%,35%{transform:translate(0,0);opacity:1}75%,85%{transform:translate(var(--dx),var(--dy));opacity:1}100%{transform:translate(var(--dx),var(--dy));opacity:0}}
+@keyframes tutDragRing{0%,15%{opacity:0;transform:scale(.5)}20%,35%{opacity:.9;transform:scale(.9)}75%{opacity:.9;transform:scale(.9)}85%,100%{opacity:0;transform:scale(1.3)}}
+.tut-hand.g-swipe{animation:tutSwipe 2.2s ease-in-out infinite}
+.tut-hand.g-swipe .tut-ring{animation:tutSwipeRing 2.2s linear infinite}
+@keyframes tutSwipe{0%{transform:translate(30px,18px);opacity:0}10%{opacity:1}20%{transform:translate(0,0)}65%,75%{transform:translate(var(--dx),var(--dy));opacity:1}100%{transform:translate(var(--dx),var(--dy));opacity:0}}
+@keyframes tutSwipeRing{0%,18%{opacity:0;transform:scale(.6)}22%,65%{opacity:.9;transform:scale(.8)}80%,100%{opacity:0;transform:scale(1.2)}}
+@media (prefers-reduced-motion:reduce){.tut-ui .tut-ghost,.tut-ghost .tut-tag{animation:none;opacity:0}.tut-hand{animation:none !important}.tut-hand .tut-ring{animation:none !important;opacity:.9}}
 /* ---------- 建立旅程（示意） ---------- */
 .wiz{padding:14px 16px calc(96px + env(safe-area-inset-bottom))}
 .wiz-prog{display:flex;gap:4px;margin:0 0 4px}
@@ -1379,13 +1457,21 @@ const APP_API = 'https://script.google.com/macros/s/AKfycbyJUSrcZOWxNrEI9JGRL4sz
 // 重新整理時瀏覽器會自己捲回上次的位置（而且是在內容還沒畫好前），我的旅程第一張卡片會被切到；捲動位置一律由網頁自己決定
 try { history.scrollRestoration = 'manual'; } catch {}
 const QS = new URLSearchParams(location.search);
-const API = QS.get('api') || APP_API;
+// ?tutorial=1：操作練習（開在 iframe 裡）。用假的旅程跑網站本來的程式，所有雲端請求都攔下來（tutApi），手機裡的資料也分開存
+const TUT = QS.get('tutorial') === '1';
+const API = TUT ? 'tutorial' : QS.get('api') || APP_API;
 // 用 ?api= 指到測試伺服器時，手機裡的資料分開存，不會跟正式的混在一起
-const TEST_SUFFIX = QS.get('api') ? '-test' : '';
+const TEST_SUFFIX = TUT ? '-tut' : QS.get('api') ? '-test' : '';
 // ---------- 旅程 ----------
 // 每趟旅程有自己的網址：?t=旅程代號&k=鑰匙（拿到連結就能看）；要修改再輸入 4 位數編輯碼（記在這支手機）；沒有 t 就是「我的旅程」
 const TRIP_ID = QS.get('t') || '', TRIP_KEY = QS.get('k') || '';
 const CACHE_KEY = 'trip-cache-' + TRIP_ID + TEST_SUFFIX, MINE_KEY = 'trips-mine' + TEST_SUFFIX, NICK_KEY = 'trip-nick' + TEST_SUFFIX;
+const TUT_NICK = (QS.get('nick') || '我').slice(0, 20);
+// 練習每次都從頭開始：清掉上次練習留下的資料，直接當作已經輸入編輯碼的人
+if (TUT) try {
+  localStorage.removeItem(CACHE_KEY); localStorage.setItem(NICK_KEY, TUT_NICK);
+  localStorage.setItem(MINE_KEY, JSON.stringify([{ id: TRIP_ID, key: TRIP_KEY, code: '0000', role: 'edit', name: '操作練習', days: 1 }]));
+} catch {}
 let TRIP = null, TRIP_ROLE = '';   // 旅程基本資料（名稱、目的地、出發日、天數…）、edit／view，載入後才有
 // DATA 裡除了 d1–dN，還有 days（標題），所以走訪行程時只看天數；天數跟著旅程
 let DAY_KEYS = [], ALL_KEYS = ['cand'];   // 備選景點也是一組卡片，存法跟每天一樣，只是沒有排進時間軸
@@ -1625,29 +1711,48 @@ function openNickEdit(opts = {}) {
     if (!to) return err('請填暱稱');
     if (/,/.test(to)) return err('暱稱不能有逗號');
     if (to === old) return finish();
-    if (old && (trips.length || a)) {
-      $('nkGo').disabled = true; $('nkGo').textContent = '儲存中…'; $('nkErr').hidden = true;
-      try {
-        await api({ action: 'renameNick', nick: old, to, trips: trips.map(t => ({ trip: t.id, key: t.key, code: t.code })), ...(a ? { sub: a.sub, akey: a.akey } : {}) }, 60000);
-      } catch (e) {
-        $('nkGo').disabled = false; $('nkGo').textContent = '儲存';
-        return err(e.code === 'network' ? '連不上雲端，請檢查網路' : e.message);
-      }
-    }
-    setNick(to);
-    // 列表的「是不是建立的人」先跟著換，等一下再跟雲端要
-    try { localStorage.setItem(MINE_KEY, JSON.stringify(myTrips().map(t => t.created_by === old ? { ...t, created_by: to } : t))); } catch {}
-    if (TRIP && TRIP.created_by === old) TRIP.created_by = to;
-    tripsFetched = false; if (current === 'trips') renderTrips();
-    if (TRIP_ID && TRIP_ROLE === 'edit') load(true);   // 這趟的同行的人、修改紀錄拿新的
+    $('nkGo').disabled = true; $('nkGo').textContent = '儲存中…'; $('nkErr').hidden = true;
+    try { await renameNickAll(old, to); }
+    catch (e) { $('nkGo').disabled = false; $('nkGo').textContent = '儲存'; return err(e.code === 'network' ? '連不上雲端，請檢查網路' : e.message); }
     finish(); toast(`暱稱改成「${to}」`);
   };
   $('nkGo').addEventListener('click', go);
   $('nkIn').addEventListener('keydown', e => { if (e.key === 'Enter' && !e.isComposing) go(); });
 }
 
+// 換暱稱：有編輯碼的旅程裡的舊名字、帳號裡的暱稱一起換（雲端 renameNick），再記在這支手機；失敗會丟出錯誤（例如名字被別人用了）
+async function renameNickAll(old, to) {
+  const a = getAccount(), trips = myTrips().filter(t => t.role === 'edit' && t.code);
+  if (old && (trips.length || a))
+    await api({ action: 'renameNick', nick: old, to, trips: trips.map(t => ({ trip: t.id, key: t.key, code: t.code })), ...(a ? { sub: a.sub, akey: a.akey } : {}) }, 60000);
+  setNick(to);
+  // 列表的「是不是建立的人」先跟著換，等一下再跟雲端要
+  try { localStorage.setItem(MINE_KEY, JSON.stringify(myTrips().map(t => t.created_by === old ? { ...t, created_by: to } : t))); } catch {}
+  if (TRIP && TRIP.created_by === old) TRIP.created_by = to;
+  tripsFetched = false; if (current === 'trips') renderTrips();
+  if (TRIP_ID && TRIP_ROLE === 'edit') load(true);   // 這趟的同行的人、修改紀錄拿新的
+}
+// 「哈囉，［名字］」的框框（建立旅程、開始編輯共用）：已經有名字＝顯示名字，點框框直接變輸入框（全選，打字就蓋掉）
+function wireHelloBox(box, inp, nameEl, onEdit) {
+  const fit = () => {
+    if (inp.hidden) return;
+    if (!fit.cx) fit.cx = document.createElement('canvas').getContext('2d');
+    const cs = getComputedStyle(inp); fit.cx.font = `${cs.fontWeight} ${cs.fontSize} ${cs.fontFamily}`;
+    inp.style.width = Math.ceil(fit.cx.measureText(inp.value || inp.placeholder).width) + 4 + 'px';
+  };
+  const cut = e => { if (e.target.value.length > 6) e.target.value = e.target.value.slice(0, 6); fit(); };
+  inp.addEventListener('input', e => { if (!e.isComposing) cut(e); else fit(); });
+  inp.addEventListener('compositionend', cut);
+  box.addEventListener('click', () => {
+    if (inp.hidden) { box.classList.remove('on'); box.classList.add('typing'); inp.hidden = false; inp.value = nameEl.textContent; fit(); inp.focus(); inp.select(); onEdit?.(); }
+    else inp.focus();
+  });
+  fit();
+  return fit;
+}
 // 呼叫 Apps Script：用 text/plain 送 JSON，瀏覽器才不會先送預檢請求（Apps Script 不支援）
 async function api(body, ms = 40000) {
+  if (TUT) return tutApi(body);
   if (!API) throw Object.assign(new Error('新版本的 API 還沒部署'), { code: 'no_api' });
   const ctl = new AbortController(), timer = setTimeout(() => ctl.abort(), ms);
   try {
@@ -2061,7 +2166,7 @@ async function load(force) {
     if (editing && !force) { deferred = r; return; }         // 編輯中不要整頁換掉，按「完成」後再套用
     const first = !TRIP;
     applyServer(r); refreshView(); resumeLookups(); setTimeout(locateMissing, 3000);
-    if (justCreated && TRIP?.code) { justCreated = false; setTimeout(openSaveTrip, 400); }   // 剛建好：提醒存連結
+    if (justCreated && TRIP?.code) { justCreated = false; setTimeout(() => { openSaveTrip(); whenSheetClosed(openTutIntro); }, 400); }   // 剛建好：提醒存連結
     // 從「我的旅程」長按選了旅程設定／刪除：載入後打開（手機裡有舊資料時一打開就有 TRIP，所以不能只看第一次載入）
     { let o = ''; try { o = sessionStorage.getItem('trip-act') || ''; sessionStorage.removeItem('trip-act'); } catch {}
       const [oid, act] = o.split(':'); if (oid === TRIP_ID && TRIP_ROLE === 'edit') setTimeout(() => runTripAct(act), 300); }
@@ -2353,7 +2458,8 @@ function updateHeader(page) {
   if (isDay(page)) {
     const d = dayInfo(page);
     dayTitle.textContent = d.en;
-    daySub.innerHTML = `${d.date}．${d.wd}${d.zh || editing ? `．<span id="subTheme">${esc(d.zh)}</span>` : ''}`;
+    const dw = [d.date, d.wd].filter(Boolean).join('．');   // 沒有日期（例如操作練習）就不要多出「．」
+    daySub.innerHTML = `${dw}${d.zh || editing ? `${dw ? '．' : ''}<span id="subTheme">${esc(d.zh)}</span>` : ''}`;
   } else {
     dayTitle.textContent = PAGES[page].en;
     if (page === 'overview') daySub.textContent = TRIP ? `${dayInfo('d1').date}–${dayInfo(lastDay()).date}．${DAY_KEYS.length} 天 ${DAY_KEYS.length - 1} 夜` : '';
@@ -2914,6 +3020,7 @@ function openTripSettings(keep) {
       <div class="ed-field"><span class="ed-lab">每天通常幾點出門 <span class="ed-lab-hint">空白的那天從這個時間開始排</span></span>
         <input id="tsDayStart" class="ts-time" type="time" step="900" value="${st.dayStart}"></div>
       <div class="ts-more">
+        <button type="button" class="inv-btn trip-set" id="tsTut"><i class="ti ti-hand-finger"></i><span><b>操作教學</b><small>練習點、長按、拖曳、交換</small></span><i class="ti ti-chevron-right"></i></button>
         <button type="button" class="inv-btn trip-set" id="tsHistory"><i class="ti ti-history"></i><span><b>修改紀錄</b><small>誰改了什麼，救回刪掉的行程</small></span><i class="ti ti-chevron-right"></i></button>
         ${canMem ? '<button type="button" class="inv-btn trip-set" id="tsReset"><i class="ti ti-key"></i><span><b>換編輯碼或連結</b><small>傳錯人了？舊的會馬上失效</small></span><i class="ti ti-chevron-right"></i></button>' : ''}</div>
       <div class="err" id="tsErr" hidden></div>
@@ -2992,6 +3099,7 @@ function openTripSettings(keep) {
     }
     // 修改紀錄、換編輯碼：同一張面板往右推進去，返回時設定改到一半的還在
     const back = () => sheetSlide(-1, () => openTripSettings(st));
+    if (b.id === 'tsTut') { closeSheet(); setTimeout(openTutorial, 200); return; }
     if (b.id === 'tsHistory') { sheetSlide(1, () => openHistory({ back })); return; }
     if (b.id === 'tsReset') { sheetSlide(1, () => openResetLinks({ back })); return; }
     if (b.dataset.mrm) { st.members.splice(+b.dataset.mrm, 1); draw(); return; }
@@ -3990,9 +4098,11 @@ acctBtn.addEventListener('click', e => {
   const a = getAccount();
   // 沒登入：Google 登入、用連結搬到其他裝置（手機裡有旅程才有）
   if (!a) acctMenu.innerHTML = `<button type="button" class="am-item" id="acctLogin"><i class="ti ti-brand-google"></i>用 Google 登入</button>
-    ${myTrips().length ? '<button type="button" class="am-item" id="acctCarry"><i class="ti ti-link"></i>用連結帶到其他裝置</button>' : ''}`;
+    ${myTrips().length ? '<button type="button" class="am-item" id="acctCarry"><i class="ti ti-link"></i>用連結帶到其他裝置</button>' : ''}
+    <button type="button" class="am-item" id="acctTut"><i class="ti ti-hand-finger"></i>操作教學</button>`;
   else acctMenu.innerHTML = `<div class="am-who"><span class="acct-pic">${acctPic(a)}</span><span><b>${esc(a.name || 'Google 帳號')}</b><small>${esc(a.email || '')}</small><small>旅程已同步</small></span></div>
     <button type="button" class="am-item" id="acctNick"><i class="ti ti-user-edit"></i>暱稱<span class="am-val">${esc(getNick() || '還沒填')}</span><i class="ti ti-chevron-right am-go"></i></button>
+    <button type="button" class="am-item" id="acctTut"><i class="ti ti-hand-finger"></i>操作教學</button>
     <button type="button" class="am-item" id="acctOut"><i class="ti ti-logout"></i>登出</button>`;
   acctMenu.hidden = false; acctBtn.setAttribute('aria-expanded', 'true');
 });
@@ -4001,6 +4111,7 @@ acctMenu.addEventListener('click', e => {
   if (e.target.closest('#acctNick')) { acctMenuClose(); openNickEdit(); }
   if (e.target.closest('#acctLogin')) { acctMenuClose(); openLogin(); }
   if (e.target.closest('#acctCarry')) { acctMenuClose(); openCarry(); }
+  if (e.target.closest('#acctTut')) { acctMenuClose(); openTutorial(); }
 });
 addEventListener('click', e => { if (!acctMenu.hidden && !e.target.closest('#acctMenu')) acctMenuClose(); });
 addEventListener('hashchange', acctMenuClose);
@@ -4198,25 +4309,26 @@ wizNext.addEventListener('click', () => {
   openCreateAuth();
 });
 // 建立旅程：只要暱稱（記在這支手機）；建好會拿到這趟的編輯碼
+// 跟開始編輯一樣是「哈囉，［名字］」：點虛線框直接打字（框跟著字變寬，最多 6 字）；登入又有暱稱＝框裡是暱稱，下面「改名」
 function openCreateAuth() {
-  openSheet(`
-    <div class="sh-head"><div style="flex:1;min-width:0"><div class="sh-title" id="shTitle">建立「${esc(wizName())}」</div>
-</div>
-      <button class="sh-close" aria-label="關閉"><i class="ti ti-x"></i></button></div>
-    ${nickFieldHtml('crNick', '你的暱稱', '旅伴會看到是誰改的', 'done')}
-    <div class="err" id="crErr" hidden></div>
-    <div class="ed-actions">
-      <button type="button" class="btn ghost ed-cancel">取消</button>
-      <button type="button" class="btn primary" id="crGo">建立旅程</button>
-    </div>`, nickFolded() ? null : '#crNick', true);
+  const folded = nickFolded(), nick0 = getNick();
+  openSheet(`<button class="sh-close au-x" aria-label="關閉"><i class="ti ti-x"></i></button><div class="au">
+    <div class="au-hi" id="shTitle">哈囉，<span class="au-box ${folded ? 'on' : 'typing'}" id="auBox"><span id="auName">${esc(folded ? nick0 : '')}</span>
+      <input id="crNick" type="text" value="${esc(nick0)}" placeholder="你的名字" autocomplete="nickname" maxlength="6" enterkeyhint="done" aria-label="暱稱"${folded ? ' hidden' : ''}></span></div>
+    <div class="au-hint">${folded ? '想改名？點擊框內輸入名字' : '填個名字，旅伴會知道是誰改的'}</div>
+    <div class="err" id="crErr" hidden></div></div>
+    <div class="ed-actions"><button type="button" class="btn primary" id="crGo" style="flex:1">建立旅程</button></div>`, null, true);   // 不自動跳鍵盤：點框框才打字
+  sheet.classList.add('center');
   const $ = id => sheet.querySelector('#' + id);
-  wireNickField(sheet, openCreateAuth);
+  wireHelloBox($('auBox'), $('crNick'), $('auName'));
   const go = async () => {
     const nick = $('crNick').value.trim();
     const err = msg => { $('crErr').textContent = msg; $('crErr').hidden = false; placeDialog(); };
-    if (!nick) return err('請填暱稱');
+    if (!nick) { err('請填你的名字'); $('crNick').focus(); return; }
+    if (/,/.test(nick)) return err('名字不能有逗號');
     $('crGo').disabled = true; $('crGo').textContent = '建立中…'; $('crErr').hidden = true;
     try {
+      if (folded && nick !== nick0) await renameNickAll(nick0, nick);   // 登入的人在框框裡改了名字：帳號和舊旅程裡的名字一起換
       const dest = wiz.dest.trim();
       const g = wiz.geo || {};
       const r = await api({ action: 'createTrip', nick, name: wizName(), dest, en: wizEn(), region: g.region || '', center: g.center || '',
@@ -4773,13 +4885,8 @@ const editBtn = document.getElementById('editBtn');
 editBtn.addEventListener('click', () => {
   if (!loaded) { toast('行程還在載入，請稍等'); return; }
   if (current === 'overview') { withAuth(openTripSettings); return; }
-  if (getAuth()) { setEditing(true); pressTip(); } else openAuth();
+  if (getAuth()) { setEditing(true); offerTutorial(); } else openAuth();
 });
-// 第一次進編輯模式時，說一次「長按卡片也能直接改」
-function pressTip() {
-  try { if (localStorage.getItem('cm-tip-press')) return; localStorage.setItem('cm-tip-press', '1'); } catch { return; }
-  setTimeout(() => toast('小技巧：不用進編輯模式，長按卡片就能直接改那一張', '知道了', () => {}, 8000), 2200);
-}
 document.getElementById('editDone').addEventListener('click', () => {
   document.activeElement?.blur();   // 標題正在原地編輯的話，先收下來
   setEditing(false);
@@ -4807,15 +4914,15 @@ document.getElementById('editCancel').addEventListener('click', () => {
 function openAuth(then) {
   if (!TRIP_ROLE) { toast('行程還在載入，請稍等'); return; }
   const needCode = TRIP_ROLE !== 'edit' || !TRIP_CODE;
-  // 「安安，［名字］」：同行的人有名單就點名字（名字跟名單一致，不會多出重複的人），名單外的「＋ 自行輸入」直接在框框裡打；
+  // 「哈囉，［名字］」：同行的人有名單就點名字（名字跟名單一致，不會多出重複的人），名單外的「＋ 自行輸入」直接在框框裡打；
   // 沒有名單＝框框就是輸入框；登入又有暱稱＝框框裡是暱稱，下面「改名」
   const folded = nickFolded(), mates = folded ? [] : (TRIP?.members || []), mine = folded ? getNick() : mates.includes(getNick()) ? getNick() : '';
   const typing = !folded && !mates.length;   // 一開始就是打字模式
   openSheet(`<div class="au">
-    <div class="au-hi" id="shTitle">安安，<span class="au-box${mine ? ' on' : ''}${typing ? ' typing' : ''}" id="auBox"><span id="auName">${esc(mine)}</span>
+    <div class="au-hi" id="shTitle">哈囉，<span class="au-box${mine ? ' on' : ''}${typing ? ' typing' : ''}" id="auBox"><span id="auName">${esc(mine)}</span>
       <input id="auNick" type="text" value="${esc(typing ? getNick() : mine)}" placeholder="你的名字" autocomplete="nickname" maxlength="6" enterkeyhint="${needCode ? 'next' : 'done'}" aria-label="暱稱"${typing ? '' : ' hidden'}></span></div>
     ${mates.length ? `<div class="chips pick-chips au-chips">${mates.map(n => `<button type="button" class="chip${n === mine ? ' on' : ''}" data-pick="${esc(n)}">${esc(n)}</button>`).join('')}<button type="button" class="chip pick-other" data-pick-other><i class="ti ti-plus"></i>自行輸入</button></div>` : ''}
-    ${folded ? `<button type="button" class="nick-chg au-chg">不是 ${esc(mine)}？改名</button>` : ''}
+    ${folded ? '<div class="au-hint">想改名？點擊框內輸入名字</div>' : ''}
     ${needCode ? `<hr class="au-sep"><div class="au-lab">編輯碼</div>
       <span class="code-boxes"><input id="auCode" type="text" inputmode="numeric" pattern="[0-9]*" maxlength="4" autocomplete="one-time-code" class="code-input" enterkeyhint="done" aria-label="編輯碼">${'<i></i>'.repeat(4)}</span>
       <div class="au-hint">問一下揪團的人，在總覽頁最下面</div>` : ''}
@@ -4837,6 +4944,7 @@ function openAuth(then) {
   $('auNick').addEventListener('input', e => { if (!e.isComposing && e.target.value.length > 6) e.target.value = e.target.value.slice(0, 6); fitName(); });
   $('auNick').addEventListener('compositionend', e => { if (e.target.value.length > 6) e.target.value = e.target.value.slice(0, 6); fitName(); });
   fitName();
+  if (folded) wireHelloBox($('auBox'), $('auNick'), $('auName'));   // 登入又有暱稱：點框框直接改名
   // 點名字：框框裡換成那個名字；「自行輸入」：框框變成輸入框
   sheet.querySelector('.au-chips')?.addEventListener('click', e => {
     const c = e.target.closest('.chip'); if (!c) return;
@@ -4851,8 +4959,10 @@ function openAuth(then) {
     const err = msg => { $('auErr').textContent = msg; $('auErr').hidden = false; placeDialog(); };
     if (!nick) return err(mates.length ? '請點你的名字，或按「自行輸入」' : '請填你的名字');
     if (code.length !== 4) return err('編輯碼是 4 位數字');
+    if (/,/.test(nick)) return err('名字不能有逗號');
     $('auGo').disabled = true; $('auGo').textContent = '確認中…'; $('auErr').hidden = true;
     try {
+      if (folded && nick !== getNick()) await renameNickAll(getNick(), nick);   // 在框框裡改了名字：帳號和舊旅程裡的名字一起換
       const r = await api({ trip: TRIP_ID, key: TRIP_KEY, code, nick, action: 'auth' });
       if (r.role !== 'edit') throw new Error('編輯碼不對');
       setNick(nick);
@@ -4860,7 +4970,8 @@ function openAuth(then) {
       TRIP_CODE = code; TRIP_ROLE = 'edit'; rememberTrip(TRIP, 'edit', TRIP_KEY, code); cache();
       closeSheet();
       if (then) { then(); toast(`嗨 ${nick}，改完按「儲存」就會存到雲端`); }
-      else { setEditing(true); toast(`嗨 ${nick}，可以開始編輯了`); pressTip(); }
+      else { setEditing(true); toast(`嗨 ${nick}，可以開始編輯了`); }
+      offerTutorial();
       if (wasView) load(true);   // 拿可以編輯的人才看得到的資料（編輯碼）
       sync();   // 之前沒存上去的修改，現在補存
     } catch (e) {
@@ -6920,6 +7031,7 @@ function deleteSub() {
 const toastEl = document.getElementById('toast');
 let toastTimer = null;
 function toast(msg, actionText, action, ms) {
+  if (TUT) return;   // 操作練習：提示框已經說明了，不要再跳黑色提示
   toastEl.innerHTML = `<span>${esc(msg)}</span>${actionText ? `<button type="button">${esc(actionText)}</button>` : ''}`;
   toastEl.classList.add('on');
   if (actionText) toastEl.querySelector('button').onclick = () => { toastEl.classList.remove('on'); action(); };
@@ -6942,6 +7054,173 @@ if (resumeDraft && getAuth()) {
   editStart = resumeDraft;
   setEditing(true);
   if (draftCount()) toast('上次的修改還沒完成：按「完成」儲存，或按「取消」放棄', '知道了', () => {});
+}
+
+// ---------- 操作練習：假的雲端 ----------
+// 示範卡片用清邁行程的真實店家（資料來自 data/import_days.json、full_notes.json），點開資訊才不會空空的
+const TUT_SEED = [
+  { id: 'tb', s: '09:00', e: '09:45', cls: 'eat', t: '帶福辦 老宅早餐', desc: '超人氣文青風老宅早餐店', area: '塔佩門附近', map: 'Tai Toon Baan Chiang Mai', loc: '18.7886,98.9939', note: 'Tai Toon Baan 帶福辦', mine: '早點去！06:30 開門很快就客滿', booked: true },
+  { id: 'tc', s: '10:00', e: '11:00', cls: 'cafe', t: 'Ristr8to', desc: '世界拉花冠軍咖啡店', area: '尼曼', map: 'Ristr8to Original Chiang Mai', loc: '18.7990,98.9679', note: 'Ristr8to 世界拉花冠軍', mine: 'Satan Latte 必點！' },
+  { id: 'tl', s: '12:00', e: '13:00', cls: 'eat', t: 'THE HOUSE by Ginger', desc: '1937 老宅・連續 7 年米其林必比登', area: '古城', map: 'THE HOUSE by Ginger Chiang Mai', loc: '18.7907,98.9927', note: 'THE HOUSE by Ginger', mine: '必點清邁拼盤、馬莎曼咖哩' },
+  { id: 'ts', s: '14:30', e: '16:00', cls: 'spa', t: 'Elite Massage & Spa', desc: '平價且極受好評的按摩店', area: '塔佩門附近', map: 'Elite Massage Spa Chiang Mai', loc: '18.7878,98.9921', note: 'Elite Massage & Spa', mine: '網路推薦評價按摩' },
+].map(x => ({ day: 'd1', map: '', travel: '', loc: '', pid: '', orig: '', area: '', short: '', troute: '', hours: '', booked: false, alert: '', mine: '', note: '', group: false, updated_by: TUT_NICK, updated_at: '1', ...x }));
+const TUT_NOTES = {"THE HOUSE by Ginger": {"orig": "⭐️傳奇老宅泰式餐廳⭐️", "points": ["1937 年殖民時期老宅改建，2020–2026 連續 7 年米其林必比登", "必點：清邁拼盤、牛頰肉馬莎曼咖哩、脆皮五花肉配薑汁炒飯、泰北咖哩麵", "餐後可以到 The HOUSE Lounge 喝一杯特調"], "links": [], "full": "已訂位✅ 12:30‼️\nTHE HOUSE by Ginger 是一間位於泰國清邁古城區邊緣（靠近塔佩門）的傳奇老宅餐廳。它由丹麥設計師 Hans 創立，將一棟建於 1937 年的殖民時期老建築，打造為結合泰式傳統料理、精緻調酒與繽紛生活選物的華麗空間。餐廳自 2020 年至 2026 年已連續 7 年榮獲米其林必比登推薦，是清邁當地兼具視覺與味覺饗宴的指標性美食勝地。空間亮點這座迷人的大庭院內主要由三棟建築構成，營造出中西碰撞的「璀璨帝國」奢華復古風：\n• GINGER & Kafe：主要的用餐與精品選物空間，掛滿水晶吊燈與圖騰壁紙，並販售自家設計的繽紛餐具與服飾。\n• The HOUSE Lounge：充滿藝術氛圍的華麗酒吧，提供極具特色的工藝雞尾酒，適合餐後小酌延續夜晚。必點招牌菜色餐廳與知名品牌 GINGER FARM kitchen 一樣，延續「從農場到餐桌」的健康理念，使用自家薑農場每日採摘的有機蔬菜：\n• 清邁拼盤 (Mixed Appetizer Platter)：集結多款泰北傳統小吃的經典前菜，初訪必點。\n• 牛頰肉馬莎曼咖哩 (Beef Cheek Massaman Curry)：濃郁燉煮、肉質軟嫩，極受饕客推崇。\n• 脆皮五花肉配薑汁炒飯：外皮金黃酥脆的烤豬肉搭配香氣獨特的炒飯。\n• 泰北咖哩麵 (Khao Soi)：將傳統街頭小吃精緻化呈現的道地風味。\n饕客真實評價\n許多造訪過的旅客對於這裡的環境與料理讚不絕口：\n• 適合場景：環境舒適、氣氛浪漫，非常適合作為生日慶祝、約會、或是旅行中的大餐犒賞。\n• 價位建議：屬於清邁中高檔的精品泰菜，但若以米其林推薦的裝潢與精緻度來說，性價比依舊相當不錯。\n• 貼心提醒：由於生意極好，強烈建議提早透過官方網站進行線上訂位，以免現場久候。"}, "Ristr8to 世界拉花冠軍": {"orig": "Ristr8to Original", "points": ["創辦人是世界拉花大賽冠軍，尼曼路必朝聖", "必點：Satan Latte 撒旦拿鐵（獨角獸冠軍拉花）", "黑色工業風裝潢，也賣自家烘焙咖啡豆"], "links": [], "full": "Ristr8to Original 是泰國清邁極具代表性的傳奇精品咖啡廳，位於熱鬧的尼曼路商圈。\n這家店以其創辦人曾榮獲世界拉花藝術大賽（World Latte Art Championship）冠軍而聞名全球，不僅是咖啡愛好者造訪清邁的必朝聖之地，更是將當地精品咖啡浪潮推向國際的頂尖代表。\n☕️ 店家特色與朝聖亮點\n• 冠軍級拉花工藝：店內每一杯經典奶咖都擁有細緻如藝術品般的展示級拉花，包含創辦人奪冠的獨創圖案，精美到讓人捨不得喝。\n• 極致講究的咖啡基底：店家特別專注於濃郁且具獨特風味的 Espresso 與 Ristr8to（限制萃取濃縮咖啡）基底，菜單上詳細標註了咖啡豆產地、烘焙度與牛奶比例。\n• 工業風設計：本店裝潢採用沉穩的黑色系工業風搭配微調燈光，營造出獨特的時尚街頭感，吸引世界各地的觀光客前來朝聖。\n📝 推薦必點\n• Satan Latte（撒旦拿鐵）：店內最具代表性的招牌品項，搭配最經典的獨角獸冠軍拉花圖案。\n• Ficelle / Godmother：針對不同奶量與咖啡濃縮比例調配的經典白咖啡系列。\n• 甜點與周邊：店內亦有販售鬆餅、手工冰淇淋、自家烘焙的咖啡豆及限定設計週邊商品。"}, "Tai Toon Baan 帶福辦": {"orig": "ใต้ถุนบ้าน · 超人氣文青風老宅早餐店", "points": ["傳統木造高腳屋的半地下室，不到 10 桌", "必點：泰式鐵鍋煎蛋、豬肉粥、麵包佐香蘭椰醬", "06:30 開門很快就客滿，早點去"], "links": [["Curly 介紹", "https://curly.com.tw/tai-thun-baan/"]], "full": ""}, "Elite Massage & Spa": {"orig": "平價且極受好評的按摩店", "points": ["塔佩門附近，CP 值高、環境乾淨", "師傅手法有勁道，點對點舒壓"], "links": [], "full": ""}};
+async function tutApi(body) {
+  await new Promise(r => setTimeout(r, 120));
+  const stamp = String(Date.now());
+  if (!body) return { ok: true, role: 'edit',
+    trip: { id: TRIP_ID, name: '操作練習', dest: '清邁', en: 'Practice', start: '2099-01-01', days: 1, mode: 'walk', stays: [], region: '', center: '', cover: '', members: [TUT_NICK],
+      day_start: '', types: [], flights: [], view_key: TRIP_KEY, code: '0000', created_by: TUT_NICK, has_owner: false },
+    days: { d1: { date: '', wd: '', en: 'Practice', zh: '跟著提示操作看看' } },
+    items: loaded ? DAY_KEYS.flatMap(k => (DATA[k] || []).map(it => ({ ...it, day: k, updated_at: BASE.items[it.id]?.updated_at || stamp }))) : TUT_SEED.map(clone),
+    notes: TUT_NOTES, checklist: [], mapsKey: '' };
+  if (body.action === 'commit') return { ok: true, items: (body.items || []).map(x => ({ ...x, updated_by: TUT_NICK, updated_at: stamp })), deleted: body.deleted || [], days: body.days || [] };
+  if (body.action === 'routeTimes') return { ok: true, routes: (body.pairs || []).map(() => null) };
+  if (['saveNotes', 'saveChecks', 'saveDay', 'auth'].includes(body.action)) return { ok: true, role: 'edit' };
+  throw Object.assign(new Error('練習模式不能用這個功能'), { code: 'tutorial' });
+}
+
+// ---------- 操作練習：關卡 ----------
+// 手指圖示（使用者提供的手勢 SVG，mock/手勢，沒有點擊弧線，點擊效果用陶土橘圈圈）：指尖在 (11.5, 6) 附近
+const HAND_SVG = '<svg class="hand-svg" viewBox="0 0 80 88" aria-hidden="true"><path d="M57.4731 83.96C50.5151 86.4958 43.5417 86.8205 36.5527 84.9341C29.5638 83.0786 22.9614 78.2544 16.7456 70.4614L2.04102 51.9995C1.79362 51.6593 1.54622 51.3037 1.29883 50.9326C1.05143 50.5615 0.834961 50.1286 0.649414 49.6338C0.216472 48.3968 0.27832 47.1753 0.834961 45.9692C1.3916 44.7323 2.41211 43.8509 3.89648 43.3252C4.88607 42.9541 5.82926 42.8923 6.72607 43.1396C7.65381 43.387 8.56608 43.9746 9.46289 44.9023L21.3843 57.7051C21.8791 58.1999 22.312 58.5246 22.6831 58.6792C23.0851 58.8029 23.4717 58.8029 23.8428 58.6792C24.2139 58.5555 24.4922 58.2772 24.6777 57.8442C24.8942 57.4113 24.9097 56.901 24.7241 56.3135L7.05078 7.88574C6.46322 6.27767 6.44775 4.82422 7.00439 3.52539C7.59196 2.19564 8.61247 1.2679 10.0659 0.742188C11.4266 0.247396 12.7409 0.324707 14.0088 0.974121C15.3076 1.59261 16.2508 2.70589 16.8384 4.31396L28.8989 37.3877C29.2082 38.2536 29.6411 38.8411 30.1978 39.1504C30.7544 39.4287 31.311 39.4751 31.8677 39.2896C32.3934 39.0731 32.7645 38.6865 32.981 38.1299C33.2284 37.5423 33.182 36.8156 32.8418 35.9497L29.27 26.0693C28.7134 24.585 29.2855 23.5335 30.9863 22.915C32.9036 22.2347 34.7282 22.2656 36.46 23.0078C38.1917 23.75 39.5215 25.389 40.4492 27.9248L42.1655 32.5635C42.4748 33.4603 42.9077 34.0479 43.4644 34.3262C44.021 34.6045 44.5776 34.6509 45.1343 34.4653C45.66 34.2489 46.0311 33.8623 46.2476 33.3057C46.464 32.7181 46.4176 31.9914 46.1084 31.1255L44.2993 26.0693C43.7427 24.585 44.3148 23.5335 46.0156 22.915C47.9639 22.2038 49.8348 22.2966 51.6284 23.1934C53.422 24.0902 54.7209 25.6673 55.5249 27.9248L56.4062 30.3369C56.7464 31.2337 57.1794 31.8213 57.7051 32.0996C58.2617 32.3779 58.8338 32.4243 59.4214 32.2388C59.9162 32.0223 60.2718 31.6357 60.4883 31.0791C60.7357 30.4915 60.7048 29.7648 60.3955 28.8989L59.0503 25.188C58.7101 24.2603 59.0194 23.6108 59.978 23.2397C61.3696 22.745 62.8385 22.7759 64.3848 23.3325C65.931 23.8892 67.3999 24.9561 68.7915 26.5332C70.214 28.1104 71.3892 30.1823 72.3169 32.749L75.3784 41.0986C77.8214 47.8711 78.7646 54.0714 78.208 59.6997C77.6514 65.297 75.6258 70.1676 72.1313 74.3115C68.6678 78.4554 63.7817 81.6715 57.4731 83.96Z" fill="currentColor"/></svg>';
+// 每一關：提示文字、手指動畫要比在哪裡（tap 點、press 長按、drag 拖到 to）、完成條件；有 after 的關卡做完還要把面板關掉才進下一關
+const editingDrag = () => !!drag;
+function tutCard(id) { return document.querySelector(`.layer [data-id="${id}"]`); }
+function tutItem(id) { return findItem(id)[1]; }
+const TUT_STEPS = [
+  { text: '點一下「THE HOUSE」<br>看看行程的資訊', gesture: 'tap', el: () => tutCard('tl'),
+    done: () => sheet.classList.contains('on') && !sheet.querySelector('#edT') && !editing, after: '這就是行程資訊。<br>往下滑關掉面板，進行下一關。' },
+  { text: '長按「Ristr8to」不要放開<br>直接修改這一張', gesture: 'press', el: () => tutCard('tc'),
+    done: () => sheet.classList.contains('on') && !!sheet.querySelector('#edT') && !editing },
+  // 下面三關都在修改面板裡；中途把面板關掉就回到「長按 Ristr8to」那一關
+  { text: '停留時間的尺往左滑<br>改成 1 小時 30 分', gesture: 'swipe', inSheet: 1, el: () => sheet.querySelector('.dr-win'), to: () => ({ dx: -60, dy: 0 }),
+    done: () => ed && ed.dur >= 90 && ed.dur <= 150 },
+  { text: '待久一點，後面也要跟著延後<br>打開「後面的行程自動移動」', gesture: 'tap', inSheet: 1, el: () => sheet.querySelector('#edPushWrap.on .sw'),
+    done: () => !!sheet.querySelector('#edPush')?.checked },
+  { text: '按「儲存」<br>後面的行程會一起往後移', gesture: 'tap', inSheet: 1, el: () => sheet.querySelector('#edSave'),
+    done: () => !sheet.classList.contains('on') && m(tutItem('tc').e) - m(tutItem('tc').s) >= 90 && m(tutItem('tl').s) > m('12:00'), after: 'THE HOUSE 和按摩<br>都自動往後延了！' },
+  { text: '點右上角的鉛筆<br>進入編輯模式', gesture: 'tap', el: () => document.getElementById('editBtn'), done: () => editing },
+  { text: '長按「Ristr8to」拿起來<br>往下拖到 11:00 再放開', gesture: 'drag', el: () => tutCard('tc'), to: () => ({ dx: 0, dy: 60 * PX }), tag: '11:00',
+    done: () => !drag && tutItem('tc') && m(tutItem('tc').s) >= m('10:30') && m(tutItem('tc').s) < m(tutItem('tl').s) },
+  { text: '長按「Ristr8to」<br>停在「THE HOUSE」正中間放開<br>兩個行程就會交換', gesture: 'drag', el: () => tutCard('tc'),
+    // 交換要「Ristr8to 卡片的中心」停在 THE HOUSE 的中段，所以手指移動的距離＝兩張卡片中心的距離
+    to: () => { const a = tutCard('tc')?.getBoundingClientRect(), b = tutCard('tl')?.getBoundingClientRect(); return a && b ? { dx: 0, dy: (b.top + b.height / 2) - (a.top + a.height / 2) } : { dx: 0, dy: 80 }; }, tag: '⇅ 交換',
+    enter: st => { st.lunch = m(tutItem('tl').s); const c = tutItem('tc'); st.c = { s: c.s, e: c.e }; },
+    done: st => !drag && m(tutItem('tl').s) < st.lunch && m(tutItem('tl').s) < m(tutItem('tc').s),
+    fail: st => !drag && m(tutItem('tl').s) === st.lunch && m(tutItem('tc').e) > st.lunch, failText: '剛剛只是疊上去，沒有交換<br>要停在 THE HOUSE「正中間」再放開' },
+];
+function tutRun() {
+  document.documentElement.classList.add('tut');
+  const ui = document.createElement('div'); ui.className = 'tut-ui';
+  ui.innerHTML = `<div class="tut-ghost" aria-hidden="true" hidden></div><div class="tut-hand" aria-hidden="true"><span class="tut-ring"></span>${HAND_SVG}</div>
+    <div class="tut-box" role="status"><div class="tut-top"><span class="tut-dots"></span><button type="button" class="tut-skip">略過教學</button></div><div class="tut-txt"></div></div>`;
+  document.body.appendChild(ui);
+  const ghost = ui.querySelector('.tut-ghost'), hand = ui.querySelector('.tut-hand'), box = ui.querySelector('.tut-box'), txt = ui.querySelector('.tut-txt'), dots = ui.querySelector('.tut-dots');
+  let i = 0, phase = 'do', touching = false, shown = '', afterAt = 0;
+  const leave = kind => { try { parent.postMessage({ tut: kind }, location.origin); } catch {} };
+  ui.querySelector('.tut-skip').addEventListener('click', () => leave('skip'));
+  addEventListener('touchstart', () => { touching = true; }, { passive: true, capture: true });
+  addEventListener('touchend', () => { touching = false; }, { passive: true, capture: true });
+  addEventListener('pointerdown', () => { touching = true; }, true); addEventListener('pointerup', () => { touching = false; }, true);
+  const say = (html, cls = '') => { if (shown === html + cls) return; shown = html + cls; txt.innerHTML = html; box.className = 'tut-box ' + cls; };
+  function finish() {
+    clearInterval(timer); hand.hidden = true; ui.classList.add('done');
+    box.innerHTML = `<div class="tut-win"><i class="ti ti-circle-check-filled"></i><b>你學會了！</b>
+      <ul><li><b>點擊卡片：</b>查看卡片資訊。</li><li><b>長按卡片：</b>只要修改單張卡片時，長按即可編輯。</li><li><b>編輯模式：</b>按下鉛筆進入，可以拖曳移動或是交換。</li></ul>
+      <button type="button" class="btn primary tut-go">開始排行程</button></div>`;
+    box.querySelector('.tut-go').addEventListener('click', () => leave('done'));
+  }
+  const timer = setInterval(() => {
+    if (!loaded || current !== 'd1') return;
+    const st = TUT_STEPS[i];
+    dots.innerHTML = TUT_STEPS.map((_, k) => `<i class="${k < i ? 'ok' : k === i ? 'on' : ''}"></i>`).join('') + `<small>${i + 1} / ${TUT_STEPS.length}</small>`;
+    if (phase === 'do' && st.inSheet && !sheet.classList.contains('on') && !st.done()) { i = st.inSheet; shown = ''; return; }   // 面板被關掉了：回到打開面板那關
+    if (phase === 'do' && st.enter && st.entered !== true) { st.enter(st); st.entered = true; }
+    if (phase === 'do' && st.done(st)) { phase = st.after ? 'after' : 'next'; afterAt = Date.now(); if ('vibrate' in navigator) try { navigator.vibrate(15); } catch {} }
+    if (phase === 'after') { say(`<i class="ti ti-circle-check tut-oki"></i><div>${st.after}</div>`, 'ok'); if (!sheet.classList.contains('on') && Date.now() - afterAt > 1600) phase = 'next'; }
+    if (phase === 'next') {
+      say('<i class="ti ti-circle-check tut-oki"></i><div>做得好！</div>', 'ok'); phase = 'wait';
+      setTimeout(() => { i++; phase = 'do'; if (i >= TUT_STEPS.length) finish(); }, 700);
+    }
+    // 放錯位置（例如只是疊上去）：Ristr8to 放回原位，提示再試一次
+    if (phase === 'do' && st.fail && st.fail(st)) { Object.assign(tutItem('tc'), st.c); renderPage(current); st.failed = Date.now(); }
+    if (phase === 'do') say(st.failed && Date.now() - st.failed < 5000 ? `<span class="tut-warn">${st.failText}</span>` : st.text);
+    // 手指：只在等使用者做的時候、面板沒打開、手沒有在螢幕上時出現
+    const el = phase === 'do' && (st.inSheet || !sheet.classList.contains('on')) && !touching && !drag ? st.el() : null;
+    if (!el) { hand.hidden = true; ghost.hidden = true; return; }
+    // 面板裡的目標被擋在下面（例如剛長出來的開關）：把面板捲過去
+    // 底下固定的按鈕列（儲存）本來就看得到，不用捲；其他東西被按鈕列或面板邊緣擋住才捲
+    if (st.inSheet) {
+      const bar = sheet.querySelector('.ed-actions'), sr = sheet.getBoundingClientRect(), er = el.getBoundingClientRect();
+      const floor = bar && !bar.contains(el) ? bar.getBoundingClientRect().top : sr.bottom;
+      if (er.bottom > floor || er.top < sr.top) { el.scrollIntoView({ block: 'center', behavior: 'smooth' }); hand.hidden = true; ghost.hidden = true; return; }
+    }
+    // 每一關開始時：要操作的卡片如果被提示框擋住、或在畫面下半部，捲到中間偏上
+    if (!st.inSheet && st.scrolled !== true && !editingDrag()) {
+      st.scrolled = true;
+      const er = el.getBoundingClientRect(), top = box.getBoundingClientRect().bottom + 16;
+      if (er.top < top || er.bottom > innerHeight * 0.62) { scrollBy({ top: er.top - Math.max(top, innerHeight * 0.42), behavior: 'smooth' }); hand.hidden = true; ghost.hidden = true; return; }
+    }
+    const r = el.getBoundingClientRect(), to = st.to ? st.to() : { dx: 0, dy: 0 };
+    // 卡片：手指放在右半邊、偏下，比較不會蓋住店名；小按鈕、面板裡的東西：放正中間
+    const wide = !st.inSheet && r.width > 120;
+    const x = wide ? r.right - Math.min(76, r.width * 0.3) : r.left + r.width / 2, y = wide ? r.top + Math.min(r.height * 0.62, 46) : r.top + Math.min(r.height / 2, 30);
+    hand.hidden = false; hand.style.left = x + 'px'; hand.style.top = y + 'px';
+    hand.style.setProperty('--dx', to.dx + 'px'); hand.style.setProperty('--dy', to.dy + 'px');
+    if (hand.dataset.g !== st.gesture + i) {
+      hand.dataset.g = st.gesture + i; hand.className = 'tut-hand g-' + st.gesture;
+      // 拖曳示範：跟真的拖曳一樣只有虛線框，跟著手指移到目的地，顯示時間或「交換」
+      if (st.gesture === 'drag') ghost.innerHTML = `<span class="tut-tag">${st.tag || ''}</span>`;
+      ghost.className = 'tut-ghost';
+      [hand, ghost].forEach(x => { x.style.animation = 'none'; void x.offsetWidth; x.style.animation = ''; });   // 手指和分身的動畫同時開始
+    }
+    ghost.hidden = st.gesture !== 'drag';
+    if (!ghost.hidden) {
+      Object.assign(ghost.style, { left: r.left + 'px', top: r.top + 'px', width: r.width + 'px', height: r.height + 'px' });
+      ghost.style.setProperty('--dx', to.dx + 'px'); ghost.style.setProperty('--dy', to.dy + 'px');
+    }
+  }, 150);
+}
+if (TUT) {
+  if (location.hash !== '#d1') history.replaceState(null, '', '#d1');
+  tutRun();
+}
+// 從網站打開練習：全螢幕 iframe（同一個網頁加 ?tutorial=1），練完或略過就關掉，記下來不再主動問
+const TUT_DONE_KEY = 'cm-tut-done';
+function openTutorial() {
+  if (TUT || document.querySelector('.tut-frame')) return;
+  const f = document.createElement('div'); f.className = 'tut-frame';
+  f.innerHTML = `<iframe title="操作練習" src="${location.pathname}?tutorial=1&t=tut&k=tut&nick=${encodeURIComponent(getNick() || '我')}#d1"></iframe>`;
+  document.body.appendChild(f); lockPage(true);
+  const onMsg = e => {
+    if (e.origin !== location.origin || !e.data?.tut) return;
+    try { localStorage.setItem(TUT_DONE_KEY, '1'); } catch {}
+    removeEventListener('message', onMsg);
+    f.classList.add('out'); setTimeout(() => { f.remove(); lockPage(false); }, 260);
+    if (e.data.tut === 'done') toast('練習完成，開始排你的行程吧！');
+  };
+  addEventListener('message', onMsg);
+}
+// 剛建好旅程（存連結的視窗關掉之後）：中間跳出「給我 30 秒，學會編輯」，下一步直接進練習
+function whenSheetClosed(fn) { const t = setInterval(() => { if (!sheet.classList.contains('on')) { clearInterval(t); setTimeout(fn, 350); } }, 300); }
+function openTutIntro() {
+  if (TUT) return;
+  try { if (localStorage.getItem(TUT_DONE_KEY) || localStorage.getItem(TUT_DONE_KEY + '-asked')) return; localStorage.setItem(TUT_DONE_KEY + '-asked', '1'); } catch { return; }
+  openSheet(`<div class="tin">
+      <div class="tin-ill" aria-hidden="true"><span class="tin-c a"></span><span class="tin-c b"></span><span class="tin-c c"></span><span class="tin-hand">${HAND_SVG}</span></div>
+      <div class="tin-t">給我 30 秒<br>學會編輯</div>
+      <p>點、長按、拖曳、交換<br>跟著手指做 8 個小關卡</p></div>
+    <div class="ed-actions"><button type="button" class="btn primary" id="tinGo" style="flex:1">下一步</button></div>
+    <button type="button" class="tin-skip" id="tinSkip">先不用，之後可以從頭像選單打開</button>`, null, true);
+  sheet.classList.add('center');
+  sheet.querySelector('#tinGo').addEventListener('click', () => { closeSheet(); setTimeout(openTutorial, 220); });
+  sheet.querySelector('#tinSkip').addEventListener('click', closeSheet);
+}
+// 第一次拿到編輯權限（輸入編輯碼、建立旅程）：問一次要不要練習
+function offerTutorial() {
+  if (TUT) return;
+  try { if (localStorage.getItem(TUT_DONE_KEY) || localStorage.getItem(TUT_DONE_KEY + '-asked')) return; localStorage.setItem(TUT_DONE_KEY + '-asked', '1'); } catch { return; }
+  setTimeout(() => toast('第一次編輯嗎？花 30 秒練習拖曳、交換', '開始練習', openTutorial, 9000), 2600);
 }
 load();
 </script>
