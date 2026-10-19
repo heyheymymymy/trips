@@ -1448,13 +1448,14 @@ const PAGES = { overview: { en: 'Overview', sub: '總覽' }, cand: { en: 'Maybe'
 // ---------- 雲端資料（Google 試算表＋Apps Script） ----------
 // 打開時先顯示上次存在手機裡的資料，背景再抓最新的；修改後畫面先更新，背景再存到雲端
 // 新版本（多旅程）的 API；還沒部署前用 ?api= 指到測試伺服器
-const APP_API = 'https://script.google.com/macros/s/AKfycbyJUSrcZOWxNrEI9JGRL4szYuFqI-zh_0XcCz08lu9EBAVBDETShetfXbODzJ4byx5y0A/exec';
+const APP_API = 'https://bkjpjmdrkrduataccxlz.supabase.co/functions/v1/api?forceFunctionRegion=ap-southeast-1';   // 2026/10/20 從 Apps Script 換到 Supabase（舊的：script.google.com/macros/s/AKfycbyJUSrcZOWxNrEI9JGRL4szYuFqI-zh_0XcCz08lu9EBAVBDETShetfXbODzJ4byx5y0A/exec）
 // 重新整理時瀏覽器會自己捲回上次的位置（而且是在內容還沒畫好前），我的旅程第一張卡片會被切到；捲動位置一律由網頁自己決定
 try { history.scrollRestoration = 'manual'; } catch {}
 const QS = new URLSearchParams(location.search);
 // ?tutorial=1：操作練習（開在 iframe 裡）。用假的旅程跑網站本來的程式，所有雲端請求都攔下來（tutApi），手機裡的資料也分開存
 const TUT = QS.get('tutorial') === '1';
 const API = TUT ? 'tutorial' : QS.get('api') || APP_API;
+const API_Q = API.includes('?') ? '&' : '?';   // API 網址本身帶參數時（例如 Supabase 的 ?forceFunctionRegion=）用 & 接
 // 用 ?api= 指到測試伺服器時，手機裡的資料分開存，不會跟正式的混在一起
 const TEST_SUFFIX = TUT ? '-tut' : QS.get('api') ? '-test' : '';
 // ---------- 旅程 ----------
@@ -1752,8 +1753,8 @@ async function api(body, ms = 40000) {
   const ctl = new AbortController(), timer = setTimeout(() => ctl.abort(), ms);
   try {
     const r = body
-      ? await fetch(API, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify(body), signal: ctl.signal })
-      : await fetch(API + '?action=load&trip=' + encodeURIComponent(TRIP_ID) + '&key=' + encodeURIComponent(TRIP_KEY) + (TRIP_CODE ? '&code=' + encodeURIComponent(TRIP_CODE) : ''), { signal: ctl.signal });
+      ? await fetch(API, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify({ ...body, cid: LIVE_CID }), signal: ctl.signal })
+      : await fetch(API + API_Q + 'action=load&trip=' + encodeURIComponent(TRIP_ID) + '&key=' + encodeURIComponent(TRIP_KEY) + (TRIP_CODE ? '&code=' + encodeURIComponent(TRIP_CODE) : ''), { signal: ctl.signal });
     const j = await r.json();
     if (!j.ok) throw Object.assign(new Error(j.message), j);
     return j;
@@ -1929,6 +1930,18 @@ const joinPhoto = (src, x, y) => !src || (Math.round(x) === 50 && Math.round(y) 
 // 雲端硬碟的照片：drive.google.com/thumbnail 每次都要先轉址（而且轉址不能存快取），直接換成轉過去的 lh3 網址，手機可以存一天，重新整理不用再下載
 const fastSrc = (u, w) => { const mm = /^https:\/\/drive\.google\.com\/thumbnail\?id=([\w-]+)(?:&sz=w(\d+))?$/.exec(u || ''); return mm ? `https://lh3.googleusercontent.com/d/${mm[1]}=w${w || mm[2] || 1200}` : u; };
 const photoImg = (url, attrs = '', w) => { const p = splitPhoto(url); p.src = fastSrc(p.src, w); return `<img src="${esc(p.src)}" alt="" style="object-position:${p.x}% ${p.y}%"${attrs}>`; };
+// 打開某一天就先在背景下載那天卡片的照片（Google 每張要等 0.5–1 秒才開始傳），點開卡片時直接從快取顯示；一次 3 張、同一張只抓一次
+const photoWarm = new Set(), photoQueue = [];
+let photoActive = 0;
+function warmPhotos(page) {
+  if (!isDay(page) && page !== 'cand') return;
+  for (const it of DATA[page] || []) for (const k of it.group || it.alts?.length ? (it.stops || it.alts || []).map(subNoteKey) : [it.note || it.t]) {
+    const src = fastSrc(splitPhoto(NOTES[k]?.photo).src);
+    if (src && !photoWarm.has(src)) { photoWarm.add(src); photoQueue.push(src); }
+  }
+  const next = () => { if (!photoQueue.length) return; photoActive++; const img = new Image(); img.onload = img.onerror = () => { photoActive--; next(); }; img.src = photoQueue.shift(); };
+  while (photoActive < 3 && photoQueue.length) next();
+}
 // 上傳照片的樣子（所有放照片的地方都一樣）：還沒有照片＝虛線框，點了上傳；有照片＝右下角一個小圓圈，點了換一張
 const PH_PICK = '<span class="ph-pick"><i class="ti ti-photo-plus"></i>點這裡上傳照片</span>';
 const PH_CAM = '<button type="button" class="ph-cam" aria-label="換一張照片"><i class="ti ti-camera"></i></button>';
@@ -2161,6 +2174,7 @@ async function load(force) {
     if (editing && !force) { deferred = r; return; }         // 編輯中不要整頁換掉，按「完成」後再套用
     const first = !TRIP;
     applyServer(r); refreshView(); resumeLookups(); setTimeout(locateMissing, 3000);
+    if (r.live) liveConnect(r.live);
     if (justCreated && TRIP?.code) { justCreated = false; setTimeout(openTutIntro, 400); }   // 剛建好：提醒存連結
     // 從「我的旅程」長按選了旅程設定／刪除：載入後打開（手機裡有舊資料時一打開就有 TRIP，所以不能只看第一次載入）
     { let o = ''; try { o = sessionStorage.getItem('trip-act') || ''; sessionStorage.removeItem('trip-act'); } catch {}
@@ -2175,6 +2189,42 @@ async function load(force) {
     else if (loadRetry < 5) { loadRetry++; setTimeout(load, 15000); }       // 先顯示手機裡的舊資料，雲端讀取失敗（Google 偶爾回錯誤頁）：15 秒後再試，最多 5 次
   } finally { loading = false; }
 }
+// ---------- 即時同步 ----------
+// 旅伴存了這趟旅程，雲端會在這個頻道喊一聲「有更新」（不帶資料），收到就重新載入；自己存的（cid 一樣）不用
+// 用 Supabase Realtime 的 WebSocket（Phoenix 格式），不另外載入套件；舊的 Apps Script 後端沒有 live，就照舊（切回來時才更新）
+const LIVE_CID = Math.random().toString(36).slice(2, 10);
+let liveSock = null;   // { ws, topic, beat, tries, info }
+function liveConnect(info) {
+  if (TUT || !window.WebSocket) return;
+  if (liveSock && liveSock.topic === info.topic && liveSock.ws.readyState <= 1) return;
+  const tries = liveSock?.tries || 0;
+  liveClose();
+  const ws = new WebSocket(`${info.url}?apikey=${encodeURIComponent(info.key)}&vsn=1.0.0`);
+  const me = liveSock = { ws, topic: info.topic, info, tries, ref: 1 };
+  const send = (topic, event, payload = {}) => { if (ws.readyState === 1) ws.send(JSON.stringify({ topic, event, payload, ref: String(++me.ref), join_ref: '1' })); };
+  ws.onopen = () => {
+    send('realtime:' + info.topic, 'phx_join', { config: { broadcast: { self: false }, presence: { key: '' }, private: false } });
+    me.beat = setInterval(() => send('phoenix', 'heartbeat'), 25000);
+    if (me.tries) load();   // 斷線重連：中間可能漏掉通知，抓一次最新的
+    me.tries = 0;
+  };
+  ws.onmessage = e => {
+    let msg; try { msg = JSON.parse(e.data); } catch { return; }
+    if (msg.event !== 'broadcast' || msg.payload?.payload?.cid === LIVE_CID) return;
+    clearTimeout(me.wait); me.wait = setTimeout(() => load(), 400);   // 對方連續存好幾次：等一下再一起抓
+  };
+  ws.onclose = () => {
+    clearInterval(me.beat);
+    if (liveSock !== me) return;   // 自己關掉的
+    me.tries++;
+    if (document.visibilityState === 'visible') setTimeout(() => { if (liveSock === me) liveConnect(info); }, Math.min(30000, 2000 * me.tries));
+  };
+}
+function liveClose() { if (!liveSock) return; const l = liveSock; liveSock = null; clearInterval(l.beat); clearTimeout(l.wait); try { l.ws.close(); } catch {} }
+// 手機切到背景時 iOS 會切斷連線：切回來重新連上（重連時順便抓一次最新的）
+document.addEventListener('visibilitychange', () => {
+  if (document.visibilityState === 'visible' && liveSock && liveSock.ws.readyState > 1) { const info = liveSock.info; liveSock.tries = liveSock.tries || 1; liveConnect(info); }
+});
 function refreshView() {
   if (!current) return;
   updateHeader(current);
@@ -2485,6 +2535,7 @@ function renderPage(page) {
   // 重畫同一頁（例如進出編輯模式、存檔後）時，記住哪些區塊是展開的
   const keepOpen = page === renderedPage ? expanders.filter(ex => ex.el.classList.contains('open')).map(ex => ex.el.dataset.id) : [];
   renderedPage = page;
+  setTimeout(() => warmPhotos(page), 300);
   computeRange();
   tl.innerHTML = ''; movable.length = 0; expanders.length = 0;
   tl.classList.remove('sliding');
@@ -4154,7 +4205,7 @@ async function refreshTrips() {
   tripsFetched = true;
   const mine = myTrips(); if (!mine.length || !API) return;
   try {
-    const r = await fetch(API + '?action=trips&list=' + encodeURIComponent(mine.map(t => t.id + ':' + t.key + ':' + (t.code || '')).join(','))).then(x => x.json());
+    const r = await fetch(API + API_Q + 'action=trips&list=' + encodeURIComponent(mine.map(t => t.id + ':' + t.key + ':' + (t.code || '')).join(','))).then(x => x.json());
     if (!r.ok) return;
     const byId = Object.fromEntries(r.trips.map(t => [t.id, t]));
     const next = mine.filter(t => byId[t.id]?.ok !== false).map(t => byId[t.id] ? { ...t, ...byId[t.id], key: t.key, code: byId[t.id].role === 'edit' ? t.code : '', cover: byId[t.id].cover || t.cover } : t);
@@ -4420,7 +4471,7 @@ async function getMapsKey() {
   if (MAPS_KEY) return MAPS_KEY;
   try { const k = localStorage.getItem(MAPS_KEY_STORE); if (k) return k; } catch {}
   if (!API) return '';
-  try { const r = await fetch(API + '?action=config').then(x => x.json()); if (r.mapsKey) { try { localStorage.setItem(MAPS_KEY_STORE, r.mapsKey); } catch {} return r.mapsKey; } } catch {}
+  try { const r = await fetch(API + API_Q + 'action=config').then(x => x.json()); if (r.mapsKey) { try { localStorage.setItem(MAPS_KEY_STORE, r.mapsKey); } catch {} return r.mapsKey; } } catch {}
   return '';
 }
 // input：目的地欄位；onPick({ name, label, region, center, en })：點了某個建議；onType()：又打字了（之前選的不算數）
