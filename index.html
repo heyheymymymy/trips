@@ -157,12 +157,22 @@ header{position:sticky;top:0;z-index:10;background:var(--page);padding:calc(12px
 .blk{position:absolute;left:4px;right:0;padding:6px 10px 5px;border:0;border-radius:8px;overflow:hidden}
 /* 名稱太長換行時，筆記按鈕接在最後一個字後面（不是夾在整段名稱右邊） */
 .blk .t{font-size:15px;font-weight:600;line-height:22px;min-height:22px}
-.blk .t .tm{font-size:12px;font-weight:400;white-space:nowrap;margin-left:4px}
 /* 短卡片：標題列垂直置中 */
 .blk.compact{display:flex;align-items:center;padding-top:0;padding-bottom:0}
 .blk .s{font-size:12px;margin-top:1px}
 /* 一句話描述：放在標題和時間中間，卡片放得下幾行就顯示幾行 */
-.blk .d{font-size:12px;line-height:16px;margin:1px 0 2px;opacity:.85;display:-webkit-box;-webkit-box-orient:vertical;overflow:hidden}
+.blk .d{font-size:14px;line-height:22px;margin:2px 0 0;display:-webkit-box;-webkit-box-orient:vertical;overflow:hidden}
+/* 卡片下面一排白色小標籤（Figma node 86:31）：時間、長度、區域、已訂位、提醒；放不下時提醒那顆縮成「…」 */
+.blk .bcs,.grp .sum .bcs{display:flex;gap:7px;align-items:center;margin-top:2px;overflow:hidden}
+.grp .sum .d{font-size:14px;line-height:22px;margin:2px 0 0;display:-webkit-box;-webkit-box-orient:vertical;overflow:hidden}
+/* 小卡片：名稱後面接標籤，名稱太長縮成「…」 */
+.blk.compact .t{display:flex;align-items:center;gap:7px;min-width:0;width:100%}
+.blk.compact .t .tt{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.blk .bcs.in{margin-top:0;flex:0 1 auto;min-width:0}
+.bc{flex-shrink:0;display:inline-flex;align-items:center;gap:3px;background:#fff;border-radius:4px;padding:2px 4px;font-size:12px;font-weight:500;line-height:15px;white-space:nowrap}
+.bc .ti{font-size:13px}
+.bc.grow{flex-shrink:1;min-width:0}
+.bc.grow > span{overflow:hidden;text-overflow:ellipsis}
 /* 交通時間：小泡泡，左右置中在卡片欄（卡片 left:4px），放在上一張結尾和這一張開頭的正中間；離得遠就用虛線把兩張卡片連起來 */
 .car{position:absolute;left:calc(50% + 2px);transform:translateX(-50%);z-index:6;display:flex;align-items:center;gap:1px;height:18px;box-sizing:border-box;padding:0 5px;
   border:1px solid var(--line);border-radius:999px;background:#fff;font-size:10px;line-height:16px;color:var(--text2);white-space:nowrap}
@@ -558,6 +568,7 @@ html.on-map:not(.sheet-lock),html.on-map:not(.sheet-lock) body{background:#f4f0e
 .sheet .ed-time input[type=time]{min-width:0;width:0;flex:1 1 0;padding:10px 4px;text-align:center}
 .ed-time input[type=time]::-webkit-calendar-picker-indicator{display:none}   /* 電腦版瀏覽器的時鐘圖示會把格子撐寬；點格子一樣會跳出選擇器 */
 .ed-time input[type=time]::-webkit-date-and-time-value{text-align:center}
+.ed-time input.auto,.ed-time input.auto::-webkit-date-and-time-value,.ed-time input.auto::-webkit-datetime-edit{color:var(--muted)}   /* 結束時間：自動算的是灰色，自己調過才變黑 */
 .ed-arrow{color:var(--muted);flex:none;font-size:14px;margin:0 6px}
 .ed-endbox{flex:1 1 0;min-width:0;font-size:16px;padding:10px 4px;border:1.5px solid transparent;border-radius:12px;background:var(--fill);color:var(--muted);line-height:normal;white-space:nowrap;text-align:center;overflow:hidden}
 .ed-mid{font-size:12px;color:var(--muted);margin-top:4px}
@@ -809,6 +820,7 @@ button.ov-stay{width:100%;font:inherit;text-align:left;cursor:pointer}
 .am-who > span:last-child{min-width:0}
 .am-item{display:flex;align-items:center;gap:10px;width:100%;padding:10px;border:0;border-radius:10px;background:none;font:inherit;font-size:14px;color:var(--text);text-align:left;cursor:pointer}
 .am-item i{font-size:18px}
+a.am-item{text-decoration:none;box-sizing:border-box}
 .am-item:active{background:var(--fill)}
 .am-val{margin-left:auto;color:var(--text2);max-width:9em;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .am-item .am-go{font-size:16px;color:var(--muted);margin-left:-4px}
@@ -1065,6 +1077,50 @@ html.tut .sheet:not(.dlg){max-height:calc(100vh - 176px - env(safe-area-inset-to
 .af-search.linked > i{color:var(--spa-fg)}
 /* 已連結地點：輸入框裡文字前面的綠色定位圖示 */
 .pin-in{position:relative;display:block}
+/* 好幾個城市：每個城市一列（輸入框＋×），下面「再加一個城市」，再下面每個城市選哪幾天 */
+.city-x{flex:none;width:36px;height:36px;border:0;border-radius:50%;background:var(--fill);color:var(--text2);font-size:16px;display:flex;align-items:center;justify-content:center;cursor:pointer}
+.city-add{display:flex;align-items:center;justify-content:center;gap:4px;width:100%;height:40px;margin-top:8px;border:1px dashed var(--border);border-radius:12px;background:#fff;font:inherit;font-size:14px;color:var(--text2);cursor:pointer}
+.leg + .leg{margin-top:8px}
+.leg-box{display:flex;align-items:center;gap:6px;padding-right:7px;border-radius:12px;background:var(--fill)}
+.leg-box:focus-within,.leg-sw:focus-within{position:relative;z-index:5}   /* 打字時建議清單蓋在下面的地點、日曆上面 */
+.leg-link{display:flex;align-items:center;gap:6px;margin:6px 2px 0;font-size:13px;color:var(--text2)}
+.leg-link:empty{display:none}
+.leg-link.fail{color:#C2412D}
+.leg-link button{margin-left:auto;padding:4px 10px;border:0;border-radius:999px;background:var(--fill2);font:inherit;font-size:13px;font-weight:600;color:var(--text);cursor:pointer}
+.leg-box .pin-in{flex:1;min-width:0}
+.leg-box input[type=text]{background:transparent !important;border-color:transparent !important}
+.leg-pill{flex:none;display:inline-flex;align-items:center;gap:2px;height:30px;padding:0 8px 0 10px;border:0;border-radius:9px;background:#fff;font:inherit;font-size:13px;font-weight:600;color:var(--text);font-variant-numeric:tabular-nums;white-space:nowrap;box-shadow:0 1px 2px rgba(60,40,20,.1);cursor:pointer}
+.leg-pill .ti{font-size:14px;color:var(--muted)}
+.leg-pill:disabled{opacity:.45;cursor:default}
+.leg-drop{max-height:0;overflow:hidden;opacity:0;transition:max-height .28s ease,opacity .2s ease}   /* 日曆往下拉開／收起來 */
+.leg-drop.open{max-height:640px;opacity:1}
+.leg-cal{padding-top:8px}
+.leg-hint{margin-top:6px;font-size:13px;color:var(--text2);text-align:center}
+.leg-sw{position:relative;border-radius:12px}   /* 不能 overflow:hidden：地點建議的下拉清單會被裁掉 */   /* 第二段以後：往左滑露出紅色刪除 */
+.leg-delbtn{position:absolute;inset:0;display:flex;justify-content:flex-end;border:0;border-radius:12px;background:#C2412D;color:#fff;font:inherit;font-size:12px;font-weight:600;cursor:pointer}   /* 紅色墊在整個框後面，往左滑從框的邊緣露出來，中間不會斷開 */
+.leg-delbtn > span{width:80px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px}
+.leg-delbtn .ti{font-size:18px}
+.leg-sw:not(.open):not(.swiping) .leg-delbtn{visibility:hidden}   /* 沒滑的時候藏起來，不然圓角那邊會透出一點紅 */
+.leg-sw .leg-box{position:relative;z-index:1;touch-action:pan-y;transition:margin-right .22s ease}
+.leg-sw .leg-box.drag{transition:none}
+@media (prefers-reduced-motion:reduce){.leg-drop{transition:none}}
+/* 日期總覽：靜態日曆，每一段一個顏色 */
+.leg-ov{padding:12px;border-radius:14px;background:var(--fill)}
+.lo-m + .lo-m{margin-top:12px}
+.lo-m > b{display:block;margin-bottom:6px;font-size:14px;text-align:center}
+.lo-g{display:grid;grid-template-columns:repeat(7,1fr);row-gap:4px;text-align:center}
+.lo-g .cal-w{font-size:12px;color:var(--muted)}
+.lo-d{height:30px;line-height:30px;font-size:13px;color:var(--text2);font-variant-numeric:tabular-nums}
+.lo-d.in{font-weight:600}
+.lo-d.fs{border-radius:15px 0 0 15px}
+.lo-d.fe{border-radius:0 15px 15px 0}
+.lo-d.fs.fe{border-radius:15px}
+.lo-legend{margin-top:10px;padding-top:10px;border-top:1px solid var(--line)}
+.lo-leg{display:flex;align-items:center;gap:8px;font-size:13px;line-height:1.9}
+.lo-leg i{flex:none;width:8px;height:8px;border-radius:50%}
+.lo-leg span{margin-left:auto;color:var(--text2);font-variant-numeric:tabular-nums}
+.lo-total{margin-top:8px;padding-top:8px;border-top:1px solid var(--line);font-size:14px;font-weight:700;text-align:right}
+.cal-d.oth::after{content:"";position:absolute;bottom:3px;left:50%;width:4px;height:4px;margin-left:-2px;border-radius:50%;background:var(--muted)}   /* 其他地點的日子 */
 .pin-in .pin-ok{display:none;position:absolute;left:12px;top:50%;transform:translateY(-50%);z-index:1;font-size:18px;color:var(--spa-fg);pointer-events:none}
 .pin-in.linked .pin-ok{display:block}
 .pin-in.linked input{padding-left:38px}
@@ -1492,7 +1548,21 @@ function setTrip(t, role) {
 // 目的地的城市名（查地點、Google 地圖搜尋時加在店名後面）、地圖起始位置
 const tripCity = () => String(TRIP?.dest || '').split(/[,，]/)[0].trim();
 const tripCenter = () => { const mm = /^\s*(-?\d+(?:\.\d+)?),\s*(-?\d+(?:\.\d+)?)/.exec(TRIP?.center || ''); return mm ? { lat: +mm[1], lng: +mm[2] } : { lat: 18.7883, lng: 98.9853 }; };
-const withCity = q => q + (tripCity() && !q.toLowerCase().includes(tripCity().toLowerCase()) ? ' ' + tripCity() : '');
+// 好幾個城市（上高地＋東京）：TRIP.cities [{ name, en, region, center, days: ['d1', …] }]；只有一個目的地是空的
+const tripCities = () => (TRIP?.cities || []).length >= 2 ? TRIP.cities : [];
+// 這幾天在哪些城市（移動日兩個）；不知道哪一天（備選、住宿還沒選日期）＝全部城市
+const citiesOn = days => { const cs = tripCities(), on = cs.filter(c => days.some(d => c.days.includes(d))); return on.length ? on : cs; };
+// 搜尋地點的條件：只有一個目的地＝以目的地為中心、限定那個國家；好幾個城市＝這幾天的每個城市各查一次，結果合併
+const searchReqs = (days, extra = {}) => {
+  const cs = tripCities();
+  if (!cs.length) return [{ ...extra, ...(biasAt ? { locationBias: { center: biasAt, radius: 30000 } } : {}), ...(TRIP?.region ? { includedRegionCodes: [TRIP.region] } : {}) }];
+  const on = citiesOn(days);
+  return on.map(c => ({ ...extra, ...(llOf(c.center) ? { locationBias: { center: llOf(c.center), radius: 30000 } } : {}), ...(c.region ? { includedRegionCodes: [c.region] } : {}) }));
+};
+// 某一天的地圖中心：好幾個城市就用那天的第一個城市
+const dayCenter = day => llOf(citiesOn([day])[0]?.center);
+// 用店名查的時候加上城市；好幾個城市不加（交給後端依那一天選城市）
+const withCity = q => tripCities().length ? q : q + (tripCity() && !q.toLowerCase().includes(tripCity().toLowerCase()) ? ' ' + tripCity() : '');
 // 這支手機打開過的旅程（「我的旅程」列表），連同輸入過的編輯碼
 const myTrips = () => { try { return JSON.parse(localStorage.getItem(MINE_KEY)) || []; } catch { return []; } };
 function rememberTrip(t, role, key, code) {
@@ -2397,6 +2467,11 @@ function hoursWarn(x, day, s, e, text) {
   const o = +mm[1] * 60 + +mm[2]; let c = +mm[3] * 60 + +mm[4]; if (c <= o) c += 24 * 60;
   return s >= o && e <= c ? '' : `不在營業時間（${mm[1]}:${mm[2]}–${mm[3]}:${mm[4]}）`;
 }
+// 卡片下面的白色小標籤：時間、長度，加上已訂位、提醒（太長縮成「…」）、查詢中
+const bcTime = (s, e) => `<span class="bc"><i class="ti ti-clock"></i>${T(s)}–${T(e)}</span>`;
+const bcExtra = (booked, al, pending) => (booked ? '<span class="bc"><i class="ti ti-circle-check"></i>已訂位</span>' : '') +
+  (al ? `<span class="bc grow"><i class="ti ti-alert-triangle"></i><span>${esc(al)}</span></span>` : '') +
+  (pending ? '<span class="bc"><i class="ti ti-loader-2 spin"></i>查詢資訊中</span>' : '');
 function renderCards(items, day) {
   // 時間重疊的卡片標紅框提醒
   const clash = new Set();
@@ -2444,7 +2519,7 @@ function renderCards(items, day) {
       g.dataset.id = it.id;
       g.setAttribute('role', 'button'); g.tabIndex = 0;
       const gal = timelineAlert(it, day, m(it.s), m(it.e));
-      const tags = (it.booked ? ' · <i class="ti ti-circle-check"></i> 已訂位' : '') + (gal ? ` · <i class="ti ti-alert-triangle"></i> ${esc(gal)}` : '');
+      const sumN = Math.max(1, Math.floor((h - 56) / 22));   // 站名放得下幾行（至少一行）
       const rows = pick
         ? `<div class="cap">這幾間都可以去，到時候再一起選一間</div>${it.alts.map((a, i) => `
           <div class="stop" data-kind="alt" data-idx="${i}"><div class="num pick"></div>
@@ -2462,26 +2537,23 @@ function renderCards(items, day) {
         <div class="head"><span class="t" style="font-size:15px;font-weight:600">${pick
           ? `<i class="ti ti-arrows-split-2"></i> ${esc(it.t)}`
           : `<i class="ti ti-stack-2"></i> ${esc(it.t)} · ${it.stops.length} 站`}${editIc}</span><span class="hd-tm">${T(it.s)}–${T(it.e)}</span><i class="ti ti-chevron-down chev"></i></div>
-        <div class="sum"><div style="font-size:12px;line-height:1.6${pick ? ';white-space:nowrap;overflow:hidden;text-overflow:ellipsis' : ''}">${pick
+        <div class="sum"><div class="d" style="-webkit-line-clamp:${pick ? 1 : sumN}">${pick
           ? esc(it.alts.map(a => a.name).join('／'))
-          : esc(it.stops.map(st => st.short || st.name).join(' → '))}</div><div style="font-size:12px">${T(it.s)}–${T(it.e)} · ${durLabel(mins)}${tags}</div></div>
+          : esc(it.stops.map(st => st.short || st.name).join(' → '))}</div><div class="bcs">${bcTime(it.s, it.e)}<span class="bc">${durLabel(mins)}</span>${bcExtra(it.booked, gal)}</div></div>
         <div class="list">${rows}</div>`;
       setCol(g, it.id);
       makeExpander(g, top, h, g);
       return;
     }
     const showNav = it.map && h >= MIN_NAV_H;
-    // 描述：標題＋時間之外還放得下至少一行才顯示（半小時左右的小卡片就不顯示）
-    const descLines = (it, h) => { const n = Math.floor((h - 52) / 16); return it.desc && it.desc !== PENDING && n >= 1 ? `<div class="d" style="-webkit-line-clamp:${n}">${esc(it.desc)}</div>` : ''; };
+    // 描述：標題（22）＋標籤（19）＋內距和間距（15）之外，每 22px 放一行；放不下就不顯示
+    const descLines = (it, h) => { const n = Math.floor((h - 56) / 22); return it.desc && it.desc !== PENDING && n >= 1 ? `<div class="d" style="-webkit-line-clamp:${n}">${esc(it.desc)}</div>` : ''; };
     const compact = h < COMPACT_H;
     const al = timelineAlert(it, day, m(it.s), m(it.e));
-    const tags = (it.booked ? ' · <span class="tag-ok"><i class="ti ti-circle-check"></i> 已訂位</span>' : '') +
-                 (al ? ` · <i class="ti ti-alert-triangle"></i> ${esc(al)}` : '') +
-                 (it.desc === PENDING ? ' · <span class="tag-q"><i class="ti ti-loader-2 spin"></i> 查詢資訊中</span>' : '');   // 剛加入、背景還在查（小卡片看不到描述，放在時間這一行）
     const b = div('blk ' + it.cls + (showNav ? ' has-nav' : '') + (compact ? ' compact' : '') + extra,
       compact
-        ? `<div class="t">${esc(it.t)}<span class="tm">· ${T(it.s)}–${T(it.e)}${it.desc === PENDING ? ' <i class="ti ti-loader-2 spin"></i>' : ''}</span></div>${showNav ? navBtn(it.map, it.t) : ''}${editIc}`
-        : `<div class="t">${esc(it.t)}</div>${descLines(it, h)}<div class="s"><i class="ti ti-clock"></i> ${T(it.s)}–${T(it.e)} · ${durLabel(mins)}${it.area ? `　<i class="ti ti-map-pin"></i> ${esc(it.area)}` : ''}${tags}</div>${showNav ? navBtn(it.map, it.t) : ''}${editIc}`);
+        ? `<div class="t"><span class="tt">${esc(it.t)}</span><span class="bcs in">${bcTime(it.s, it.e)}<span class="bc">${durLabel(mins)}</span>${bcExtra(it.booked, al, it.desc === PENDING)}</span></div>${showNav ? navBtn(it.map, it.t) : ''}${editIc}`
+        : `<div class="t">${esc(it.t)}</div>${descLines(it, h)}<div class="bcs">${bcTime(it.s, it.e)}<span class="bc">${durLabel(mins)}</span>${it.area ? `<span class="bc"><i class="ti ti-map-pin"></i>${esc(it.area)}</span>` : ''}${bcExtra(it.booked, al, it.desc === PENDING)}</div>${showNav ? navBtn(it.map, it.t) : ''}${editIc}`);
     b.dataset.id = it.id;
     setCol(b, it.id);
     b.style.height = h + 'px'; place(b, top);
@@ -2507,7 +2579,8 @@ function updateHeader(page) {
   if (isDay(page)) {
     const d = dayInfo(page);
     dayTitle.textContent = d.en;
-    const dw = [d.date, d.wd].filter(Boolean).join('．');   // 沒有日期（例如操作練習）就不要多出「．」
+    const city = tripCities().length ? citiesOn([page]).map(c => c.name).join('→') : '';   // 好幾個城市：這天在哪（移動日「上高地→東京」）
+    const dw = [d.date, d.wd, city].filter(Boolean).join('．');   // 沒有日期（例如操作練習）就不要多出「．」
     daySub.innerHTML = `${dw}${d.zh || editing ? `${dw ? '．' : ''}<span id="subTheme">${esc(d.zh)}</span>` : ''}`;
   } else {
     dayTitle.textContent = PAGES[page].en;
@@ -3040,6 +3113,7 @@ function openTripSettings(keep) {
   // 交通方式：還沒自己選過（開始規劃的「選交通方式」還沒完成）就先不選，選開車才算完成那一步
   const cv0 = splitPhoto(TRIP.cover);
   const st = keep || { dayStart: TRIP.day_start || '10:00', cover: { src: cv0.src, x: cv0.x, y: cv0.y, busy: false }, name: TRIP.name, dest: TRIP.dest, modes: getSetup().mode || tripMode() !== 'drive' || tripModeList().length > 1 ? tripModeList() : [], start: TRIP.start, end: end0, cal: TRIP.start.slice(0, 7), members: [...(TRIP.members || [])], memDraft: '', types: JSON.parse(JSON.stringify(tripTypes())), tyEdit: null };
+  if (!keep) { st.legs = placeLegs(TRIP, end0); st.legOpen = -1; legsFix(st); }   // 目的地和日期：每個地點自己的日期（一個目的地就是出發到回程）
   const canMem = canDeleteTrip();   // 建立的人才能新增、移除同行的人   // 住處另外在總覽的「住宿」管理
   const nDays = () => { const a = parseD(st.start), b = parseD(st.end); return a && b && b >= a ? Math.round((b - a) / 864e5) + 1 : 0; };
   // 改日期的提醒：少掉的那幾天的行程會移到備選；改出發日時行程跟著「第幾天」走
@@ -3056,11 +3130,9 @@ function openTripSettings(keep) {
     const open = sheet.scrollTop;
     sheet.querySelector('#tsBody').innerHTML = `
       <label class="ed-field"><span class="ed-lab">旅程名稱</span><input id="tsName" type="text" value="${esc(st.name)}" maxlength="40" autocomplete="off"></label>
-      <div class="ed-field ps-field"><span class="ed-lab">目的地 <span class="ed-lab-hint" id="tsDestHint">${st.geo ? esc(st.geo.label) : '查地點、地圖會以這裡為中心'}</span></span>${pinIn(`<input id="tsDest" type="text" value="${esc(st.dest)}" maxlength="60" autocomplete="off">`, !!st.geo || (st.dest === TRIP.dest && !!TRIP.center))}</div>
-      <div class="ed-field"><span class="ed-lab">日期 <span class="ed-lab-hint">${!st.calOpen ? '點一下修改' : !st.start ? '先點出發日' : !st.end ? '再點最後一天' : ''}</span></span>
-        <button type="button" class="stay-strip ts-strip${st.calOpen ? ' on' : ''}" id="tsDates" aria-expanded="${!!st.calOpen}">${tripStrip(st.start, st.end, nDays())}</button>
-        ${st.calOpen ? `<div class="ts-cal">${calHtml(st)}</div>` : ''}
-        ${nDays() && dateNote() && (nDays() !== n0 || st.start !== TRIP.start) ? `<div class="ed-hint"><i class="ti ti-info-circle"></i> ${esc(dateNote())}</div>` : ''}</div>
+      ${legsHtml(st, '查地點、地圖會以這裡為中心；點日期修改')}
+      ${nDays() && dateNote() && (nDays() !== n0 || st.start !== TRIP.start) ? `<div class="ed-hint"><i class="ti ti-info-circle"></i> ${esc(dateNote())}</div>` : ''}
+      ${legsOverviewHtml(st)}
       <div class="ed-field"><span class="ed-lab">主要交通方式 <span class="ed-lab-hint">系統會優先以你選擇的交通方式進行交通時間預估</span></span>
         <div class="wiz-opts grid">${WIZ_MODES.map(([k, ic, nm]) => `<button type="button" class="wiz-opt${st.modes.includes(k) ? ' on' : ''}" data-mode="${k}" aria-pressed="${st.modes.includes(k)}"><i class="ti ti-${ic}"></i><span><b>${nm}</b></span></button>`).join('')}</div></div>
       <div class="ed-field"><span class="ed-lab">封面照片 <span class="ed-lab-hint">顯示在「我的旅程」</span></span>
@@ -3084,8 +3156,7 @@ function openTripSettings(keep) {
       <div class="err" id="tsErr" hidden></div>
       ${canDeleteTrip() ? '<button type="button" class="ts-del" id="tsDel"><i class="ti ti-trash"></i> 刪除旅程</button>' : ''}`;
     sheet.scrollTop = open;
-    attachPlaceSuggest(sheet.querySelector('#tsDest'), g => { Object.assign(st, { dest: g.name, geo: g }); draw(); },
-      () => { setPin(sheet.querySelector('#tsDest'), false); if (st.geo) { st.geo = null; sheet.querySelector('#tsDestHint').textContent = '查地點、地圖會以這裡為中心'; } });
+    wireLegs(sheet.querySelector('#tsBody'), st, draw);
   };
   openSheet(`
     <div class="sh-head"><div style="flex:1;min-width:0"><div class="sh-title" id="shTitle">旅程設定</div>
@@ -3103,7 +3174,6 @@ function openTripSettings(keep) {
     if (e.target.id === 'tsName') st.name = e.target.value;
     else if (e.target.id === 'tsMemIn') st.memDraft = e.target.value;
     else if (e.target.id === 'tsDayStart' && e.target.value) st.dayStart = e.target.value;
-    else if (e.target.id === 'tsDest') st.dest = e.target.value;
   });
   // 封面照片：跟其他照片一樣，空的點框框上傳、有照片點右下角相機換；可以拖曳選要顯示的範圍
   body.addEventListener('click', e => { if (e.target.closest('#tsCoverBox.empty')) sheet.querySelector('#tsCoverFile').click(); });
@@ -3161,22 +3231,17 @@ function openTripSettings(keep) {
     if (b.id === 'tsHistory') { sheetSlide(1, () => openHistory({ back })); return; }
     if (b.id === 'tsReset') { sheetSlide(1, () => openResetLinks({ back })); return; }
     if (b.dataset.mrm) { st.members.splice(+b.dataset.mrm, 1); draw(); return; }
-    if (b.dataset.cal) { const [y, mo] = st.cal.split('-').map(Number); st.cal = ymd(new Date(y, mo - 1 + +b.dataset.cal, 1)).slice(0, 7); draw(); return; }
-    if (b.dataset.day) {   // 第一下＝出發日、第二下＝最後一天（點到出發日之前就重選出發）；都選好再點＝重來
-      const v = b.dataset.day;
-      if (!st.start || st.end || v < st.start) { st.start = v; st.end = ''; } else { st.end = v; st.calOpen = false; }   // 選好最後一天就收起來
-      draw(); return;
-    }
-    if (b.id === 'tsDates') { st.calOpen = !st.calOpen; draw(); return; }
     if (b.dataset.mode) { const k = b.dataset.mode; st.modes = st.modes.includes(k) ? st.modes.filter(x => x !== k) : WIZ_MODES.map(x => x[0]).filter(x => x === k || st.modes.includes(x)); draw(); }   // 可以複選，照固定順序存
   });
   sheet.querySelector('#tsSave').addEventListener('click', async e => {
     const err = msg => { const el = body.querySelector('#tsErr'); el.textContent = msg; el.hidden = false; el.scrollIntoView({ block: 'nearest' }); };
     if (!st.name.trim()) return err('請填旅程名稱');
-    if (!st.dest.trim()) return err('請填目的地');
+    { const le = legsErr(st); if (le) return err(le); }
     const changes = {};
     if (st.name.trim() !== TRIP.name) changes.name = st.name.trim();
-    if (st.dest.trim() !== TRIP.dest) { changes.dest = st.dest.trim(); if (st.geo) Object.assign(changes, { region: st.geo.region, center: st.geo.center, en: st.geo.en ? st.geo.en + '.' : '' }); }
+    const wasMulti = tripCities().length > 0, isMulti = st.legs.length > 1;
+    if (!isMulti && (wasMulti || st.dest.trim() !== TRIP.dest)) { changes.dest = st.dest.trim(); if (st.geo) Object.assign(changes, { region: st.geo.region, center: st.geo.center, en: st.geo.en ? st.geo.en + '.' : '' }); }
+    if (!isMulti && wasMulti) changes.cities = [];
     if (!st.modes.length && (getSetup().mode || TRIP.mode !== 'drive')) return err('交通方式至少選一種');
     if (st.modes.length && st.modes.join(',') !== tripModeList().join(',')) changes.mode = st.modes.join(',');
     if (st.cover.busy) return err('封面照片還在上傳，等一下再按儲存');
@@ -3186,6 +3251,10 @@ function openTripSettings(keep) {
     if (!n) return err('請選出發日和最後一天');
     if (n > 30) return err('最多 30 天');
     if (st.start !== TRIP.start || n !== n0) Object.assign(changes, { start: st.start, days: n });
+    if (isMulti) {
+      const cities = cityPayload(st), pick = cs => JSON.stringify(cs.map(c => [c.name, c.days]));
+      if (pick(cities) !== pick(tripCities())) changes.cities = cities;
+    }
     if (canMem && st.memDraft.trim() && !st.members.includes(st.memDraft.trim())) st.members.push(st.memDraft.replace(/,/g, ' ').trim());   // 打了名字忘了按加入
     if (st.dayStart !== (TRIP.day_start || '10:00')) changes.day_start = st.dayStart;
     { const t = st.types.find(x => x.k === st.tyEdit), n = body.querySelector('#tsTyName')?.value.trim().slice(0, 6); if (t && n) t.n = n; }   // 改到一半直接按儲存
@@ -3798,7 +3867,7 @@ function openStayEditor(idx, opts = {}) {
     sheet.querySelector('#stOwnOff')?.addEventListener('click', () => { Object.assign(es, { manual: false, loc: '', map: '', pid: '', addr: '', llText: '' }); draw(); });
     if (es.manual) { nameEl.addEventListener('input', () => { es.name = nameEl.value.trim(); }); return; }   // 自己填位置時，名稱不用跳 Google 建議
     attachPlaceSuggest(nameEl, g => { Object.assign(es, g); draw(); autoPhoto(g.map || withCity(g.name), g.name); }, null, {
-      request: () => ({ includedPrimaryTypes: ['lodging'], ...(biasAt ? { locationBias: { center: biasAt, radius: 30000 } } : {}), ...(TRIP?.region ? { includedRegionCodes: [TRIP.region] } : {}) }),
+      requests: () => searchReqs(ds.map((x, i) => es.ci && x.ymd >= es.ci && x.ymd <= (es.co || es.ci) ? 'd' + (i + 1) : '').filter(Boolean), { includedPrimaryTypes: ['lodging'] }),
       resolve: async (pr, name) => {
         const place = pr.toPlace();
         try { await place.fetchFields({ fields: ['displayName', 'formattedAddress', 'location'] }); } catch {}
@@ -4157,10 +4226,12 @@ acctBtn.addEventListener('click', e => {
   // 沒登入：Google 登入、用連結搬到其他裝置（手機裡有旅程才有）
   if (!a) acctMenu.innerHTML = `<button type="button" class="am-item" id="acctLogin"><i class="ti ti-brand-google"></i>用 Google 登入</button>
     ${myTrips().length ? '<button type="button" class="am-item" id="acctCarry"><i class="ti ti-link"></i>用連結帶到其他裝置</button>' : ''}
-    <button type="button" class="am-item" id="acctTut"><i class="ti ti-hand-finger"></i>操作教學</button>`;
+    <button type="button" class="am-item" id="acctTut"><i class="ti ti-hand-finger"></i>操作教學</button>
+    <a class="am-item" href="privacy.html" target="_blank" rel="noopener"><i class="ti ti-shield-lock"></i>隱私權說明</a>`;
   else acctMenu.innerHTML = `<div class="am-who"><span class="acct-pic">${acctPic(a)}</span><span><b>${esc(a.name || 'Google 帳號')}</b><small>${esc(a.email || '')}</small><small>旅程已同步</small></span></div>
     <button type="button" class="am-item" id="acctNick"><i class="ti ti-user-edit"></i>暱稱<span class="am-val">${esc(getNick() || '還沒填')}</span><i class="ti ti-chevron-right am-go"></i></button>
     <button type="button" class="am-item" id="acctTut"><i class="ti ti-hand-finger"></i>操作教學</button>
+    <a class="am-item" href="privacy.html" target="_blank" rel="noopener"><i class="ti ti-shield-lock"></i>隱私權說明</a>
     <button type="button" class="am-item" id="acctOut"><i class="ti ti-logout"></i>登出</button>`;
   acctMenu.hidden = false; acctBtn.setAttribute('aria-expanded', 'true');
 });
@@ -4293,28 +4364,31 @@ const wizEl = document.getElementById('wiz'), wizBack = document.getElementById(
 const WIZ_MODES = [['drive', 'car', '開車／叫車', 'Grab、Uber、計程車'], ['transit', 'bus', '大眾運輸', '捷運、公車、火車'],
   ['moto', 'motorbike', '機車', '自己騎或叫機車'], ['walk', 'walk', '走路為主', '景點都在附近']];
 let wiz;
-function wizReset() { const t = todayYmd(); wiz = { name: '', dest: '', geo: null, start: '', end: '', cal: t.slice(0, 7), err: '' }; }
+function wizReset() { const t = todayYmd(); wiz = { name: '', legs: [{ name: '', geo: null, s: '', e: '' }], legOpen: -1, dest: '', geo: null, start: '', end: '', cal: t.slice(0, 7), err: '' }; }   // 選好地點才自動展開日曆
 const ymd = d => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
 const todayYmd = () => ymd(new Date(Date.now() + NOW_SHIFT));
 const dLabel = v => { const d = new Date(v + 'T00:00'); return `${mdOf(d)}（${'日一二三四五六'[d.getDay()]}）`; };
 const destCity = d => String(d || '').split(/[,，]/)[0].trim();
 // 封面英文字：選了 Google 地點用它的英文名（京都 → Kyoto），不然用打的字
-const wizEn = () => (wiz.geo?.en || destCity(wiz.dest) || 'Trip').replace(/\.$/, '') + '.';
+const wizEn = () => wiz.legs.length > 1 ? wiz.legs.map(l => l.geo?.en || l.name.trim()).join(' & ') + '.' : (wiz.geo?.en || destCity(wiz.dest) || 'Trip').replace(/\.$/, '') + '.';   // 好幾個地點：Kamikochi & Tokyo.
 // 名稱沒填就用這個（也是名稱欄的提示文字）：「京都四天三夜快樂之旅」；一天就是「京都一日快樂之旅」
 const wizName = () => wiz.name.trim() || autoName();   // 有填用填的，沒填用提示文字
 const zhNum = n => { const d = '零一二三四五六七八九'; return n <= 10 ? (n === 10 ? '十' : d[n]) : n < 20 ? '十' + d[n - 10] : d[Math.floor(n / 10)] + '十' + (n % 10 ? d[n % 10] : ''); };
-const autoName = () => { const c = destCity(wiz.dest), n = wizDays(); return c ? `${c}${n > 1 ? `${zhNum(n)}天${zhNum(n - 1)}夜` : n ? '一日' : ''}快樂之旅` : ''; };
+const autoName = () => { const c = wiz.legs.length > 1 ? wiz.legs.map(l => l.name.trim()).filter(Boolean).join('・') : destCity(wiz.dest), n = wizDays(); return c ? `${c}${n > 1 ? `${zhNum(n)}天${zhNum(n - 1)}夜` : n ? '一日' : ''}快樂之旅` : ''; };
 function calHtml(w = wiz) {   // 建立旅程、旅程設定共用：w 有 start、end、cal（顯示哪個月）
   const [y, m] = w.cal.split('-').map(Number), first = new Date(y, m - 1, 1), total = new Date(y, m, 0).getDate(), today = todayYmd();
   let g = '日一二三四五六'.split('').map(w => `<span class="cal-w">${w}</span>`).join('') + '<span></span>'.repeat(first.getDay());
   for (let i = 1; i <= total; i++) {
     const v = ymd(new Date(y, m - 1, i)), c = ['cal-d'];
     if (v < today) c.push('past');
+    const off = (w.min && v < w.min) || (w.only && v !== w.only);
+    if (off) c.push('out');                                                                // 後面的地點：點開頭時只能點前一段的最後一天，點結尾時開頭之前不能點
+    if (w.others?.some(o => o.s && o.e && v >= o.s && v <= o.e)) c.push('oth');            // 其他地點的日子：下面一個小點
     if (v === today) c.push('today');
     if (v === w.start) c.push('s'), w.end && w.end !== v && c.push('has-e');
     if (v === w.end && v !== w.start) c.push('e');
     if (w.start && w.end && v > w.start && v < w.end) c.push('in');
-    g += `<button type="button" class="${c.join(' ')}" data-day="${v}"><span>${i}</span></button>`;
+    g += `<button type="button" class="${c.join(' ')}" data-day="${v}"${off ? ' disabled' : ''}><span>${i}</span></button>`;
   }
   const atNow = w.cal <= today.slice(0, 7);
   return `<div class="cal"><div class="cal-h"><button type="button" data-cal="-1" aria-label="上個月"${atNow ? ' disabled' : ''}><i class="ti ti-chevron-left"></i></button>
@@ -4324,22 +4398,18 @@ const parseD = v => v ? new Date(v + 'T00:00') : null;
 function wizDays() { const s = parseD(wiz.start), e = parseD(wiz.end); return s && e && e >= s ? Math.round((e - s) / 864e5) + 1 : 0; }
 function renderWiz() {
   const field = (lab, html, hint = '') => `<label class="ed-field"><span class="ed-lab">${lab}${hint ? `<span class="ed-lab-hint">${hint}</span>` : ''}</span>${html}</label>`;
+  const html = legsHtml(wiz, wiz.legs.length > 1 ? '每一段是一個城市，移動那天兩段都算' : wiz.geo ? wiz.geo.label : '打城市名稱，從清單選一個');   // 先算好日期（wizDays 要用）
   const n = wizDays();
   daySub.textContent = '建立旅程';
   wizEl.innerHTML = `<div class="wiz-h">要去哪裡？</div><p class="wiz-p">住處、交通方式、想去的店、封面照片，建好之後再慢慢加。</p>
     ${field('旅程名稱', `<input type="text" data-k="name" id="wizName" value="${esc(wiz.name)}" placeholder="${esc(autoName() || '京都四天三夜快樂之旅')}" autocomplete="off" maxlength="40">`)}
-    <div class="ed-field ps-field"><span class="ed-lab">目的地<span class="ed-lab-hint">${wiz.geo ? esc(wiz.geo.label) : '打城市名稱，從清單選一個'}</span></span>
-      ${pinIn(`<input type="text" data-k="dest" id="wizDest" value="${esc(wiz.dest)}" placeholder="例如：京都、Bangkok" autocomplete="off">`, !!wiz.geo)}</div>
-    <div class="ed-field"><span class="ed-lab">日期<span class="ed-lab-hint">${!wiz.start ? '先點出發日' : !wiz.end ? '再點回程日' : ''}</span></span>${calHtml()}</div>
-    <div class="wiz-note${wiz.err ? ' err' : ''}" id="wizNote">${wiz.err ? esc(wiz.err) : n ? `${dLabel(wiz.start)}–${dLabel(wiz.end)}．共 ${n} 天 ${n - 1} 夜` : wiz.start ? `出發 ${dLabel(wiz.start)}` : ''}</div>
+    ${html}
+    <div class="wiz-note${wiz.err ? ' err' : ''}" id="wizNote">${wiz.err ? esc(wiz.err) : ''}</div>
+    ${legsOverviewHtml(wiz)}
 `;
   wizBack.textContent = '取消';
   wizNext.textContent = '建立旅程';
-  const dest = wizEl.querySelector('#wizDest');
-  attachPlaceSuggest(dest, g => {
-    Object.assign(wiz, { dest: g.name, geo: g });
-    const keep = document.activeElement; renderWiz(); if (keep === dest) wizEl.querySelector('#wizDest')?.blur();
-  }, () => { setPin(dest, false); if (wiz.geo) { wiz.geo = null; const h = dest.closest('.ed-field').querySelector('.ed-lab-hint'); if (h) h.textContent = '打城市名稱，從清單選一個'; } });
+  wireLegs(wizEl, wiz, () => { wiz.err = ''; renderWiz(); }, { onType: () => { const nm = wizEl.querySelector('#wizName'); if (nm) nm.placeholder = autoName() || '京都四天三夜快樂之旅'; } });
 }
 // 封面：有照片顯示照片，沒有就是淺陶土色底＋英文目的地
 const coverHtml = (url, en) => `<span class="cover${url ? ' has' : ''}">${url ? photoImg(url) : `<span class="en">${esc(en)}</span>`}</span>`;
@@ -4347,22 +4417,11 @@ wizEl.addEventListener('input', e => {
   const k = e.target.dataset.k;
   if (!k) return;
   wiz[k] = e.target.value;
-  if (k === 'dest') wizEl.querySelector('#wizName').placeholder = autoName() || '京都四天三夜快樂之旅';   // 沒填名稱時會用提示文字當名稱
-});
-wizEl.addEventListener('click', e => {
-  const b = e.target.closest('button'); if (!b) return;
-  if (b.dataset.cal) {
-    const [y, m] = wiz.cal.split('-').map(Number); wiz.cal = ymd(new Date(y, m - 1 + +b.dataset.cal, 1)).slice(0, 7); renderWiz();
-  } else if (b.dataset.day) {   // 第一下＝出發；第二下＝回程（點到出發日之前就當作重選出發）；兩個都選好再點＝重新開始
-    const v = b.dataset.day;
-    if (!wiz.start || wiz.end || v < wiz.start) { wiz.start = v; wiz.end = ''; } else wiz.end = v;
-    wiz.err = ''; renderWiz();
-  }
 });
 wizBack.addEventListener('click', () => { location.hash = 'trips'; });
 wizNext.addEventListener('click', () => {
   const n = wizDays();
-  wiz.err = !wiz.dest.trim() ? '請填目的地' : !wiz.start || !wiz.end ? '請選出發和回程日期' : !n ? '回程不能比出發早' : n > 30 ? '最多 30 天' : '';
+  wiz.err = legsErr(wiz) || (n > 30 ? '最多 30 天' : '');
   if (wiz.err) { renderWiz(); wizEl.querySelector('#wizNote')?.scrollIntoView({ block: 'center', behavior: 'smooth' }); return; }
   openCreateAuth();
 });
@@ -4387,10 +4446,11 @@ function openCreateAuth() {
     $('crGo').disabled = true; $('crGo').textContent = '建立中…'; $('crErr').hidden = true;
     try {
       if (folded && nick !== nick0) await renameNickAll(nick0, nick);   // 登入的人在框框裡改了名字：帳號和舊旅程裡的名字一起換
+      legsFix(wiz);
       const dest = wiz.dest.trim();
       const g = wiz.geo || {};
       const r = await api({ action: 'createTrip', nick, name: wizName(), dest, en: wizEn(), region: g.region || '', center: g.center || '',
-        start: wiz.start, days: wizDays() }, 60000);
+        start: wiz.start, days: wizDays(), ...(wiz.legs.length > 1 ? { cities: cityPayload(wiz) } : {}) }, 60000);
       setNick(nick);
       rememberTrip(r.trip, 'edit', r.trip.view_key, r.trip.code); setTripOwner(r.trip.id, r.owner);
       try { sessionStorage.setItem('trip-created', r.trip.code); } catch {}
@@ -4495,9 +4555,17 @@ function attachPlaceSuggest(input, onPick, onType, opts = {}) {
       const key = await getMapsKey(); if (!key) return;
       await loadMaps(key); places = await google.maps.importLibrary('places');
       token = token || new places.AutocompleteSessionToken();   // 同一次選擇的查詢算一次計費
-      const { suggestions } = await places.AutocompleteSuggestion.fetchAutocompleteSuggestions({ input: q, sessionToken: token, ...(opts.request ? opts.request(q) : { includedPrimaryTypes: ['(regions)'] }) });
+      const reqs = opts.requests ? opts.requests(q) : [opts.request ? opts.request(q) : { includedPrimaryTypes: ['(regions)'] }];
+      const lists = await Promise.all(reqs.map(async req => {
+        try { const { suggestions } = await places.AutocompleteSuggestion.fetchAutocompleteSuggestions({ input: q, sessionToken: token, ...req });
+          return (suggestions || []).map(x => x.placePrediction).filter(Boolean).map(p => ({ p })); } catch { return []; }
+      }));
       if (my !== seq || document.activeElement !== input) return;
-      items = (suggestions || []).map(x => x.placePrediction).filter(Boolean).slice(0, 5);
+      // 好幾組條件：每組輪流拿一個（opts.seq＝照順序：第一組排完才輪到下一組），最多 6 個；同一個地點只留一個
+      // （不標城市：以某個城市為中心也會查到別的城市，地址那行看得出在哪）
+      const seen = new Set(), add = x => { if (x && !seen.has(x.p.placeId) && items.length < 6) { seen.add(x.p.placeId); items.push(x.p); } }; items = [];
+      if (opts.seq) lists.flat().forEach(add);
+      else for (let i = 0; items.length < (lists.length > 1 ? 6 : 5) && lists.some(l => l[i]); i++) lists.forEach(l => add(l[i]));
     } catch { return; }
     box.innerHTML = items.map((p, i) => `<button type="button" data-i="${i}"><i class="ti ti-map-pin"></i><span><b>${esc(p.mainText?.text || p.text?.text || '')}</b><small>${esc(p.secondaryText?.text || '')}</small></span></button>`).join('');
     box.hidden = !items.length;
@@ -4524,6 +4592,214 @@ function attachPlaceSuggest(input, onPick, onType, opts = {}) {
     token = null;
   });
 }
+// ---------- 目的地：一個或好幾個地點（例如上高地＋東京、釜山＋福岡），每個地點自己的日期。建立旅程、旅程設定共用 ----------
+// S.legs [{ name, geo, s, e, next }]（s、e＝yyyy-mm-dd）：第一個地點從出發日開始；之後每個地點接在前一個後面，
+// 「當天移動」（開始日＝前一個的最後一天）或「隔天才到」（next：前一個最後一天的隔天），所以每一天都有地點、最多重疊一天
+// 開始日由前一個地點算出來（前一個改日期，後面跟著移；選過的「隔天才到」記在 next 不會不見）
+// 旅程的日期＝第一個地點的開始到最後一個地點的結束（同步到 S.start、S.end；S.dest、S.geo＝第一個地點）
+// S.legOpen：哪一個地點的日曆打開（-1＝都關著）；S.cal：日曆顯示哪個月
+const LEG_MAX = 4;
+const addDays = (v, n) => { const d = parseD(v); d.setDate(d.getDate() + n); return ymd(d); };
+const mdOfV = v => mdOf(parseD(v));
+function legsFix(S) {
+  S.legs.forEach((l, i) => {
+    if (!i) return;
+    const p = S.legs[i - 1];
+    if (!p.e) return;                            // 前一個地點正在重選日期：先不動，選好再接上
+    l.s = addDays(p.e, l.next ? 1 : 0);
+    if (l.e && l.e < l.s) l.e = '';              // 前一個地點延長到超過這裡的離開日：離開日重選
+  });
+  const last = S.legs[S.legs.length - 1];
+  Object.assign(S, { dest: S.legs[0].name, geo: S.legs[0].geo, start: S.legs[0].s, end: S.legs.every(l => l.s && l.e) ? last.e : '' });
+}
+const legDays = (S, l) => Math.round((parseD(l.e) - parseD(l.s)) / 864e5) + 1;
+// 每個地點一個框：左邊地點名稱、右邊白色日期按鈕（沒選＝「日期」、選好＝「12/1–12/3」）；點了往下展開日曆（有動畫），選完收起來
+// 選好地點（Google 建議）會自動展開日曆。後面的地點從前一個的最後一天開始（移動那天兩段都算）；有兩段以上時每一段都可以往左滑露出紅色「刪除」
+// （刪掉第一段：下一段變成第一段，日期不變，旅程的出發日跟著變）
+const LEG_COLORS = [['#F7E6DA', '#9A4A25'], ...STAY_COLORS];
+function legsHtml(S, hint0) {
+  legsFix(S);
+  const rows = S.legs.map((l, i) => {
+    const open = S.legOpen === i, prev = S.legs[i - 1], disabled = i && !prev.e;
+    const pill = !open && l.s && l.e ? `${mdOfV(l.s)}–${mdOfV(l.e)}<i class="ti ti-chevron-down"></i>` : `日期<i class="ti ti-chevron-${open ? 'up' : 'down'}"></i>`;
+    let cal = '';
+    if (open) {
+      const others = S.legs.filter((_, k) => k !== i).map(o => ({ s: o.s, e: o.e }));
+      const head = i && !S.legTail;   // 後面的地點：先點頭（只能點前一段的最後一天），再點尾
+      cal = `${calHtml({ start: head && !l.e ? '' : l.s, end: head ? l.e : '', cal: S.cal, others, ...(i ? head ? { only: prev.e } : { min: l.s } : {}) })}
+        <div class="leg-hint">${i ? head ? `先點 ${mdOfV(prev.e)}（離開${esc(prev.name || '上一個城市')}、到${esc(l.name || '這裡')}的那天）` : `再點離開${esc(l.name || '這裡')}的那天`
+          : !l.s ? '先點出發日' : !l.e ? `再點離開${esc(l.name || '這裡')}的那天` : '要重選就再點一次出發日'}</div>`;
+    }
+    const link = !l.name.trim() || l.geo ? '' : l.linkSt === 'trying' ? '<i class="ti ti-loader-2 spin"></i>連結 Google 地點中…'
+      : l.linkSt === 'fail' ? `<i class="ti ti-alert-circle"></i>未連結成功（查地點、地圖可能會不準）<button type="button" data-lk="${i}">再試一次</button>` : '';
+    const swipe = S.legs.length > 1;   // 有兩段以上：每一段（包括第一段）都可以往左滑刪除
+    return `<div class="leg" data-leg="${i}">${swipe ? `<div class="leg-sw" data-sw="${i}"><button type="button" class="leg-delbtn" data-lx="${i}" tabindex="-1"><span><i class="ti ti-trash"></i>刪除</span></button>` : ''}<div class="leg-box${open ? ' on' : ''}">${pinIn(`<input type="text" class="leg-in" data-li="${i}" value="${esc(l.name)}" placeholder="${i ? '下一個城市，例如：東京、Fukuoka' : '例如：京都、Bangkok'}" autocomplete="off" maxlength="40">`, !!l.geo)}
+        <button type="button" class="leg-pill${!open && l.e ? ' set' : ''}" data-lo="${i}"${disabled ? ' disabled' : ''} aria-expanded="${open}">${pill}</button></div>${swipe ? '</div>' : ''}
+      <div class="leg-link${l.linkSt === 'fail' ? ' fail' : ''}">${link}</div>
+      <div class="leg-drop${open ? ' open' : ''}" data-ld="${i}"><div class="leg-cal">${cal}</div></div></div>`;
+  }).join('');
+  const last = S.legs[S.legs.length - 1];
+  const add = S.legs.length < LEG_MAX && last.name.trim() && last.e ? `<button type="button" class="city-add" id="legAdd"><i class="ti ti-plus"></i> 接著去下一個城市</button>` : '';
+  return `<div class="ed-field ps-field"><span class="ed-lab">目的地和日期<span class="ed-lab-hint">${esc(hint0)}</span></span>${rows}${add}</div>`;
+}
+// 日期總覽：一個靜態的日曆，標出每一段在哪幾天（每段一個顏色，移動日左右各半），下面寫「東京 12/1（二）–12/3（四）．3 天」
+function legsOverviewHtml(S) {
+  legsFix(S);
+  if (!S.start || !S.end || S.legOpen !== -1) return '';   // 還在選日期：先不出現，免得畫面上好幾個日曆
+  const legs = S.legs.map((l, i) => ({ ...l, c: LEG_COLORS[i % LEG_COLORS.length] })).filter(l => l.s && l.e);
+  const first = legs[0]?.s || todayYmd(), last = legs.length ? legs[legs.length - 1].e : first;
+  const months = []; for (let mo = first.slice(0, 7); mo <= last.slice(0, 7) && months.length < 3; ) { months.push(mo); const [y, mm] = mo.split('-').map(Number); mo = ymd(new Date(y, mm, 1)).slice(0, 7); }
+  const wd = v => '日一二三四五六'[parseD(v).getDay()];
+  const grid = mo => {
+    const [y, mm] = mo.split('-').map(Number), firstD = new Date(y, mm - 1, 1), total = new Date(y, mm, 0).getDate();
+    let g = '日一二三四五六'.split('').map(w => `<span class="cal-w">${w}</span>`).join('') + '<span></span>'.repeat(firstD.getDay());
+    for (let d = 1; d <= total; d++) {
+      const v = ymd(new Date(y, mm - 1, d)), on = legs.filter(l => v >= l.s && v <= l.e);
+      const bg = on.length > 1 ? `linear-gradient(90deg, ${on[0].c[0]} 50%, ${on[1].c[0]} 50%)` : on[0]?.c[0] || '';
+      const cls = ['lo-d', on.length ? 'in' : '', on.length && v === on[0].s && on.length < 2 ? 'fs' : '', on.length && v === on[on.length - 1].e && on.length < 2 ? 'fe' : ''].filter(Boolean).join(' ');
+      g += `<span class="${cls}"${bg ? ` style="background:${bg};color:${on[on.length - 1].c[1]}"` : ''}>${d}</span>`;
+    }
+    return `<div class="lo-m"><b>${y} 年 ${mm} 月</b><div class="lo-g">${g}</div></div>`;
+  };
+  const legend = legs.map(l => `<div class="lo-leg"><i style="background:${l.c[1]}"></i><b>${esc(l.name || '？')}</b><span>${mdOfV(l.s)}（${wd(l.s)}）–${mdOfV(l.e)}（${wd(l.e)}）．${legDays(S, l)} 天</span></div>`).join('');
+  const n = legDays(S, { s: S.start, e: S.end });
+  return `<div class="ed-field"><span class="ed-lab">日期總覽</span><div class="leg-ov">${months.map(grid).join('')}${legend ? `<div class="lo-legend">${legend}</div>` : ''}
+    <div class="lo-total">共 ${n} 天 ${n - 1} 夜</div></div></div>`;
+}
+// opts.onType()：打了地點名稱（建立旅程更新名稱提示）
+// 目的地的下拉清單：先城市、地區（regions），再其他地方（上高地、國家公園這種景區不算地區）
+const DEST_SUGGEST = { requests: () => [{ includedPrimaryTypes: ['(regions)'] }, {}], seq: true };
+// 沒從清單選、自己打的地點名稱：跟下拉清單一樣先找城市地區，沒有再找其他地方；其他地方要名字對得上（不然亂打也會配到一家公司）
+const normName = v => String(v || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/\s+/g, '').toLowerCase();
+async function geoLookup(name) {
+  const key = await getMapsKey(); if (!key) return null;
+  await loadMaps(key);
+  const places = await google.maps.importLibrary('places');
+  const ask = async req => ((await places.AutocompleteSuggestion.fetchAutocompleteSuggestions({ input: name, ...req })).suggestions || []).map(x => x.placePrediction).filter(Boolean);
+  const same = pr => { const a = normName(pr.mainText?.text), b = normName(name); return a && b && (a.includes(b) || b.includes(a)); };
+  const pr = (await ask({ includedPrimaryTypes: ['(regions)'] }))[0] || (await ask({})).find(same);
+  if (!pr) return null;
+  const p = pr.toPlace();
+  await p.fetchFields({ fields: ['location', 'addressComponents'] });
+  if (!p.location) return null;
+  const en = new places.Place({ id: p.id, requestedLanguage: 'en' });
+  try { await en.fetchFields({ fields: ['displayName'] }); } catch {}
+  const country = (p.addressComponents || []).find(c => c.types.includes('country'));
+  return { name, label: [pr.mainText?.text, pr.secondaryText?.text].filter(Boolean).join('，') || name, region: country?.shortText || '', center: `${p.location.lat().toFixed(5)},${p.location.lng().toFixed(5)}`, en: en.displayName || '' };
+}
+function wireLegs(root, S, redraw, opts = {}) {
+  // 連結狀態只更新那一列（不整個重畫，免得正在別的輸入框打字被打斷）
+  const showLink = i => {
+    const l = S.legs[i], row = root.querySelector(`.leg[data-leg="${i}"]`); if (!row) return;
+    setPin(row.querySelector('.leg-in'), !!l.geo);
+    const line = row.querySelector('.leg-link');
+    line.className = 'leg-link' + (l.linkSt === 'fail' && !l.geo ? ' fail' : '');
+    line.innerHTML = !l.name.trim() || l.geo ? '' : l.linkSt === 'trying' ? '<i class="ti ti-loader-2 spin"></i>連結 Google 地點中…'
+      : `<i class="ti ti-alert-circle"></i>未連結成功（查地點、地圖可能會不準）<button type="button" data-lk="${i}">再試一次</button>`;
+    line.querySelector('[data-lk]')?.addEventListener('click', () => tryLink(i));
+  };
+  const tryLink = async i => {
+    const l = S.legs[i], name = l.name.trim(); if (!name || l.geo) return;
+    l.linkSt = 'trying'; showLink(i);
+    let g = null; try { g = await geoLookup(name); } catch {}
+    if (S.legs[i] !== l || l.name.trim() !== name) return;   // 查的途中刪掉了、改名了
+    if (g) { l.geo = g; l.linkSt = ''; if (!i) S.geo = g; } else l.linkSt = 'fail';
+    showLink(i);
+  };
+  root.querySelectorAll('[data-lk]').forEach(b => b.addEventListener('click', () => tryLink(+b.dataset.lk)));
+  // 展開：剛畫好的日曆先收著，下一格畫面再打開（才有往下拉開的動畫）；收起：先播收起來的動畫再重畫
+  if (S.animIn != null) {
+    const d = root.querySelector(`[data-ld="${S.animIn}"]`); S.animIn = null;
+    if (d && !reduceMotion) { d.classList.remove('open'); void d.offsetHeight; d.classList.add('open'); }   // 先量一次高度（收著的樣子），再打開才會播動畫
+  }
+  const openLeg = i => { const l = S.legs[i]; S.legOpen = i; S.animIn = i; S.legTail = false; S.cal = (l.s || S.legs[i - 1]?.e || todayYmd()).slice(0, 7); redraw(); };
+  const closeLeg = () => {
+    const d = root.querySelector(`[data-ld="${S.legOpen}"]`), done = () => { S.legOpen = -1; redraw(); };
+    if (!d || reduceMotion) return done();
+    d.classList.remove('open'); setTimeout(done, 280);
+  };
+  root.querySelectorAll('.leg-in').forEach(inp => {
+    const i = +inp.dataset.li, l = S.legs[i];
+    inp.addEventListener('input', e => { if (e.isComposing) return; l.name = inp.value; S.dest = S.legs[0].name; opts.onType?.(); });
+    inp.addEventListener('compositionend', () => { l.name = inp.value; S.dest = S.legs[0].name; opts.onType?.(); });
+    // 選好地點：還沒選日期就直接展開日曆
+    attachPlaceSuggest(inp, g => { Object.assign(l, { name: g.name, geo: g, linkSt: '' }); legsFix(S); if (!l.e && (!i || S.legs[i - 1].e)) openLeg(i); else redraw(); }, () => { setPin(inp, false); l.geo = null; l.linkSt = ''; const line = root.querySelector(`.leg[data-leg="${i}"] .leg-link`); if (line) line.innerHTML = ''; }, DEST_SUGGEST);
+    // 沒從清單選、自己打完字離開輸入框：一樣自動展開日曆（等一下，點的如果是日期按鈕就交給它）
+    inp.addEventListener('change', () => setTimeout(() => {
+      if (!root.isConnected || S.legs[i] !== l) return;
+      if (!l.geo && l.name.trim() && l.linkSt !== 'trying') tryLink(i);   // 沒從清單選：自動幫他連結一次
+      if (S.legOpen === -1 && l.name.trim() && !l.e && (!i || S.legs[i - 1].e)) openLeg(i);
+    }, 200));
+  });
+  root.querySelectorAll('[data-lo]').forEach(b => b.addEventListener('click', () => { const i = +b.dataset.lo; if (S.legOpen === i) closeLeg(); else openLeg(i); }));
+  root.querySelectorAll('[data-lx]').forEach(b => b.addEventListener('click', () => { S.legs.splice(+b.dataset.lx, 1); S.legOpen = -1; redraw(); }));
+  const DEL_W = 80, shut = except => root.querySelectorAll('.leg-sw.open').forEach(w => { if (w !== except) { w.classList.remove('open'); w.querySelector('.leg-box').style.marginRight = ''; } });
+  root.querySelectorAll('.leg-sw').forEach(w => {
+    const box = w.querySelector('.leg-box'); let p = null;
+    box.addEventListener('pointerdown', e => { p = { x: e.clientX, y: e.clientY, base: w.classList.contains('open') ? -DEL_W : 0, lock: '' }; });
+    box.addEventListener('pointermove', e => {
+      if (!p) return;
+      const dx = e.clientX - p.x, dy = e.clientY - p.y;
+      if (!p.lock) { if (Math.abs(dx) < 10 && Math.abs(dy) < 10) return; p.lock = Math.abs(dx) > Math.abs(dy) ? 'h' : 'v'; if (p.lock === 'h') { shut(w); box.setPointerCapture?.(e.pointerId); box.classList.add('drag'); w.classList.add('swiping'); } }
+      if (p.lock !== 'h') return;
+      box.style.marginRight = `${-Math.max(-DEL_W - 20, Math.min(0, p.base + dx))}px`;   // 框往右邊縮（不是整個往左推），地點名稱留在原位看得到
+    });
+    const end = e => {
+      if (!p) return;
+      const was = p; p = null; box.classList.remove('drag');
+      if (was.lock !== 'h') return;
+      const inp = box.querySelector('input'); if (inp) { inp.scrollLeft = 0; inp.blur(); window.getSelection?.()?.removeAllRanges(); }   // 在輸入框上滑：文字不要被捲走、不要反白
+      setTimeout(() => w.classList.remove('swiping'), 250);
+      const x = was.base + (e.clientX - was.x), open = x < -DEL_W / 2;
+      w.classList.toggle('open', open); box.style.marginRight = open ? DEL_W + 'px' : '';
+      w.dataset.swiped = Date.now();   // 滑完放開的那一下不要當成點擊（不要打開日曆）
+    };
+    box.addEventListener('pointerup', end); box.addEventListener('pointercancel', end);
+    box.addEventListener('click', e => { if (Date.now() - (+w.dataset.swiped || 0) < 300) { e.stopPropagation(); e.preventDefault(); } else if (w.classList.contains('open')) { e.stopPropagation(); e.preventDefault(); shut(); } }, true);
+  });
+  if (!root.dataset.swShut) { root.dataset.swShut = 1; document.addEventListener('pointerdown', e => { if (!e.target.closest('.leg-sw')) root.querySelectorAll('.leg-sw.open').forEach(w => { w.classList.remove('open'); w.querySelector('.leg-box').style.marginRight = ''; }); }); }   // 點別的地方：滑回去
+  root.querySelector('#legAdd')?.addEventListener('click', () => {
+    const p = S.legs[S.legs.length - 1];
+    S.legs.push({ name: '', geo: null, s: p.e, e: '', next: false }); S.legOpen = -1; redraw();
+    root.querySelector(`.leg-in[data-li="${S.legs.length - 1}"]`)?.focus();   // 先填地點，選好就自動展開日曆
+  });
+  root.querySelectorAll('.leg-cal').forEach(box => box.addEventListener('click', e => {
+    const b = e.target.closest('button'); if (!b || b.dataset.lx) return;
+    e.stopPropagation();   // 不要讓外面（建立旅程、旅程設定）原本的日曆處理到
+    const i = S.legOpen, l = S.legs[i];
+    if (b.dataset.cal) { const [y, mo] = S.cal.split('-').map(Number); S.cal = ymd(new Date(y, mo - 1 + +b.dataset.cal, 1)).slice(0, 7); }
+    else if (b.dataset.day) {
+      const v = b.dataset.day;
+      if (i && !S.legTail) { if (v !== l.s) return; l.e = ''; S.legTail = true; }   // 後面的地點：先點頭（前一段的最後一天）
+      else if (i) { if (v < l.s) return; l.e = v; S.legTail = false; legsFix(S); redraw(); closeLeg(); return; }   // 再點尾；選好收起來
+      else if (!l.s || l.e || v < l.s) { l.s = v; l.e = ''; }                            // 第一個地點：先點出發、再點離開；都選好再點＝重來
+      else { l.e = v; legsFix(S); redraw(); closeLeg(); return; }
+    } else return;
+    redraw();
+  }));
+}
+// 地點都填了名稱、選好日期才能存
+function legsErr(S) {
+  legsFix(S);
+  if (!S.legs[0].name.trim()) return '請填目的地';
+  if (S.legs.some(l => !l.name.trim())) return '有地點還沒填名稱（不要的話按 × 拿掉）';
+  if (S.legs.some(l => !l.s || !l.e)) return S.legs.length > 1 ? '每個地點都要選日期' : '請選出發和離開的日期';
+  return '';
+}
+// 送給 API 的城市清單：每個地點的名稱、英文、國家、座標、在第幾天（d1…）
+const cityPayload = S => S.legs.map(l => {
+  const a = legDays(S, { s: S.start, e: l.s }) - 1, k = legDays(S, l);
+  return { name: l.name.trim(), en: l.geo?.en || '', region: l.geo?.region || '', center: l.geo?.center || '', days: Array.from({ length: k }, (_, x) => 'd' + (a + x + 1)) };
+});
+// 從旅程讀回來：好幾個城市照 cities 的天數換成日期；一個目的地就是出發到回程
+function placeLegs(trip, end) {
+  const cs = (trip.cities || []).length >= 2 ? trip.cities : [], at = d => addDays(trip.start, +d.slice(1) - 1);
+  const geoOf = c => c.center ? { name: c.name, label: c.name, en: String(c.en || '').replace(/\.$/, ''), region: c.region, center: c.center } : null;
+  return cs.length ? cs.map((c, i) => ({ name: c.name, geo: geoOf(c), s: at(c.days[0] || 'd1'), e: at(c.days[c.days.length - 1] || 'd1'),
+      next: i > 0 && c.days[0] !== cs[i - 1].days[cs[i - 1].days.length - 1] }))
+    : [{ name: trip.dest, geo: geoOf({ name: trip.dest, en: trip.en, region: trip.region, center: trip.center }), s: trip.start, e: end }];
+}
+
 // 淡淡的大地色底圖；店家、公車站這類 Google 自己的標記拿掉，只留我們的圖釘
 const MAP_STYLE = [
   { elementType: 'geometry', stylers: [{ color: '#f4f0e9' }] },
@@ -4897,6 +5173,7 @@ sheetBg.addEventListener('click', closeSheet);
 let pull = null;
 sheet.addEventListener('touchstart', e => {
   if (sheet.classList.contains('dlg') || e.touches.length > 1) return;
+  if (document.activeElement?.matches?.('input[type=time]') && sheet.contains(document.activeElement)) return;   // 時間滾輪開著：手指在滾輪上滑，不要當成往下拉關面板
   const onHead = e.target.closest('.grab, .sh-head');
   // 鍵盤打開時只能拉上方的拉桿或標題列關閉，免得想捲動內容卻把面板關掉
   if (!onHead && (kbOpen() || sheet.scrollTop > 0 || e.target.closest('input, textarea, select, .chips, .full-txt, .ph-drag, .af-mapwrap, .af-bigmap, .cv-prev, .ts-cover, .cand-pick, .dr-scroll'))) return;
@@ -5638,7 +5915,7 @@ function addLinkStart(raw) {
   const L = af.link = { raw, links, st: 'loading' }, toCand = af.day === 'cand' && !af.sub;
   clearTimeout(af.linkT); drawAdd();
   if (links.length > 1) { if (toCand) addToBatch(raw); else { L.st = 'list'; drawAdd(); } return; }
-  api({ ...getAuth(), action: 'lookupPlace', link: links[0] }, 90000).then(r => {
+  api({ ...getAuth(), action: 'lookupPlace', link: links[0], day: af.day }, 90000).then(r => {
     if (!af || af.link !== L) return;   // 讀的途中按了 × 或關掉了
     if (r.list) { if (toCand) addToBatch(raw, { link: links[0], r }); else { L.st = 'list'; drawAdd(); } return; }
     const p = r.place || {};
@@ -5702,7 +5979,7 @@ function drawAdd() {
     const q = body.querySelector('#afQ'), region = TRIP?.region;
     tripBias();   // 先在背景準備好搜尋中心
     attachPlaceSuggest(q, pick => { af.pick = pick; af.q = pick.name; drawAdd(); }, () => { af.q = q.value; },
-      { request: () => ({ ...(biasAt ? { locationBias: { center: biasAt, radius: 30000 } } : {}), ...(region ? { includedRegionCodes: [region] } : {}) }),
+      { requests: () => searchReqs([af.day]),
         resolve: async (pr, name) => { const r = await placePick(pr.toPlace(), name); if (!r.addr) r.addr = pr.secondaryText?.text || ''; return r; } });
     // 打字中不重畫面板（會打斷正在查的地點建議）：只更新「不用地點」那顆按鈕
     // 貼上的是 Google 地圖連結（手機分享會多「清單名 · 帳號名」、店名地址）：改成「查這個連結」
@@ -5863,7 +6140,7 @@ async function addMapCenter(day) {
   if (subLl) return { at: subLl, zoom: 15 };
   const before = (DATA[day] || []).filter(it => it.loc && m(it.s) <= af.s).sort((a, b) => m(a.s) - m(b.s)).pop();
   const ll = llOf(before?.loc) || llOf(homeFor(day)?.loc);
-  return ll ? { at: ll, zoom: 15 } : { at: await tripBias() || tripCenter(), zoom: 13 };
+  return ll ? { at: ll, zoom: 15 } : { at: dayCenter(day) || await tripBias() || tripCenter(), zoom: 13 };   // 好幾個城市：那天的城市
 }
 // 加一站、加選項的地圖：標這張卡片裡已經有的幾家
 const subPoints = sub => { const card = subCardOf(sub); return (subList(card || {}, sub.kind) || []).map(x => ({ p: llOf(x.loc), cls: x.cls || card.cls || 'eat', name: x.name })).filter(x => x.p); };
@@ -6041,7 +6318,7 @@ function openEditor(id, startAt, toDay, replaceId, keep) {
       <div class="chips sm day-chips" id="edDay">${ALL_KEYS.map(k => `<button type="button" class="chip${k === ed.day ? ' on' : ''}${k === 'cand' ? ' cand' : ''}" data-v="${k}">${k === 'cand' ? '備選' : dayNum(k)}</button>`).join('')}</div></div>
     <div class="ed-field"><span class="ed-lab">時間</span>
       <div class="ed-time"><input id="edS" type="time" step="300" value="${T(ed.s)}" aria-label="開始時間">
-        <span class="ed-arrow">→</span><span class="ed-endbox" id="edEnd" aria-label="結束時間（自動算）"></span></div>
+        <span class="ed-arrow">→</span>${ed.group || ed.fixedLen ? '<span class="ed-endbox" id="edEnd" aria-label="結束時間（自動算）"></span>' : `<input id="edE" class="auto" type="time" step="300" value="${T(hhmm(m(ed.s) + ed.dur))}" aria-label="結束時間">`}</div>
       <div class="ed-mid" id="edMid" hidden>結束時間過了午夜，還算同一天</div>
       ${ed.group ? '<div class="ed-hint"><i class="ti ti-info-circle"></i> 區塊的長度由裡面的店家決定。改開始時間，所有店家會一起移動</div>'
         : ed.fixedLen ? '<div class="ed-hint"><i class="ti ti-info-circle"></i> 長度取停留最久的那一家。要改長度，請展開後點那一家設定停留時間</div>' : `
@@ -6091,16 +6368,21 @@ function openEditor(id, startAt, toDay, replaceId, keep) {
 function wireEditor() {
   const $ = id => sheet.querySelector('#' + id);
   chipScroller($('edDay'));   // 類型收起來時量不到寬度，展開時才算
+  // iPhone 的時間滾輪開著時，下面的東西不要長出來、收起來（版面一動，有些 iPhone 會把滾輪收掉），等滾輪關掉再補
+  let pickingId = '';   // 正在用滾輪的時間欄位（focus 時記下、blur 時清掉）
+  const picking = () => !!pickingId;
   const refresh = () => {
     const sMin = $('edS').value ? fromInput($('edS').value) : m(ed.s), eMin = sMin + ed.dur;
-    $('edEnd').textContent = clock(eMin); $('edMid').hidden = eMin <= 24 * 60;
+    if ($('edEnd')) $('edEnd').textContent = clock(eMin);
+    if ($('edE') && pickingId !== 'edE') $('edE').value = T(hhmm(eMin));
+    if (!picking()) $('edMid').hidden = eMin <= 24 * 60;
     if ($('edDurTxt')) $('edDurTxt').textContent = durLabel(ed.dur);
     ed.syncRuler?.(ed.dur);   // 別的地方改了長度（例如換卡片樣式），刻度尺跟著移
     sheet.querySelectorAll('#edDur .chip').forEach(c => c.classList.toggle('on', +c.dataset.v === ed.dur));
     // 時間有變時，才問要不要把後面的行程一起移動
     if ($('edPushWrap')) {
       const delta = eMin - m(ed.orig.e);
-      $('edPushWrap').classList.toggle('on', !(delta === 0 || !laterItems().length || ed.day !== ed.fromDay));   // 往下推開／收起來
+      if (!picking()) $('edPushWrap').classList.toggle('on', !(delta === 0 || !laterItems().length || ed.day !== ed.fromDay));   // 往下推開／收起來
       if (delta) $('edPushTxt').textContent = `（${delta > 0 ? '往後' : '提前'} ${durLabel(Math.abs(delta))}）`;   // 收起來的時候字先留著，不要收到一半變空
     }
     $('edTimeErr').hidden = true;
@@ -6199,6 +6481,15 @@ function wireEditor() {
   ed.syncRuler = setRuler;
   sheet.querySelectorAll('.step').forEach(b => b.addEventListener('click', () => { ed.dur = Math.max(5, ed.dur + +b.dataset.d); refresh(); }));
   $('edS').addEventListener('input', refresh);
+  $('edE')?.addEventListener('input', () => {
+    if (!$('edE').value) return;
+    $('edE').classList.remove('auto');   // 自己調過：變黑色
+    const sMin = $('edS').value ? fromInput($('edS').value) : m(ed.s), eMin = fromInput($('edE').value);
+    if (eMin - sMin < DR_MIN) { $('edTimeErr').textContent = '結束時間要比開始時間晚'; $('edTimeErr').hidden = false; return; }
+    ed.dur = eMin - sMin; refresh();
+  });
+  // 滾輪關掉：把剛剛先不動的提示、順延開關補上；結束時間不合理就改回去
+  ['edS', 'edE'].forEach(id => { $(id)?.addEventListener('focus', () => { pickingId = id; }); $(id)?.addEventListener('blur', () => { pickingId = ''; refresh(); }); });
   $('edT').addEventListener('input', () => { $('edTErr').hidden = true; updateMapStatus(); });
   // 地圖欄位：即時說明現在存的是「連結」還是「用店名搜尋」
   const updateMapStatus = () => {
@@ -6618,7 +6909,7 @@ async function locateMissing() {
     let loc = fromUrl, pid = '';
     if (!loc && found.has(j.q)) ({ loc, pid } = found.get(j.q));
     else if (!loc) {
-      try { const p = (await api({ ...getAuth(), action: 'lookupPlace', link: /^https?:/.test(j.q) ? j.q : withCity(j.q) }, 60000)).place; if (p?.places) { loc = p.loc; pid = p.pid || ''; } }
+      try { const p = (await api({ ...getAuth(), action: 'lookupPlace', link: /^https?:/.test(j.q) ? j.q : withCity(j.q), day: findItem(j.id)[0] }, 60000)).place; if (p?.places) { loc = p.loc; pid = p.pid || ''; } }
       catch {}
       found.set(j.q, { loc, pid });
     }
@@ -6648,7 +6939,7 @@ function resumeLookups() {
 async function bgLookup({ id, link }) {
   let p = null, fail = '';
   let list = null;
-  try { const r = await api({ ...getAuth(), action: 'lookupPlace', link }, 90000); p = r.place; list = r.list; }
+  try { const r = await api({ ...getAuth(), action: 'lookupPlace', link, day: findItem(id)[0] }, 90000); p = r.place; list = r.list; }
   catch (err) { if (err.code === 'network') { setTimeout(() => bgBusy.delete(id), 60000); return; } fail = err.message; }   // 沒網路：一分鐘後再試
   let [day, it] = findItem(id);
   if (!it || it.desc !== PENDING) { bgBusy.delete(id); return; }
