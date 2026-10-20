@@ -906,10 +906,14 @@ html.tut .sheet:not(.dlg){max-height:calc(100vh - 176px - env(safe-area-inset-to
 @keyframes tutDrag{0%{transform:translate(14px,18px);opacity:0}8%{opacity:1}15%,35%{transform:translate(0,0);opacity:1}75%,85%{transform:translate(var(--dx),var(--dy));opacity:1}100%{transform:translate(var(--dx),var(--dy));opacity:0}}
 @keyframes tutDragRing{0%,15%{opacity:0;transform:scale(.5)}20%,35%{opacity:.9;transform:scale(.9)}75%{opacity:.9;transform:scale(.9)}85%,100%{opacity:0;transform:scale(1.3)}}
 .tut-hand.g-swipe{animation:tutSwipe 2.2s ease-in-out infinite}
-.tut-hand.g-swipe .tut-ring{animation:tutSwipeRing 2.2s linear infinite}
+.tut-hand .tut-arrow{position:absolute;left:-40px;top:-16px;font-size:32px;line-height:1;color:var(--accent-fg);opacity:0;display:none}   /* 指尖（手的原點）旁邊、同一個高度：往左滑在指尖左邊 */
+.tut-hand.to-right .tut-arrow{left:10px}
+.tut-hand.g-swipe .tut-ring{display:none}
+.tut-hand.g-swipe .tut-arrow{display:block;animation:tutSwipeArrow 2.2s linear infinite}
+@keyframes tutSwipeArrow{0%,20%{opacity:0}28%,62%{opacity:1}76%,100%{opacity:0}}
 @keyframes tutSwipe{0%{transform:translate(30px,18px);opacity:0}10%{opacity:1}20%{transform:translate(0,0)}65%,75%{transform:translate(var(--dx),var(--dy));opacity:1}100%{transform:translate(var(--dx),var(--dy));opacity:0}}
 @keyframes tutSwipeRing{0%,18%{opacity:0;transform:scale(.6)}22%,65%{opacity:.9;transform:scale(.8)}80%,100%{opacity:0;transform:scale(1.2)}}
-@media (prefers-reduced-motion:reduce){.tut-ui .tut-ghost,.tut-ghost .tut-tag{animation:none;opacity:0}.tut-hand{animation:none !important}.tut-hand .tut-ring{animation:none !important;opacity:.9}}
+@media (prefers-reduced-motion:reduce){.tut-ui .tut-ghost,.tut-ghost .tut-tag{animation:none;opacity:0}.tut-hand{animation:none !important}.tut-hand .tut-ring,.tut-hand .tut-arrow{animation:none !important;opacity:.9}}
 /* ---------- 建立旅程（示意） ---------- */
 .wiz{padding:14px 16px calc(96px + env(safe-area-inset-bottom))}
 .wiz-prog{display:flex;gap:4px;margin:0 0 4px}
@@ -7114,18 +7118,22 @@ if (resumeDraft && getAuth()) {
 // 示範卡片用清邁行程的真實店家（資料來自 data/import_days.json、full_notes.json），點開資訊才不會空空的
 const TUT_SEED = [
   { id: 'tb', s: '09:00', e: '09:45', cls: 'eat', t: '帶福辦 老宅早餐', desc: '超人氣文青風老宅早餐店', area: '塔佩門附近', map: 'Tai Toon Baan Chiang Mai', loc: '18.7886,98.9939', note: 'Tai Toon Baan 帶福辦', mine: '早點去！06:30 開門很快就客滿', booked: true },
-  { id: 'tc', s: '10:00', e: '11:00', cls: 'cafe', t: 'Ristr8to', desc: '世界拉花冠軍咖啡店', area: '尼曼', map: 'Ristr8to Original Chiang Mai', loc: '18.7990,98.9679', note: 'Ristr8to 世界拉花冠軍', mine: 'Satan Latte 必點！' },
+  { id: 'tc', s: '11:00', e: '12:00', cls: 'cafe', t: 'Ristr8to', desc: '世界拉花冠軍咖啡店', area: '尼曼', map: 'Ristr8to Original Chiang Mai', loc: '18.7990,98.9679', note: 'Ristr8to 世界拉花冠軍', mine: 'Satan Latte 必點！' },
   { id: 'tl', s: '12:00', e: '13:00', cls: 'eat', t: 'THE HOUSE by Ginger', desc: '1937 老宅・連續 7 年米其林必比登', area: '古城', map: 'THE HOUSE by Ginger Chiang Mai', loc: '18.7907,98.9927', note: 'THE HOUSE by Ginger', mine: '必點清邁拼盤、馬莎曼咖哩' },
   { id: 'ts', s: '14:30', e: '16:00', cls: 'spa', t: 'Elite Massage & Spa', desc: '平價且極受好評的按摩店', area: '塔佩門附近', map: 'Elite Massage Spa Chiang Mai', loc: '18.7878,98.9921', note: 'Elite Massage & Spa', mine: '網路推薦評價按摩' },
-].map(x => ({ day: 'd1', map: '', travel: '', loc: '', pid: '', orig: '', area: '', short: '', troute: '', hours: '', booked: false, alert: '', mine: '', note: '', group: false, updated_by: TUT_NICK, updated_at: '1', ...x }));
+  { id: 'tj', s: '16:00', e: '17:30', cls: 'bar', t: 'The North Gate Jazz Co-Op', desc: '北門旁的爵士酒吧，每晚現場演奏', area: '古城北門', map: 'The North Gate Jazz Co-Op Chiang Mai' },
+  // 第 1 天：第一關從這裡往左滑到第 2 天（主要的練習在第 2 天）
+  { id: 'tw', day: 'd1', s: '09:30', e: '11:00', cls: 'see', t: '帕辛寺 Wat Phra Singh', desc: '古城裡最重要的寺廟之一', area: '古城', map: 'Wat Phra Singh Chiang Mai' },
+  { id: 'tn', day: 'd1', s: '13:00', e: '15:00', cls: 'shop', t: 'One Nimman', desc: '尼曼路的歐風購物中心', area: '尼曼', map: 'One Nimman Chiang Mai' },
+].map(x => ({ day: 'd2', map: '', travel: '', loc: '', pid: '', orig: '', area: '', short: '', troute: '', hours: '', booked: false, alert: '', mine: '', note: '', group: false, updated_by: TUT_NICK, updated_at: '1', ...x }));
 const TUT_NOTES = {"THE HOUSE by Ginger": {"orig": "⭐️傳奇老宅泰式餐廳⭐️", "points": ["1937 年殖民時期老宅改建，2020–2026 連續 7 年米其林必比登", "必點：清邁拼盤、牛頰肉馬莎曼咖哩、脆皮五花肉配薑汁炒飯、泰北咖哩麵", "餐後可以到 The HOUSE Lounge 喝一杯特調"], "links": [], "full": "已訂位✅ 12:30‼️\nTHE HOUSE by Ginger 是一間位於泰國清邁古城區邊緣（靠近塔佩門）的傳奇老宅餐廳。它由丹麥設計師 Hans 創立，將一棟建於 1937 年的殖民時期老建築，打造為結合泰式傳統料理、精緻調酒與繽紛生活選物的華麗空間。餐廳自 2020 年至 2026 年已連續 7 年榮獲米其林必比登推薦，是清邁當地兼具視覺與味覺饗宴的指標性美食勝地。空間亮點這座迷人的大庭院內主要由三棟建築構成，營造出中西碰撞的「璀璨帝國」奢華復古風：\n• GINGER & Kafe：主要的用餐與精品選物空間，掛滿水晶吊燈與圖騰壁紙，並販售自家設計的繽紛餐具與服飾。\n• The HOUSE Lounge：充滿藝術氛圍的華麗酒吧，提供極具特色的工藝雞尾酒，適合餐後小酌延續夜晚。必點招牌菜色餐廳與知名品牌 GINGER FARM kitchen 一樣，延續「從農場到餐桌」的健康理念，使用自家薑農場每日採摘的有機蔬菜：\n• 清邁拼盤 (Mixed Appetizer Platter)：集結多款泰北傳統小吃的經典前菜，初訪必點。\n• 牛頰肉馬莎曼咖哩 (Beef Cheek Massaman Curry)：濃郁燉煮、肉質軟嫩，極受饕客推崇。\n• 脆皮五花肉配薑汁炒飯：外皮金黃酥脆的烤豬肉搭配香氣獨特的炒飯。\n• 泰北咖哩麵 (Khao Soi)：將傳統街頭小吃精緻化呈現的道地風味。\n饕客真實評價\n許多造訪過的旅客對於這裡的環境與料理讚不絕口：\n• 適合場景：環境舒適、氣氛浪漫，非常適合作為生日慶祝、約會、或是旅行中的大餐犒賞。\n• 價位建議：屬於清邁中高檔的精品泰菜，但若以米其林推薦的裝潢與精緻度來說，性價比依舊相當不錯。\n• 貼心提醒：由於生意極好，強烈建議提早透過官方網站進行線上訂位，以免現場久候。"}, "Ristr8to 世界拉花冠軍": {"orig": "Ristr8to Original", "points": ["創辦人是世界拉花大賽冠軍，尼曼路必朝聖", "必點：Satan Latte 撒旦拿鐵（獨角獸冠軍拉花）", "黑色工業風裝潢，也賣自家烘焙咖啡豆"], "links": [], "full": "Ristr8to Original 是泰國清邁極具代表性的傳奇精品咖啡廳，位於熱鬧的尼曼路商圈。\n這家店以其創辦人曾榮獲世界拉花藝術大賽（World Latte Art Championship）冠軍而聞名全球，不僅是咖啡愛好者造訪清邁的必朝聖之地，更是將當地精品咖啡浪潮推向國際的頂尖代表。\n☕️ 店家特色與朝聖亮點\n• 冠軍級拉花工藝：店內每一杯經典奶咖都擁有細緻如藝術品般的展示級拉花，包含創辦人奪冠的獨創圖案，精美到讓人捨不得喝。\n• 極致講究的咖啡基底：店家特別專注於濃郁且具獨特風味的 Espresso 與 Ristr8to（限制萃取濃縮咖啡）基底，菜單上詳細標註了咖啡豆產地、烘焙度與牛奶比例。\n• 工業風設計：本店裝潢採用沉穩的黑色系工業風搭配微調燈光，營造出獨特的時尚街頭感，吸引世界各地的觀光客前來朝聖。\n📝 推薦必點\n• Satan Latte（撒旦拿鐵）：店內最具代表性的招牌品項，搭配最經典的獨角獸冠軍拉花圖案。\n• Ficelle / Godmother：針對不同奶量與咖啡濃縮比例調配的經典白咖啡系列。\n• 甜點與周邊：店內亦有販售鬆餅、手工冰淇淋、自家烘焙的咖啡豆及限定設計週邊商品。"}, "Tai Toon Baan 帶福辦": {"orig": "ใต้ถุนบ้าน · 超人氣文青風老宅早餐店", "points": ["傳統木造高腳屋的半地下室，不到 10 桌", "必點：泰式鐵鍋煎蛋、豬肉粥、麵包佐香蘭椰醬", "06:30 開門很快就客滿，早點去"], "links": [["Curly 介紹", "https://curly.com.tw/tai-thun-baan/"]], "full": ""}, "Elite Massage & Spa": {"orig": "平價且極受好評的按摩店", "points": ["塔佩門附近，CP 值高、環境乾淨", "師傅手法有勁道，點對點舒壓"], "links": [], "full": ""}};
 async function tutApi(body) {
   await new Promise(r => setTimeout(r, 120));
   const stamp = String(Date.now());
   if (!body) return { ok: true, role: 'edit',
-    trip: { id: TRIP_ID, name: '操作練習', dest: '清邁', en: 'Practice', start: '2099-01-01', days: 1, mode: 'walk', stays: [], region: '', center: '', cover: '', members: [TUT_NICK],
+    trip: { id: TRIP_ID, name: '操作練習', dest: '清邁', en: 'Practice', start: '2099-01-01', days: 2, mode: 'walk', stays: [], region: '', center: '', cover: '', members: [TUT_NICK],
       day_start: '', types: [], flights: [], view_key: TRIP_KEY, code: '0000', created_by: TUT_NICK, has_owner: false },
-    days: { d1: { date: '', wd: '', en: 'Practice', zh: '跟著提示操作看看' } },
+    days: { d1: { date: '', wd: '', en: 'Warm Up', zh: '左右滑就能換日期' }, d2: { date: '', wd: '', en: 'Practice', zh: '跟著提示操作看看' } },
     items: loaded ? DAY_KEYS.flatMap(k => (DATA[k] || []).map(it => ({ ...it, day: k, updated_at: BASE.items[it.id]?.updated_at || stamp }))) : TUT_SEED.map(clone),
     notes: TUT_NOTES, checklist: [], mapsKey: '' };
   if (body.action === 'commit') return { ok: true, items: (body.items || []).map(x => ({ ...x, updated_by: TUT_NICK, updated_at: stamp })), deleted: body.deleted || [], days: body.days || [] };
@@ -7141,32 +7149,51 @@ const HAND_SVG = '<svg class="hand-svg" viewBox="0 0 80 88" aria-hidden="true"><
 const editingDrag = () => !!drag;
 function tutCard(id) { return document.querySelector(`.layer [data-id="${id}"]`); }
 function tutItem(id) { return findItem(id)[1]; }
+// 時間軸上沒有卡片的地方：滑動示範放這裡，手指才不會壓在卡片上（箭頭在手指旁邊，上下只要留手掌的高度）
+function tutBlank() {
+  const cards = [...document.querySelectorAll(`#tl .layer [data-id]`)].map(c => c.getBoundingClientRect()).filter(r => r.height && r.bottom > 0 && r.top < innerHeight);
+  const box = document.querySelector('.tut-box')?.getBoundingClientRect().bottom || 0;
+  const top = Math.max(box + 60, tl.getBoundingClientRect().top + 60);   // 只找時間軸裡面（不要壓在標題上）
+  // 每個高度蓋到卡片多少（手掌往下約 44px、指尖往上留 16px）；找最長的一段完全空白，放在那段偏下的地方
+  let best = null, run = null;
+  for (let y = top; y <= innerHeight - 45; y += 4) {
+    const cover = cards.reduce((n, r) => n + Math.max(0, Math.min(r.bottom, y + 44) - Math.max(r.top, y - 16)), 0);
+    if (!cover) { run = run || { a: y, b: y }; run.b = y; if (!best || best.cover || run.b - run.a > best.b - best.a) best = { ...run, cover: 0 }; }
+    else { run = null; if (!best || (best.cover && cover < best.cover)) best = { a: y, b: y, cover }; }
+  }
+  const y = best ? best.a + (best.b - best.a) * 0.65 : innerHeight - 90;
+  return { x: innerWidth * 0.72, y };   // 往左滑：從右邊開始
+}
 const TUT_STEPS = [
+  // 第一關：練習從第 1 天開始，往左滑一次到第 2 天，接著直接點 THE HOUSE
+  { text: '左右滑可以切換日期<br>往左滑，看看第 2 天', gesture: 'swipe', days: ['d1', 'd2'],
+    el: () => tl, to: () => ({ dx: -140, dy: 0 }), pos: tutBlank, done: () => current === 'd2' },
   { text: '點一下「THE HOUSE」<br>看看行程的資訊', gesture: 'tap', el: () => tutCard('tl'),
     done: () => sheet.classList.contains('on') && !sheet.querySelector('#edT') && !editing, after: '這就是行程資訊。<br>往下滑關掉面板，進行下一關。' },
   { text: '長按「Ristr8to」不要放開<br>直接修改這一張', gesture: 'press', el: () => tutCard('tc'),
     done: () => sheet.classList.contains('on') && !!sheet.querySelector('#edT') && !editing },
   // 下面三關都在修改面板裡；中途把面板關掉就回到「長按 Ristr8to」那一關
-  { text: '停留時間的尺往左滑<br>改成 1 小時 30 分', gesture: 'swipe', inSheet: 1, el: () => sheet.querySelector('.dr-win'), to: () => ({ dx: -60, dy: 0 }),
+  { text: '停留時間的尺往左滑<br>改成 1 小時 30 分', gesture: 'swipe', inSheet: 2, el: () => sheet.querySelector('.dr-win'), to: () => ({ dx: -60, dy: 0 }),
     done: () => ed && ed.dur >= 90 && ed.dur <= 150 },
-  { text: '待久一點，後面也要跟著延後<br>打開「後面的行程自動移動」', gesture: 'tap', inSheet: 1, el: () => sheet.querySelector('#edPushWrap.on .sw'),
+  { text: '待久一點，後面也要跟著延後<br>打開「後面的行程自動移動」', gesture: 'tap', inSheet: 2, el: () => sheet.querySelector('#edPushWrap.on .sw'),
     done: () => !!sheet.querySelector('#edPush')?.checked },
-  { text: '按「儲存」<br>後面的行程會一起往後移', gesture: 'tap', inSheet: 1, el: () => sheet.querySelector('#edSave'),
-    done: () => !sheet.classList.contains('on') && m(tutItem('tc').e) - m(tutItem('tc').s) >= 90 && m(tutItem('tl').s) > m('12:00'), after: 'THE HOUSE 和按摩<br>都自動往後延了！' },
+  { text: '按「儲存」<br>後面的行程會一起往後移', gesture: 'tap', inSheet: 2, el: () => sheet.querySelector('#edSave'),
+    done: () => !sheet.classList.contains('on') && m(tutItem('tc').e) - m(tutItem('tc').s) >= 90 && m(tutItem('tl').s) > m('12:00'), after: '後面的行程<br>都自動往後延了！' },
   { text: '點右上角的鉛筆<br>進入編輯模式', gesture: 'tap', el: () => document.getElementById('editBtn'), done: () => editing },
-  { text: '長按「Ristr8to」拿起來<br>往下拖到 11:00 再放開', gesture: 'drag', el: () => tutCard('tc'), to: () => ({ dx: 0, dy: 60 * PX }), tag: '11:00',
-    done: () => !drag && tutItem('tc') && m(tutItem('tc').s) >= m('10:30') && m(tutItem('tc').s) < m(tutItem('tl').s) },
-  { text: '長按「Ristr8to」<br>停在「THE HOUSE」正中間放開<br>兩個行程就會交換', gesture: 'drag', el: () => tutCard('tc'),
-    // 交換要「Ristr8to 卡片的中心」停在 THE HOUSE 的中段，所以手指移動的距離＝兩張卡片中心的距離
-    to: () => { const a = tutCard('tc')?.getBoundingClientRect(), b = tutCard('tl')?.getBoundingClientRect(); return a && b ? { dx: 0, dy: (b.top + b.height / 2) - (a.top + a.height / 2) } : { dx: 0, dy: 80 }; }, tag: '⇅ 交換',
-    enter: st => { st.lunch = m(tutItem('tl').s); const c = tutItem('tc'); st.c = { s: c.s, e: c.e }; },
-    done: st => !drag && m(tutItem('tl').s) < st.lunch && m(tutItem('tl').s) < m(tutItem('tc').s),
-    fail: st => !drag && m(tutItem('tl').s) === st.lunch && m(tutItem('tc').e) > st.lunch, failText: '剛剛只是疊上去，沒有交換<br>要停在 THE HOUSE「正中間」再放開' },
+  { text: '長按「Elite 按摩」拿起來<br>往上拖到 14:00 再放開', gesture: 'drag', el: () => tutCard('ts'), to: () => ({ dx: 0, dy: (m('14:00') - m(tutItem('ts').s)) * PX }), tag: '14:00',
+    enter: st => { st.from = m(tutItem('ts').s); },
+    done: st => !drag && m(tutItem('ts').s) < st.from && m(tutItem('ts').s) >= m(tutItem('tl').e) && m(tutItem('ts').s) <= m('14:30') },
+  { text: '長按「Elite 按摩」<br>停在「酒吧」正中間放開<br>兩個行程就會交換', gesture: 'drag', el: () => tutCard('ts'),
+    // 交換要「按摩卡片的中心」停在酒吧的中段，所以手指移動的距離＝兩張卡片中心的距離
+    to: () => { const a = tutCard('ts')?.getBoundingClientRect(), b = tutCard('tj')?.getBoundingClientRect(); return a && b ? { dx: 0, dy: (b.top + b.height / 2) - (a.top + a.height / 2) } : { dx: 0, dy: 120 }; }, tag: '⇅ 交換',
+    enter: st => { st.bar = m(tutItem('tj').s); const c = tutItem('ts'); st.c = { s: c.s, e: c.e }; st.failId = 'ts'; },
+    done: st => !drag && m(tutItem('tj').s) < st.bar && m(tutItem('tj').s) < m(tutItem('ts').s),
+    fail: st => !drag && m(tutItem('tj').s) === st.bar && tutItem('ts').s !== st.c.s, failText: '剛剛只是移動，沒有交換<br>要停在酒吧「正中間」再放開' },
 ];
 function tutRun() {
   document.documentElement.classList.add('tut');
   const ui = document.createElement('div'); ui.className = 'tut-ui';
-  ui.innerHTML = `<div class="tut-ghost" aria-hidden="true" hidden></div><div class="tut-hand" aria-hidden="true"><span class="tut-ring"></span>${HAND_SVG}</div>
+  ui.innerHTML = `<div class="tut-ghost" aria-hidden="true" hidden></div><div class="tut-hand" aria-hidden="true"><span class="tut-ring"></span><span class="tut-arrow"><i class="ti ti-arrow-narrow-left"></i></span>${HAND_SVG}</div>
     <div class="tut-box" role="status"><div class="tut-top"><span class="tut-dots"></span><button type="button" class="tut-skip">略過教學</button></div><div class="tut-txt"></div></div>`;
   document.body.appendChild(ui);
   const ghost = ui.querySelector('.tut-ghost'), hand = ui.querySelector('.tut-hand'), box = ui.querySelector('.tut-box'), txt = ui.querySelector('.tut-txt'), dots = ui.querySelector('.tut-dots');
@@ -7185,13 +7212,18 @@ function tutRun() {
   function finish() {
     clearInterval(timer); hand.hidden = true; ui.classList.add('done');
     box.innerHTML = `<div class="tut-win"><i class="ti ti-circle-check-filled"></i><b>你學會了！</b>
-      <ul><li><b>點擊卡片：</b>查看卡片資訊。</li><li><b>長按卡片：</b>只要修改單張卡片時，長按即可編輯。</li><li><b>編輯模式：</b>按下鉛筆進入，可以拖曳移動或是交換。</li></ul>
+      <ul><li><b>左右滑：</b>切換日期。</li><li><b>點擊卡片：</b>查看卡片資訊。</li><li><b>長按卡片：</b>只要修改單張卡片時，長按即可編輯。</li><li><b>編輯模式：</b>按下鉛筆進入，可以拖曳移動或是交換。</li></ul>
       <button type="button" class="btn primary tut-go">開始排行程</button></div>`;
     box.querySelector('.tut-go').addEventListener('click', () => leave('done'));
   }
   const timer = setInterval(() => {
-    if (!loaded || current !== 'd1') return;
+    if (!loaded) return;
     const st = TUT_STEPS[i];
+    if (!st || !(st.days || ['d2']).includes(current)) {
+      hand.hidden = true; ghost.hidden = true;
+      if (phase === 'do' && current) say(current === 'overview' || current === 'd1' ? '往左滑<br>回到第 2 天' : '往右滑<br>回到第 2 天');   // 主要的練習在第 2 天
+      return;
+    }
     dots.innerHTML = TUT_STEPS.map((_, k) => `<i class="${k < i ? 'ok' : k === i ? 'on' : ''}"></i>`).join('') + `<small>${i + 1} / ${TUT_STEPS.length}</small>`;
     if (phase === 'do' && st.inSheet && !sheet.classList.contains('on') && !st.done()) { i = st.inSheet; shown = ''; return; }   // 面板被關掉了：回到打開面板那關
     if (phase === 'do' && st.enter && st.entered !== true) { st.enter(st); st.entered = true; }
@@ -7201,9 +7233,9 @@ function tutRun() {
       say('<i class="ti ti-circle-check tut-oki"></i><div>做得好！</div>', 'ok'); phase = 'wait';
       setTimeout(() => { i++; phase = 'do'; if (i >= TUT_STEPS.length) finish(); }, 700);
     }
-    // 放錯位置（例如只是疊上去）：Ristr8to 放回原位，提示再試一次
-    if (phase === 'do' && st.fail && st.fail(st)) { Object.assign(tutItem('tc'), st.c); renderPage(current); st.failed = Date.now(); }
-    if (phase === 'do') say(st.failed && Date.now() - st.failed < 5000 ? `<span class="tut-warn">${st.failText}</span>` : st.text);
+    // 放錯位置（例如只是移動、沒有交換）：卡片放回原位，提示再試一次
+    if (phase === 'do' && st.fail && st.fail(st)) { Object.assign(tutItem(st.failId), st.c); renderPage(current); st.failed = Date.now(); }
+    if (phase === 'do') say(st.failed && Date.now() - st.failed < 5000 ? `<span class="tut-warn">${st.failText}</span>` : typeof st.text === 'function' ? st.text() : st.text);
     // 手指：只在等使用者做的時候、面板沒打開、手沒有在螢幕上時出現
     const el = phase === 'do' && (st.inSheet || !sheet.classList.contains('on')) && !touching && !drag ? st.el() : null;
     if (!el) { hand.hidden = true; ghost.hidden = true; return; }
@@ -7215,7 +7247,7 @@ function tutRun() {
       if (er.bottom > floor || er.top < sr.top) { el.scrollIntoView({ block: 'center', behavior: 'smooth' }); hand.hidden = true; ghost.hidden = true; return; }
     }
     // 每一關開始時：要操作的卡片如果被提示框擋住、或在畫面下半部，捲到中間偏上
-    if (!st.inSheet && st.scrolled !== true && !editingDrag()) {
+    if (!st.inSheet && !st.pos && st.scrolled !== true && !editingDrag()) {
       st.scrolled = true;
       const er = el.getBoundingClientRect(), top = box.getBoundingClientRect().bottom + 16;
       if (er.top < top || er.bottom > innerHeight * 0.62) { scrollBy({ top: er.top - Math.max(top, innerHeight * 0.42), behavior: 'smooth' }); hand.hidden = true; ghost.hidden = true; return; }
@@ -7223,7 +7255,9 @@ function tutRun() {
     const r = el.getBoundingClientRect(), to = st.to ? st.to() : { dx: 0, dy: 0 };
     // 卡片：手指放在右半邊、偏下，比較不會蓋住店名；小按鈕、面板裡的東西：放正中間
     const wide = !st.inSheet && r.width > 120;
-    const x = wide ? r.right - Math.min(76, r.width * 0.3) : r.left + r.width / 2, y = wide ? r.top + Math.min(r.height * 0.62, 46) : r.top + Math.min(r.height / 2, 30);
+    let x = wide ? r.right - Math.min(76, r.width * 0.3) : r.left + r.width / 2, y = wide ? r.top + Math.min(r.height * 0.62, 46) : r.top + Math.min(r.height / 2, 30);
+    if (st.pos) ({ x, y } = st.pos());
+    hand.querySelector('.tut-arrow i').className = 'ti ti-arrow-narrow-' + (to.dx > 0 ? 'right' : 'left');
     hand.hidden = false; hand.style.left = x + 'px'; hand.style.top = y + 'px';
     hand.style.setProperty('--dx', to.dx + 'px'); hand.style.setProperty('--dy', to.dy + 'px');
     if (hand.dataset.g !== st.gesture + i) {
@@ -7233,6 +7267,7 @@ function tutRun() {
       ghost.className = 'tut-ghost';
       [hand, ghost].forEach(x => { x.style.animation = 'none'; void x.offsetWidth; x.style.animation = ''; });   // 手指和分身的動畫同時開始
     }
+    hand.classList.toggle('to-right', to.dx > 0);
     ghost.hidden = st.gesture !== 'drag';
     if (!ghost.hidden) {
       Object.assign(ghost.style, { left: r.left + 'px', top: r.top + 'px', width: r.width + 'px', height: r.height + 'px' });
@@ -7241,7 +7276,8 @@ function tutRun() {
   }, 150);
 }
 if (TUT) {
-  if (location.hash !== '#d1') history.replaceState(null, '', '#d1');
+  if (location.hash !== '#d1') history.replaceState(null, '', '#d1');   // 第一關：從第 1 天往左滑到第 2 天
+  if (current !== 'd1') showPage('d1', false);
   tutRun();
 }
 // 從網站打開練習：整頁換到同一個網頁加 ?tutorial=1（iPhone 的 iframe 裡固定位置的東西會跑掉，所以不用 iframe）
@@ -7262,7 +7298,7 @@ function openTutIntro() {
   openSheet(`<div class="tin">
       <div class="tin-ill" aria-hidden="true"><span class="tin-c a"></span><span class="tin-c b"></span><span class="tin-c c"></span><span class="tin-hand">${HAND_SVG}</span></div>
       <div class="tin-t">給我 30 秒<br>學會編輯</div>
-      <p>點、長按、拖曳、交換<br>跟著手指做 8 個小關卡</p></div>
+      <p>滑動、點、長按、拖曳、交換<br>跟著手指做 ${TUT_STEPS.length} 個小關卡</p></div>
     <div class="ed-actions"><button type="button" class="btn primary" id="tinGo" style="flex:1">下一步</button></div>
     <button type="button" class="tin-skip" id="tinSkip">先不用，之後可以從頭像選單打開</button>`, null, true);
   sheet.classList.add('center');
