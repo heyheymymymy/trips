@@ -2455,14 +2455,22 @@ function markNow() {
 }
 setInterval(() => { if (document.visibilityState === 'visible' && !drag && !busy && isDay(current)) markNow(); }, 60000);
 
-// 時間軸範圍：預設 9:00–22:00，有行程超出時自動延伸（所有天數共用，滑動時才對得齊）
-let START = 9, END = 22, baseH = 0;
-function computeRange() {
-  let lo = 9 * 60, hi = 22 * 60;
-  for (const k of DAY_KEYS) for (const it of withFlights(DATA[k] || [], k)) { lo = Math.min(lo, m(it.s)); hi = Math.max(hi, m(it.e)); }
-  START = Math.floor(lo / 60); END = Math.min(29, Math.ceil(hi / 60));
+// 時間軸範圍：從旅程設定的「每天幾點出門」到 22:00，有行程超出時自動延伸。結束時間所有天共用；
+// 開始時間：沒有航班的日子共用一個（滑動時才對得齊），有航班的那天自己算（報到很早，不要把每一天都拉到清晨）
+let START = 9, END = 22, baseH = 0, START_OF = {};
+function computeRange(page) {
+  const d0 = TRIP?.day_start ? m(TRIP.day_start) : 10 * 60;
+  let lo = d0, hi = 22 * 60; START_OF = {};
+  for (const k of DAY_KEYS) {
+    const fl = flightItems(k).length > 0; let dlo = d0;
+    for (const it of withFlights(DATA[k] || [], k)) { if (fl) dlo = Math.min(dlo, m(it.s)); else lo = Math.min(lo, m(it.s)); hi = Math.max(hi, m(it.e)); }
+    if (fl) START_OF[k] = Math.floor(dlo / 60);
+  }
+  START_OF._ = Math.floor(lo / 60); END = Math.min(29, Math.ceil(hi / 60));
+  START = startOf(page);
   baseH = (END - START) * 60 * PX + 20;
 }
+const startOf = page => START_OF[page] ?? START_OF._ ?? 9;
 const y = s => (m(s) - START * 60) * PX;
 // 「＋ 加入行程」：放在這天最後一張卡片下面；這天還沒有行程就放在時間軸上方
 // 航班卡片（自動產生）也要避開：還沒有行程但有航班時，航班前面放得下就放上面，放不下就放航班下面
@@ -2552,10 +2560,10 @@ function hideCutChips(root) {
 }
 document.fonts?.ready.then(() => curLayer && hideCutChips(curLayer));   // 字型晚到、字變寬變高：再量一次
 function buildLayer(page, isLive) {
-  const layer = div('layer');
-  target = layer; live = isLive;
+  const layer = div('layer'), st0 = START;
+  target = layer; live = isLive; START = startOf(page);   // 滑動時旁邊那天：用那天自己的開始時間排
   renderCards(withFlights(itemsOf(page), page), page);
-  target = null; live = true;
+  target = null; live = true; START = st0;
   return layer;
 }
 // 時間線上的提醒：營業時間平常不顯示（點開看得到），只有排的時間不在營業時間內、或那天公休才提醒
@@ -2750,7 +2758,7 @@ function renderPage(page) {
   const keepOpen = page === renderedPage ? expanders.filter(ex => ex.el.classList.contains('open')).map(ex => ex.el.dataset.id) : [];
   renderedPage = page;
   setTimeout(() => warmPhotos(page), 300);
-  computeRange();
+  computeRange(page);
   tl.innerHTML = ''; movable.length = 0; expanders.length = 0;
   tl.classList.remove('sliding');
   // 地圖模式：時間軸、備選清單收起來，改顯示地圖
