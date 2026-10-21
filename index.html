@@ -11,7 +11,7 @@
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.19.0/dist/tabler-icons.min.css">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Isometra&family=Instrument+Serif:ital@0;1&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Playwrite+DK+Loopet&family=Instrument+Serif:ital@0;1&display=swap">
 <style>
 :root{
   color-scheme:light;
@@ -39,11 +39,15 @@ body{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
 input,textarea,[contenteditable],.sheet .sh-title,.sheet .sh-sub,.sh-desc,.sh-meta,.sh-list,.full-txt,.sheet .mine,.st-al span,.share-text{-webkit-user-select:text;user-select:text;-webkit-touch-callout:default}
 .app{max-width:480px;margin:0 auto;min-height:100vh;overflow-x:clip;padding-bottom:env(safe-area-inset-bottom)}
 header{position:sticky;top:0;z-index:10;background:var(--page);padding:calc(12px + env(safe-area-inset-top)) 16px 10px;border-bottom:1px solid var(--line)}
-/* 天數列：放得下時置中；放不下時可左右滑，兩側保留 16px 邊界 */
-.tabs-row{display:flex;align-items:center;margin:0 -16px 10px}
+/* 天數列（Figma 126-1473）：標題下面；總覽（月曆）、備選（書籤）固定在左右兩側，只有中間的天數可以滑。放得下時置中 */
+.tabs-row{display:flex;align-items:center;gap:0;margin:12px -6px 0}
+.tab.side{flex:none;width:56px;height:40px;padding:0;border-radius:999px;background:var(--fill);color:var(--accent-fg);font-size:22px;display:flex;align-items:center;justify-content:center}
+.tab.side[data-page="cand"]{width:52px;font-size:20px}
+.tab.side svg{display:block}   /* 月曆（含右上角小圓點）、書籤：使用者給的 SVG（icon/），顏色跟著文字色，選中時變白 */
+.tab.side.on{background:var(--accent-fg);color:#fff;font-weight:400}
 .on-trips .tabs-row{display:none}
 .tabs{overflow-x:auto;scrollbar-width:none;flex:1;min-width:0;-webkit-overflow-scrolling:touch;scroll-padding:0 16px}
-.tabs-in{display:flex;align-items:center;gap:2px;width:max-content;margin:0 auto;padding:0 16px}
+.tabs-in{display:flex;align-items:center;gap:6px;width:max-content;margin:0 auto;padding:0 11px}
 .tabs::-webkit-scrollbar{display:none}
 /* 還能往左／往右滑時，該側邊緣淡出 */
 .tabs{--fl:0px;--fr:0px;
@@ -53,13 +57,13 @@ header{position:sticky;top:0;z-index:10;background:var(--page);padding:calc(12px
 .tabs.fade-r{--fr:36px}
 .tab{position:relative;flex:none;padding:5px 8px;border-radius:8px;font-size:13px;color:var(--text2);border:0;background:none}
 /* 天數按鈕：正圓、數字置中 */
-.tab.day{width:30px;height:30px;padding:0;border-radius:50%;display:flex;align-items:center;justify-content:center;
+.tab.day{width:34px;height:34px;padding:0;border-radius:50%;display:flex;align-items:center;justify-content:center;background:var(--fill);color:var(--text);font-weight:500;
   line-height:1;font-variant-numeric:tabular-nums}
-.tab.on{background:var(--accent-bg);color:var(--accent-fg);font-weight:600}
+.tab.on{background:var(--accent-fg);color:#fff;font-weight:600}
 /* 單日大標題：英文書寫體，營造度假感 */
-.day-title{font-family:"Isometra",cursive;font-size:36px;font-weight:400;line-height:1.15;color:var(--accent-fg);text-align:center}
+.day-title{font-family:"Playwrite DK Loopet",cursive;font-size:36px;font-weight:400;line-height:1.4;color:var(--accent-fg);text-align:center}
 .day-sub{font-size:13px;color:var(--text2);margin-top:4px;text-align:center}
-.tl{position:relative;margin:14px 16px 40px 0;transition:height .25s ease;touch-action:pan-y pinch-zoom}
+.tl{position:relative;margin:14px 16px 140px 0;transition:height .25s ease;touch-action:pan-y pinch-zoom}   /* 下面留空：右下角的地圖、手不會一直蓋住最後一張卡片 */
 /* 卡片層：時間線固定不動，只有這一層左右滑 */
 .cards{position:absolute;top:0;bottom:0;left:52px;right:0;overflow:hidden;z-index:1}   /* 蓋在「現在」那條線上面 */
 .layer{position:absolute;inset:0}
@@ -241,7 +245,8 @@ header{position:sticky;top:0;z-index:10;background:var(--page);padding:calc(12px
 .now{position:absolute;left:52px;width:0;height:0;z-index:0}   /* 現在時間：時間刻度和卡片中間一個咖啡色小圓點 */
 .now::before{content:"";position:absolute;left:-7px;top:-3px;width:6px;height:6px;border-radius:50%;background:var(--accent-fg)}
 .now{pointer-events:none}
-.tab.today::after{content:"";position:absolute;left:50%;bottom:2px;width:4px;height:4px;margin-left:-2px;border-radius:50%;background:var(--accent-fg)}
+.tab.today::after{content:"";position:absolute;left:50%;bottom:3px;width:4px;height:4px;margin-left:-2px;border-radius:50%;background:var(--accent-fg)}
+.tab.today.on::after{background:#fff}
 .ov-today{margin-left:6px;padding:0 6px;border-radius:999px;background:var(--accent-fg);color:#fff;font-size:10px;font-weight:600;vertical-align:1px}
 .sheet-bg{position:fixed;inset:0;z-index:50;background:rgba(20,20,18,.35);opacity:0;pointer-events:none;transition:opacity .2s}
 .sheet-bg.on{opacity:1;pointer-events:auto}
@@ -329,10 +334,16 @@ html.sheet-lock body{position:fixed;left:0;right:0;bottom:0;overflow:hidden}
 #subTheme.empty{color:var(--accent-fg);font-weight:600;background-image:none}
 .hd-edit:active{opacity:.6}
 /* ---------- 編輯模式 ---------- */
-.edit-btn{position:absolute;right:16px;bottom:6px;width:38px;height:38px;border-radius:50%;border:0;background:none;
-  color:var(--text2);font-size:22px;display:flex;align-items:center;justify-content:center;cursor:pointer}
+.edit-btn{position:fixed;right:max(9px,calc(50vw - 231px));bottom:calc(24px + env(safe-area-inset-bottom));z-index:40;width:84px;height:48px;padding:0;border:0;border-radius:999px;background:#fff;
+  color:var(--accent-fg);font-size:25px;display:flex;align-items:center;justify-content:center;box-shadow:0 2px 12px rgba(60,30,10,.16),0 0 0 .5px rgba(60,30,10,.06);cursor:pointer}   /* 右下角：拇指按得到（Figma 126-1473） */
+.edit-btn[hidden]{display:none}
 .edit-btn i{display:block;line-height:1}
-.editing .edit-btn{display:none}
+.edit-btn svg,.map-btn svg{display:block;width:20px;height:auto}
+.edit-btn,.map-btn{gap:5px}
+.edit-btn i,.map-btn i{font-size:21px}
+.btn-lb{font-size:13px;font-weight:600;line-height:1;letter-spacing:.5px}   /* 圖示旁邊的小字 */
+.edit-btn{transition:background-color .25s,color .25s,transform .25s cubic-bezier(.3,.7,.2,1),opacity .2s}
+.editing .edit-btn{z-index:41;background:var(--accent-fg);color:#fff}   /* 編輯中：手變成實心打勾，按了＝儲存離開（同一顆按鈕進出編輯） */
 /* ---------- 地圖 ---------- */
 /* 分段切換（卡片樣式）：三段等寬，選中的那段是白色小塊，切換時滑過去 */
 .seg{position:relative;display:flex;height:36px;padding:3px;border-radius:10px;background:var(--fill2);box-sizing:border-box}
@@ -342,12 +353,22 @@ html.sheet-lock body{position:fixed;left:0;right:0;bottom:0;overflow:hidden}
 .seg button{position:relative;z-index:1;flex:1;min-width:0;padding:0;border:0;border-radius:8px;background:none;font:inherit;font-size:14px;color:var(--text2);cursor:pointer;transition:color .2s}
 .seg button.on{color:var(--text);font-weight:600}
 @media (prefers-reduced-motion:reduce){.seg-thumb{transition:none}}
-.map-btn{position:absolute;left:16px;bottom:6px;width:38px;height:38px;border-radius:50%;border:0;background:none;
-  color:var(--text2);font-size:22px;display:flex;align-items:center;justify-content:center;cursor:pointer;padding:0}
+.map-btn{position:fixed;right:max(9px,calc(50vw - 231px));bottom:calc(82px + env(safe-area-inset-bottom));z-index:40;width:84px;height:48px;padding:0;border:0;border-radius:999px;background:#fff;
+  color:var(--accent-fg);font-size:24px;display:flex;align-items:center;justify-content:center;box-shadow:0 2px 12px rgba(60,30,10,.16),0 0 0 .5px rgba(60,30,10,.06);cursor:pointer}
 .map-btn i{display:block;line-height:1}
-.map-btn[hidden],.editing .map-btn{display:none}
+.map-btn[hidden]{display:none}
+.map-btn{transition:transform .25s cubic-bezier(.3,.7,.2,1),opacity .2s,background-color .25s,color .25s}
+.editing .map-btn{transform:translateY(58px) scale(.85);opacity:0;pointer-events:none}   /* 編輯中不能開地圖：往下收進打勾後面 */
+@media (prefers-reduced-motion:reduce){.edit-btn,.map-btn{transition:none}}
 .map-view{position:relative;height:calc(100dvh - var(--hd, 160px));min-height:320px;background:#F3EFE8}
 .map-view .gmap{position:absolute;inset:0}
+/* 地圖、清單切換：清單淡出再換、回來淡入（地圖直接出現，不等它畫好：等的話開地圖感覺變慢） */
+.fade-out{opacity:0 !important;transition:opacity .14s ease}
+.fade-in{animation:fadeIn .22s ease}
+@keyframes fadeIn{from{opacity:0}}
+.ic-in{animation:icIn .2s ease}
+@keyframes icIn{from{opacity:0;transform:scale(.7)}}
+@media (prefers-reduced-motion:reduce){.fade-out{transition:none}.fade-in,.ic-in{animation:none}}
 /* 地圖模式：網頁背景換成地圖底色，iPhone 底部半透明網址列後面露出來的是米色，跟地圖連成一片 */
 html.on-map:not(.sheet-lock),html.on-map:not(.sheet-lock) body{background:#f4f0e9}   /* 打開資訊面板時是白色，跟面板一樣 */
 .map-msg{position:absolute;left:16px;right:16px;top:16px;z-index:2;padding:10px 12px;border-radius:10px;background:rgba(255,255,255,.94);
@@ -356,6 +377,12 @@ html.on-map:not(.sheet-lock),html.on-map:not(.sheet-lock) body{background:#f4f0e
 /* 放大縮小：自己做的按鈕，跟頁首的按鈕同一個樣式（Google 內建的關掉） */
 .map-zoom{position:absolute;right:12px;bottom:36px;z-index:2;display:flex;flex-direction:column;gap:8px}
 .map-view.has-strip .map-zoom{bottom:80px}
+.map-zoom{display:none}   /* 10/21 拿掉放大縮小：手指兩指縮放、點兩下放大就好（Google 地圖沒有規定要放這兩顆） */
+/* 地圖模式：用不到編輯，手往上滑進地圖按鈕後面收起來；地圖按鈕位置不動、變成陶土色實心＋清單圖示（跟編輯中的打勾一樣是「開著」的樣子）。
+   地圖按鈕本來就在地點列上面，不用移動 */
+.btn-map .edit-btn{transform:translateY(-58px) scale(.85);opacity:0;pointer-events:none}
+.btn-map .map-btn{z-index:41;background:var(--accent-fg);color:#fff}
+.edit-btn,.map-btn{will-change:transform,opacity}   /* 獨立一層：換頁、畫地圖忙的時候動畫也不卡 */
 /* 地圖最底下一條米色，蓋住 Google 標誌和版權字（使用者自己的決定，個人使用） */
 .map-cover{position:absolute;left:0;right:0;bottom:0;height:72px;z-index:2;pointer-events:none;
   background:linear-gradient(to top,#f4f0e9 0,#f4f0e9 26px,rgba(244,240,233,0) 100%)}   /* 底下 26px 實色蓋住字樣，往上淡出 */
@@ -393,13 +420,21 @@ html.on-map:not(.sheet-lock),html.on-map:not(.sheet-lock) body{background:#f4f0e
   font-size:11px;font-weight:600;box-shadow:0 1px 3px rgba(0,0,0,.12)}
 .pin.dim{opacity:.45}
 .map-view.far .pin span{display:none}   /* 拉遠時只留編號圓點，店名才不會疊在一起 */
-/* 編輯列蓋掉天數列，高度跟天數列一樣（30px），進出編輯時頁首不會跳動 */
-.editbar{display:none;align-items:center;gap:6px;height:30px;margin:0 0 10px;padding:0;background:none;color:var(--accent-fg);font-size:13px;font-weight:600}
-.editing .editbar{display:flex}
-.editing .tabs,.editing .tabs-row{display:none}
-.eb-label{flex:1}
-.eb-btn{height:26px;padding:0 12px;border-radius:999px;border:0;background:var(--accent-bg);color:var(--accent-fg);font-size:13px;font-weight:600;cursor:pointer}
-.eb-btn.done{background:var(--accent-fg);color:#fff}
+/* 編輯列：天數列原地變成一條灰色膠囊（跟總覽按鈕一樣 40px 高），從總覽按鈕往右拉長蓋過去；天數、備選淡出。離開時縮回總覽按鈕 */
+.tabs-row{position:relative}
+.editbar{position:absolute;left:0;top:50%;z-index:2;display:flex;align-items:center;gap:6px;width:56px;height:40px;margin-top:-20px;padding:0 5px 0 16px;box-sizing:border-box;border-radius:999px;background:var(--fill);
+  color:var(--text);font-size:14px;font-weight:600;overflow:hidden;white-space:nowrap;visibility:hidden;transition:width .3s cubic-bezier(.3,.7,.2,1),visibility 0s .3s}
+.editing .editbar{width:100%;visibility:visible;transition:width .34s cubic-bezier(.3,.7,.2,1),visibility 0s}
+.editbar > *{opacity:0;transition:opacity .1s}
+.editing .editbar > *{opacity:1;transition:opacity .2s .22s}
+.tabs-row .tabs,.tabs-row .tab.side{transition:opacity .2s}
+.editing .tabs-row .tabs,.editing .tabs-row .tab.side[data-page="cand"]{opacity:0;pointer-events:none}
+@media (prefers-reduced-motion:reduce){.editbar,.editing .editbar,.editbar > *,.editing .editbar > *,.tabs-row .tabs,.tabs-row .tab.side{transition:none}}
+.eb-label{flex:1;min-width:0;display:flex;align-items:center;gap:0;color:var(--accent-fg);overflow:hidden;text-overflow:ellipsis}
+.eb-label > i{margin-right:5px;font-size:17px}   /* 「✎ 第二天編輯中」陶土色 */
+.eb-st:not(:empty)::before{content:"・"}
+.eb-btn{flex:none;height:30px;padding:0 16px;border-radius:999px;border:0;background:#fff;color:var(--text2);font-size:14px;font-weight:600;cursor:pointer}
+.eb-btn.done{color:var(--accent-fg)}
 .car.stale,.car-line.stale{opacity:.5}
 .car .q{margin-left:2px;font-weight:600}
 .rt-list{display:flex;flex-direction:column;gap:2px;margin-top:4px}
@@ -487,15 +522,15 @@ html.on-map:not(.sheet-lock),html.on-map:not(.sheet-lock) body{background:#f4f0e
 .fab{position:fixed;right:max(20px,calc(50vw - 220px));bottom:calc(24px + env(safe-area-inset-bottom));z-index:40;width:52px;height:52px;border-radius:50%;
   border:0;background:var(--accent-fg);color:#fff;font-size:24px;display:none;align-items:center;justify-content:center;box-shadow:0 4px 14px rgba(60,30,10,.22);cursor:pointer}
 .fab i{display:block;line-height:1}
-.editing .fab.day{display:flex}
+.editing .fab.day{display:none}   /* 10/21 拿掉：編輯模式點空白處就能新增 */
 /* ＋ 上方的淺色小按鈕：計算這天的交通（樣式跟頁首的編輯按鈕一樣，不搶 ＋ 的風頭） */
 .fab-sub{position:fixed;right:calc(max(20px,calc(50vw - 220px)) + 7px);bottom:calc(88px + env(safe-area-inset-bottom));z-index:40;width:38px;height:38px;border-radius:50%;
   border:1px solid var(--line);background:#fff;color:var(--accent-fg);font-size:18px;display:none;align-items:center;justify-content:center;box-shadow:0 2px 8px rgba(60,30,10,.12);cursor:pointer}
 .fab-sub i{display:block;line-height:1}
-.editing .fab-sub.day{display:flex}
-.editing .toast{bottom:calc(140px + env(safe-area-inset-bottom))}   /* 編輯模式右下有兩顆按鈕，提示往上移 */
+.editing .fab-sub.day{display:none}   /* 10/21 拿掉「計算這天的交通」 */
+.editing .toast{bottom:calc(24px + env(safe-area-inset-bottom))}   /* 編輯模式右下沒有按鈕：提示放回下面 */
 /* 左右各留 16px、置中、寬度照文字長度：原本 left:50% 會讓提示最多只有半個螢幕寬，短短一句也被折成兩行 */
-.toast{position:fixed;left:0;right:0;margin:0 auto;width:max-content;bottom:calc(88px + env(safe-area-inset-bottom));z-index:60;transform:translateY(20px);opacity:0;pointer-events:none;
+.toast{position:fixed;left:0;right:0;margin:0 auto;width:max-content;bottom:calc(142px + env(safe-area-inset-bottom));z-index:60;transform:translateY(20px);opacity:0;pointer-events:none;
   display:flex;align-items:center;gap:12px;max-width:calc(100% - 32px);box-sizing:border-box;padding:10px 14px;border-radius:12px;background:#2b2622;color:#fff;font-size:14px;
   transition:opacity .2s,transform .2s}
 .toast.on{opacity:1;transform:none;pointer-events:auto}
@@ -594,7 +629,7 @@ html.on-map:not(.sheet-lock),html.on-map:not(.sheet-lock) body{background:#f4f0e
   box-shadow:0 0 0 1px var(--line),0 2px 8px rgba(60,40,20,.06);overflow:hidden;cursor:pointer}
 .trip-cover{position:relative;height:132px;background:var(--accent-bg);display:flex;align-items:center;justify-content:center}
 .trip-cover img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
-.trip-cover .en{font-family:"Isometra",cursive;font-size:34px;color:var(--accent-fg)}
+.trip-cover .en{font-family:"Playwrite DK Loopet",cursive;font-size:34px;color:var(--accent-fg)}
 .trip-badge{position:absolute;top:10px;right:10px;padding:3px 9px;border-radius:999px;background:rgba(255,255,255,.92);color:var(--accent-fg);font-size:12px;font-weight:600}
 .trip-body{display:block;padding:12px 16px 14px}
 .trip-name{font-size:16px;font-weight:600;line-height:1.35}
@@ -813,11 +848,14 @@ button.ov-stay{width:100%;font:inherit;text-align:left;cursor:pointer}
 .trips-carry{margin-top:22px;text-align:center}
 /* Google 登入：入口在「我的旅程」左上角的頭像（沒登入是灰色的頭）、第一次建立旅程時問一次 */
 /* 登入後：我的旅程左上角放頭像，點了往下展開帳號選單（名字、信箱、登出） */
-.acct-btn{position:absolute;left:16px;bottom:9px;width:32px;height:32px;padding:0;border:0;border-radius:50%;overflow:hidden;background:var(--other-bg);color:var(--text2);font-size:18px;display:none;align-items:center;justify-content:center;cursor:pointer}
-.on-trips:not(.on-new) .acct-btn:not([hidden]){display:flex}
+.acct-btn{position:absolute;left:10px;top:calc(18px + env(safe-area-inset-top));width:38px;height:38px;padding:0;border:0;border-radius:50%;background:none;color:var(--text2);font-size:24px;display:none;align-items:center;justify-content:center;cursor:pointer}   /* 漢堡：標題左邊 */
+html:not(.on-new) .acct-btn:not([hidden]){display:flex}   /* 我的旅程、旅程裡都在標題列左邊 */
+html:not(.on-new) .editing .acct-btn,html.tut .acct-btn{display:none}
 .acct-btn img{width:100%;height:100%;object-fit:cover}
-.acct-menu{position:absolute;left:12px;top:calc(100% - 4px);z-index:20;min-width:240px;max-width:calc(100% - 24px);padding:6px;border-radius:14px;background:#fff;box-shadow:0 8px 28px rgba(0,0,0,.14),0 0 0 1px rgba(0,0,0,.04);animation:dropIn .16s ease}
+.am-set{margin-top:4px;border-top:1px solid var(--line);border-radius:0 0 10px 10px}   /* 旅程設定：跟上面帳號的東西隔開 */
+.acct-menu{position:absolute;left:12px;top:calc(60px + env(safe-area-inset-top));z-index:20;min-width:240px;max-width:calc(100% - 24px);padding:6px;border-radius:14px;background:#fff;box-shadow:0 8px 28px rgba(0,0,0,.14),0 0 0 1px rgba(0,0,0,.04);animation:dropIn .16s ease}
 .acct-menu[hidden]{display:none}
+.am-login{margin-bottom:4px;border-bottom:1px solid var(--line);border-radius:10px 10px 0 0;padding-bottom:12px}
 .am-who{display:flex;align-items:center;gap:10px;padding:10px 10px 12px;border-bottom:1px solid var(--line);margin-bottom:4px}
 .am-who .acct-pic{width:36px;height:36px}
 .am-who b{display:block;font-size:14px}
@@ -825,6 +863,10 @@ button.ov-stay{width:100%;font:inherit;text-align:left;cursor:pointer}
 .am-who > span:last-child{min-width:0}
 .am-item{display:flex;align-items:center;gap:10px;width:100%;padding:10px;border:0;border-radius:10px;background:none;font:inherit;font-size:14px;color:var(--text);text-align:left;cursor:pointer}
 .am-item i{font-size:18px}
+.am-scale{cursor:default}.am-scale:active{background:none}
+.am-seg{display:flex;margin-left:auto;padding:2px;border-radius:8px;background:var(--fill)}
+.am-seg button{padding:4px 10px;border:0;border-radius:6px;background:none;font:inherit;font-size:13px;color:var(--text2);cursor:pointer}
+.am-seg button.on{background:#fff;color:var(--text);font-weight:600;box-shadow:0 1px 2px rgba(0,0,0,.08)}
 a.am-item{text-decoration:none;box-sizing:border-box}
 .am-item:active{background:var(--fill)}
 .am-val{margin-left:auto;color:var(--text2);max-width:9em;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
@@ -841,10 +883,9 @@ a.am-item{text-decoration:none;box-sizing:border-box}
 .g-note a{white-space:nowrap}
 .sheet.center .sh-head > div{padding-left:40px}   /* 右邊有關閉鈕，左邊空一樣寬，標題才會在正中間 */
 .g-skip{display:block;margin:10px auto 0;padding:6px 4px;border:0;background:none;font:inherit;font-size:13px;color:var(--text2);text-decoration:underline;text-underline-offset:3px;cursor:pointer}
-.acct-btn.anon{color:#B5B5B5;font-size:20px}   /* 沒登入：灰色的頭 */
 .trips-carry button{display:inline-flex;align-items:center;gap:6px;height:38px;padding:0 14px;border:1px solid var(--border);border-radius:999px;background:#fff;font:inherit;font-size:14px;color:var(--text);cursor:pointer}
 .trips-carry small{display:block;margin:8px auto 0;max-width:280px;font-size:12px;line-height:1.5;color:var(--muted)}
-.trips-empty .en{font-family:"Isometra",cursive;font-size:30px;color:var(--accent-fg);margin-bottom:8px}
+.trips-empty .en{font-family:"Playwrite DK Loopet",cursive;font-size:30px;color:var(--accent-fg);margin-bottom:8px}
 /* 還沒有旅程：一張虛線大卡片（點了建立旅程），右下角手寫風的箭頭提示 */
 .trips-empty:has(.te-card){padding:0}
 .te-card{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;width:100%;height:201px;padding:0 16px;border:1.5px dashed #9a948d;border-radius:16px;background:var(--fill);box-shadow:0 6px 18px rgba(60,40,20,.08);font:inherit;color:var(--accent-fg);cursor:pointer}
@@ -1297,7 +1338,7 @@ html.tut .sheet:not(.dlg){max-height:calc(100vh - 176px - env(safe-area-inset-to
 .ed-lab-hint .ti-map-pin-check{color:var(--spa-fg)}
 .cover{position:relative;display:flex;align-items:center;justify-content:center;height:150px;border-radius:16px;overflow:hidden;background:var(--accent-bg)}
 .cover img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
-.cover .en{font-family:"Isometra",cursive;font-size:34px;color:var(--accent-fg);padding:0 16px;text-align:center;line-height:1.1}
+.cover .en{font-family:"Playwrite DK Loopet",cursive;font-size:34px;color:var(--accent-fg);padding:0 16px;text-align:center;line-height:1.1}
 .wiz-bar{position:fixed;left:0;right:0;bottom:0;z-index:40;max-width:480px;margin:0 auto;display:none;gap:8px;
   padding:12px 16px calc(12px + env(safe-area-inset-bottom));background:var(--page);border-top:1px solid var(--line)}
 .on-new .wiz-bar{display:flex}
@@ -1474,20 +1515,22 @@ input.sw:focus-visible{outline:2px solid var(--accent-bg);outline-offset:2px}
 <body>
 <div class="app">
   <header>
-    <div class="editbar"><span class="eb-label"><i class="ti ti-pencil"></i> <span id="ebDay"></span>編輯中 · <span id="ebSt" class="eb-st">點空白處新增</span></span>
-      <button type="button" class="eb-btn" id="editCancel">取消</button><button type="button" class="eb-btn done" id="editDone">完成</button></div>
-    <div class="tabs-row">
-    <nav class="tabs"><div class="tabs-in">
-      <button class="tab" data-page="overview">總覽</button><button class="tab day" data-page="d1" aria-label="第 1 天">1</button><button class="tab day" data-page="d2" aria-label="第 2 天">2</button>
-      <button class="tab day" data-page="d3" aria-label="第 3 天">3</button><button class="tab day" data-page="d4" aria-label="第 4 天">4</button><button class="tab day" data-page="d5" aria-label="第 5 天">5</button>
-      <button class="tab day" data-page="d6" aria-label="第 6 天">6</button><button class="tab day" data-page="d7" aria-label="第 7 天">7</button><button class="tab day" data-page="d8" aria-label="第 8 天">8</button><button class="tab" data-page="cand">備選</button>
-    </div></nav></div>
     <div class="day-title" id="dayTitle"></div>
     <div class="day-sub" id="daySub"></div>
-    <button type="button" class="map-btn" id="mapBtn" aria-label="看地圖" hidden><i class="ti ti-map"></i></button>
-    <button type="button" class="acct-btn" id="acctBtn" aria-label="Google 帳號" aria-expanded="false" hidden></button>
+    <div class="tabs-row">
+    <button class="tab side" data-page="overview" aria-label="總覽"><svg aria-hidden="true" width="22" height="19" viewBox="0 0 22 19" fill="none" xmlns="http://www.w3.org/2000/svg">
+<path d="M3.11955 18.7382C2.09229 18.7382 1.31549 18.475 0.78918 17.9487C0.262865 17.4287 -0.000293016 16.6614 -0.000293016 15.6468V4.07108C-0.000293016 3.05016 0.262865 2.27971 0.78918 1.75974C1.31549 1.23976 2.09229 0.979776 3.11955 0.979776H14.4004C14.1975 1.31586 14.039 1.68047 13.9249 2.07362C13.8171 2.46043 13.7632 2.8631 13.7632 3.28161C13.7632 3.71281 13.8171 4.12181 13.9249 4.50862C14.039 4.89543 14.1975 5.25688 14.4004 5.59296H3.10053C2.70104 5.59296 2.39666 5.69759 2.1874 5.90685C1.97814 6.1161 1.87352 6.42682 1.87352 6.83899V15.6278C1.87352 16.04 1.97814 16.3507 2.1874 16.56C2.39666 16.7629 2.70104 16.8643 3.10053 16.8643H16.2172C16.6167 16.8643 16.9211 16.7629 17.1303 16.56C17.3459 16.3507 17.4537 16.04 17.4537 15.6278V7.79968C17.5996 7.83772 17.7517 7.86943 17.9103 7.89479C18.0688 7.91382 18.2305 7.92333 18.3954 7.92333C18.5539 7.92333 18.7093 7.91382 18.8614 7.89479C19.02 7.86943 19.1753 7.83772 19.3275 7.79968V15.6468C19.3275 16.6614 19.0644 17.4287 18.538 17.9487C18.0181 18.475 17.2413 18.7382 16.2077 18.7382H3.11955ZM7.82785 8.89353C7.66298 8.89353 7.54567 8.86182 7.47592 8.79841C7.40617 8.735 7.37129 8.62086 7.37129 8.45599V7.89479C7.37129 7.72358 7.40617 7.60627 7.47592 7.54286C7.54567 7.47945 7.66298 7.44774 7.82785 7.44774H8.38904C8.56025 7.44774 8.67756 7.47945 8.74098 7.54286C8.81073 7.60627 8.8456 7.72358 8.8456 7.89479V8.45599C8.8456 8.62086 8.81073 8.735 8.74098 8.79841C8.67756 8.86182 8.56025 8.89353 8.38904 8.89353H7.82785ZM10.9477 8.89353C10.7701 8.89353 10.6497 8.86182 10.5862 8.79841C10.5228 8.735 10.4911 8.62086 10.4911 8.45599V7.89479C10.4911 7.72358 10.5228 7.60627 10.5862 7.54286C10.6497 7.47945 10.7701 7.44774 10.9477 7.44774H11.4994C11.6706 7.44774 11.7879 7.47945 11.8513 7.54286C11.9211 7.60627 11.9559 7.72358 11.9559 7.89479V8.45599C11.9559 8.62086 11.9211 8.735 11.8513 8.79841C11.7879 8.86182 11.6706 8.89353 11.4994 8.89353H10.9477ZM14.0485 8.89353C13.8773 8.89353 13.7568 8.86182 13.6871 8.79841C13.6237 8.735 13.592 8.62086 13.592 8.45599V7.89479C13.592 7.72358 13.6237 7.60627 13.6871 7.54286C13.7568 7.47945 13.8773 7.44774 14.0485 7.44774H14.6097C14.7809 7.44774 14.8982 7.47945 14.9616 7.54286C15.0251 7.60627 15.0568 7.72358 15.0568 7.89479V8.45599C15.0568 8.62086 15.0251 8.735 14.9616 8.79841C14.8982 8.86182 14.7809 8.89353 14.6097 8.89353H14.0485ZM4.71752 11.9468C4.54631 11.9468 4.42583 11.9183 4.35607 11.8612C4.29266 11.7978 4.26096 11.6805 4.26096 11.5092V10.9481C4.26096 10.7832 4.29266 10.669 4.35607 10.6056C4.42583 10.5422 4.54631 10.5105 4.71752 10.5105H5.27871C5.44992 10.5105 5.56723 10.5422 5.63064 10.6056C5.69406 10.669 5.72576 10.7832 5.72576 10.9481V11.5092C5.72576 11.6805 5.69406 11.7978 5.63064 11.8612C5.56723 11.9183 5.44992 11.9468 5.27871 11.9468H4.71752ZM7.82785 11.9468C7.66298 11.9468 7.54567 11.9183 7.47592 11.8612C7.40617 11.7978 7.37129 11.6805 7.37129 11.5092V10.9481C7.37129 10.7832 7.40617 10.669 7.47592 10.6056C7.54567 10.5422 7.66298 10.5105 7.82785 10.5105H8.38904C8.56025 10.5105 8.67756 10.5422 8.74098 10.6056C8.81073 10.669 8.8456 10.7832 8.8456 10.9481V11.5092C8.8456 11.6805 8.81073 11.7978 8.74098 11.8612C8.67756 11.9183 8.56025 11.9468 8.38904 11.9468H7.82785ZM10.9477 11.9468C10.7701 11.9468 10.6497 11.9183 10.5862 11.8612C10.5228 11.7978 10.4911 11.6805 10.4911 11.5092V10.9481C10.4911 10.7832 10.5228 10.669 10.5862 10.6056C10.6497 10.5422 10.7701 10.5105 10.9477 10.5105H11.4994C11.6706 10.5105 11.7879 10.5422 11.8513 10.6056C11.9211 10.669 11.9559 10.7832 11.9559 10.9481V11.5092C11.9559 11.6805 11.9211 11.7978 11.8513 11.8612C11.7879 11.9183 11.6706 11.9468 11.4994 11.9468H10.9477ZM14.0485 11.9468C13.8773 11.9468 13.7568 11.9183 13.6871 11.8612C13.6237 11.7978 13.592 11.6805 13.592 11.5092V10.9481C13.592 10.7832 13.6237 10.669 13.6871 10.6056C13.7568 10.5422 13.8773 10.5105 14.0485 10.5105H14.6097C14.7809 10.5105 14.8982 10.5422 14.9616 10.6056C15.0251 10.669 15.0568 10.7832 15.0568 10.9481V11.5092C15.0568 11.6805 15.0251 11.7978 14.9616 11.8612C14.8982 11.9183 14.7809 11.9468 14.6097 11.9468H14.0485ZM4.71752 15.0191C4.54631 15.0191 4.42583 14.9874 4.35607 14.924C4.29266 14.8605 4.26096 14.7432 4.26096 14.572V14.0108C4.26096 13.846 4.29266 13.7318 4.35607 13.6684C4.42583 13.605 4.54631 13.5733 4.71752 13.5733H5.27871C5.44992 13.5733 5.56723 13.605 5.63064 13.6684C5.69406 13.7318 5.72576 13.846 5.72576 14.0108V14.572C5.72576 14.7432 5.69406 14.8605 5.63064 14.924C5.56723 14.9874 5.44992 15.0191 5.27871 15.0191H4.71752ZM7.82785 15.0191C7.66298 15.0191 7.54567 14.9874 7.47592 14.924C7.40617 14.8605 7.37129 14.7432 7.37129 14.572V14.0108C7.37129 13.846 7.40617 13.7318 7.47592 13.6684C7.54567 13.605 7.66298 13.5733 7.82785 13.5733H8.38904C8.56025 13.5733 8.67756 13.605 8.74098 13.6684C8.81073 13.7318 8.8456 13.846 8.8456 14.0108V14.572C8.8456 14.7432 8.81073 14.8605 8.74098 14.924C8.67756 14.9874 8.56025 15.0191 8.38904 15.0191H7.82785ZM10.9477 15.0191C10.7701 15.0191 10.6497 14.9874 10.5862 14.924C10.5228 14.8605 10.4911 14.7432 10.4911 14.572V14.0108C10.4911 13.846 10.5228 13.7318 10.5862 13.6684C10.6497 13.605 10.7701 13.5733 10.9477 13.5733H11.4994C11.6706 13.5733 11.7879 13.605 11.8513 13.6684C11.9211 13.7318 11.9559 13.846 11.9559 14.0108V14.572C11.9559 14.7432 11.9211 14.8605 11.8513 14.924C11.7879 14.9874 11.6706 15.0191 11.4994 15.0191H10.9477ZM18.4049 6.58218C17.7961 6.58218 17.2445 6.43316 16.7498 6.13513C16.2552 5.83709 15.8589 5.4376 15.5609 4.93665C15.2628 4.4357 15.1138 3.88719 15.1138 3.29112C15.1138 2.68871 15.2628 2.14021 15.5609 1.6456C15.8589 1.14465 16.2552 0.745153 16.7498 0.447119C17.2445 0.149086 17.7961 6.86646e-05 18.4049 6.86646e-05C18.9946 6.86646e-05 19.5368 0.149086 20.0314 0.447119C20.5323 0.745153 20.9318 1.14465 21.2299 1.6456C21.5279 2.14021 21.6769 2.68871 21.6769 3.29112C21.6769 3.88719 21.5279 4.4357 21.2299 4.93665C20.9318 5.4376 20.5323 5.83709 20.0314 6.13513C19.5368 6.43316 18.9946 6.58218 18.4049 6.58218Z" fill="currentColor"/>
+</svg></button>
+    <nav class="tabs"><div class="tabs-in"><button class="tab day" data-page="d1" aria-label="第 1 天">1</button><button class="tab day" data-page="d2" aria-label="第 2 天">2</button><button class="tab day" data-page="d3" aria-label="第 3 天">3</button><button class="tab day" data-page="d4" aria-label="第 4 天">4</button><button class="tab day" data-page="d5" aria-label="第 5 天">5</button><button class="tab day" data-page="d6" aria-label="第 6 天">6</button><button class="tab day" data-page="d7" aria-label="第 7 天">7</button><button class="tab day" data-page="d8" aria-label="第 8 天">8</button></div></nav>
+    <button class="tab side" data-page="cand" aria-label="備選"><svg aria-hidden="true" width="11" height="17" viewBox="0 0 11 17" fill="none" xmlns="http://www.w3.org/2000/svg">
+<path d="M0.973613 16.5425C0.671604 16.5425 0.432514 16.4443 0.256342 16.248C0.0852041 16.0568 -0.000365019 15.7925 -0.000365019 15.4553V2.28768C-0.000365019 1.5377 0.190907 0.968914 0.573452 0.581336C0.955996 0.193758 1.51975 -3.09944e-05 2.2647 -3.09944e-05H8.26712C9.01208 -3.09944e-05 9.57583 0.193758 9.95837 0.581336C10.3409 0.968914 10.5322 1.5377 10.5322 2.28768V15.4553C10.5322 15.7925 10.4441 16.0568 10.2679 16.248C10.0968 16.4443 9.86274 16.5425 9.56576 16.5425C9.35939 16.5425 9.17063 16.4796 8.99949 16.3537C8.82836 16.2329 8.5792 16.014 8.25202 15.6969L5.33009 12.8127C5.28982 12.7674 5.24704 12.7674 5.20173 12.8127L2.28735 15.6969C1.96017 16.014 1.7085 16.2329 1.53233 16.3537C1.36119 16.4796 1.17495 16.5425 0.973613 16.5425Z" fill="currentColor"/>
+</svg></button>
+    <div class="editbar"><span class="eb-label"><i class="ti ti-pencil"></i><span id="ebDay"></span>編輯中<span id="ebSt" class="eb-st"></span></span>
+      <button type="button" class="eb-btn" id="editCancel">取消</button><button type="button" class="eb-btn done" id="editDone">儲存</button></div></div>
+    <button type="button" class="map-btn" id="mapBtn" aria-label="看地圖" hidden></button>
+    <button type="button" class="acct-btn" id="acctBtn" aria-label="選單" aria-expanded="false" hidden></button>
     <div class="acct-menu" id="acctMenu" hidden></div>
-    <button type="button" class="edit-btn" id="editBtn" aria-label="編輯行程"><i class="ti ti-pencil"></i></button>
+    <button type="button" class="edit-btn" id="editBtn" aria-label="編輯行程"></button>
   </header>
   <div class="tl" id="tl"></div>
   <div class="ov" id="ov" hidden></div>
@@ -1507,7 +1550,10 @@ input.sw:focus-visible{outline:2px solid var(--accent-bg);outline-offset:2px}
 <div class="sheet-bg" id="sheetBg"></div>
 <div class="sheet" id="sheet" role="dialog" aria-modal="true" aria-labelledby="shTitle"></div>
 <script>
-const PX = 1.5;                      // 1 分鐘 = 1.5px（1 小時 = 90px；10/21 從 75px 放大 20%，40 分鐘的卡片才放得下標題＋一排標籤）
+// 1 分鐘幾 px：1 小時 75px × 時間軸大小（帳號選單裡選：小 100%／正常 120%＝90px，預設／大 140%）。只存在這支手機，不跟旅伴同步
+const TL_SCALES = [[1, '小'], [1.2, '正常'], [1.4, '大']], TL_SCALE_KEY = 'trip-tlscale';
+const tlScale = () => { let v = 1.2; try { v = +localStorage.getItem(TL_SCALE_KEY) || 1.2; } catch {} return TL_SCALES.some(x => x[0] === v) ? v : 1.2; };
+let PX = 1.25 * tlScale();
 const tl = document.getElementById('tl');
 const tabsEl = document.querySelector('.tabs');
 function updateTabFade() {
@@ -1516,6 +1562,37 @@ function updateTabFade() {
   tabsEl.classList.toggle('fade-r', tabsEl.scrollLeft < max - 2);
 }
 tabsEl.addEventListener('scroll', updateTabFade, { passive: true });
+// 天數列捲到這一頁：某一天＝捲到正中間；總覽＝捲到最前面（第 1 天在總覽旁邊）、備選＝捲到最後面。
+// 有一點彈的感覺：先衝過頭 8px 再彈回來（到頭了捲不過去，衝過頭的部分用位移做）。
+// 不用捲（頭尾幾天、整排放得下）就不彈（試過照換頁方向也彈，太彈了）。第一次畫、減少動態效果就直接到位
+let tabsAnim = 0, tabsDrawn = false, tabsPage = '';
+function springTabs(page) {
+  if (page === tabsPage && tabsDrawn) return;   // 同一頁重畫（存檔、換頁動畫結束）：不要打斷正在彈的
+  const max = Math.max(0, tabsEl.scrollWidth - tabsEl.clientWidth), inner = tabsEl.firstElementChild, id = ++tabsAnim;
+  inner.style.transform = ''; tabsPage = page;
+  let to;
+  if (page === 'overview') to = 0;
+  else if (page === 'cand') to = max;
+  else {
+    const b = tabsEl.querySelector(`.tab[data-page="${page}"]`); if (!b) return;
+    const br = b.getBoundingClientRect(), tr = tabsEl.getBoundingClientRect();
+    to = Math.max(0, Math.min(max, tabsEl.scrollLeft + br.left + br.width / 2 - tr.left - tr.width / 2));
+  }
+  const from = tabsEl.scrollLeft, dir = Math.sign(to - from);
+  if (!tabsDrawn || !dir || matchMedia('(prefers-reduced-motion: reduce)').matches) { tabsDrawn = true; tabsEl.scrollLeft = to; return; }
+  const over = to + dir * 8, T1 = 260, T2 = 160, t0 = performance.now();
+  const ease = t => 1 - Math.pow(1 - t, 3);
+  const set = v => { const c = Math.max(0, Math.min(max, v)); tabsEl.scrollLeft = c; inner.style.transform = c !== v ? `translateX(${c - v}px)` : ''; };
+  const step = now => {
+    if (id !== tabsAnim) return;
+    const t = now - t0;
+    if (t < T1) set(from + (over - from) * ease(t / T1));
+    else if (t < T1 + T2) set(over + (to - over) * ease((t - T1) / T2));
+    else { set(to); return; }
+    requestAnimationFrame(step);
+  };
+  requestAnimationFrame(step);
+}
 addEventListener('resize', updateTabFade);
 
 // ---------- 小工具 ----------
@@ -1636,8 +1713,7 @@ function setTrip(t, role) {
   if (DAY_KEYS.length !== n) {
     DAY_KEYS = Array.from({ length: n }, (_, i) => 'd' + (i + 1)); ALL_KEYS = [...DAY_KEYS, 'cand'];
     const tabs = document.querySelector('.tabs-in');
-    if (tabs) tabs.innerHTML = '<button class="tab" data-page="overview">總覽</button>' +
-      DAY_KEYS.map((k, i) => `<button class="tab day" data-page="${k}" aria-label="第 ${i + 1} 天">${i + 1}</button>`).join('') + '<button class="tab" data-page="cand">備選</button>';
+    if (tabs) tabs.innerHTML = DAY_KEYS.map((k, i) => `<button class="tab day" data-page="${k}" aria-label="第 ${i + 1} 天">${i + 1}</button>`).join('');   // 總覽、備選固定在兩側，不在這裡
   }
   document.documentElement.classList.toggle('view-only', TRIP_ROLE === 'view');
   document.title = t.name || '行程';
@@ -2327,7 +2403,7 @@ function setSyncState(st, quiet) {
   clearTimeout(savedTimer);
   const n = draftCount();
   el.innerHTML = {
-    idle: n ? `已改 ${n} 處` : '點空白處新增',
+    idle: n ? `已改 ${n} 處` : '',
     saving: '<i class="ti ti-cloud-upload"></i> 儲存中…',
     saved: '<i class="ti ti-cloud-check"></i> 已存到雲端',
     error: '<button type="button" class="eb-st err" id="ebRetry"><i class="ti ti-cloud-off"></i> 未存到雲端・重試</button>',
@@ -2734,20 +2810,22 @@ function updateHeader(page) {
   }
   document.documentElement.classList.toggle('on-trips', page === 'trips' || page === 'new');
   document.documentElement.classList.toggle('on-new', page === 'new');
+  if (!acctBtn.innerHTML) updateAcctBtn();   // 直接打開旅程連結：頭像還沒畫過
   fab.classList.toggle('day', isDay(page) || page === 'cand');
-  // 總覽頁沒有地圖，同一個位置改放房子：回到「我的旅程」
+  // 左上角漢堡（回我的旅程、帳號、旅程設定都在選單裡）；地圖、編輯（手）是右下角兩顆。總覽沒有地圖、也沒有卡片可以編輯
   const home = page === 'overview';
-  mapBtn.hidden = !(home || isDay(page) || page === 'cand');
-  mapBtn.innerHTML = `<i class="ti ${home ? 'ti-home' : mapMode ? 'ti-list' : 'ti-map'}"></i>`;
-  mapBtn.setAttribute('aria-label', home ? '回到我的旅程' : mapMode ? '回到清單' : '看地圖');
-  // 總覽沒有卡片可以編輯：右上角的鉛筆換成齒輪，點了打開旅程設定
+  mapBtn.hidden = !(isDay(page) || page === 'cand');
+  const mic = mapMode ? 'ti-list' : 'ti-map';
+  if (!mapBtn.querySelector('.' + mic)) mapBtn.innerHTML = mapIcon(mapMode, !!mapBtn.firstChild);   // 地圖、清單圖示換的時候淡入（同一個就不重畫，換天不會閃）
+  mapBtn.setAttribute('aria-label', mapMode ? '回到清單' : '看地圖');
   const eb = document.getElementById('editBtn');
-  eb.innerHTML = `<i class="ti ${home ? 'ti-settings' : 'ti-pencil'}"></i>`;
-  eb.setAttribute('aria-label', home ? '旅程設定' : '編輯行程');
+  eb.hidden = home;
+  if (!eb.querySelector(editing ? '.ti-check' : '.ti-pencil')) eb.innerHTML = editing ? '<i class="ti ti-check"></i><span class="btn-lb">儲存</span>' : PENCIL_SVG + '<span class="btn-lb">編輯</span>';
+  eb.setAttribute('aria-label', editing ? '儲存，離開編輯' : '編輯行程');
   applyHeaderEditable();
   document.getElementById('routeFab').classList.toggle('day', isDay(page));
-  document.getElementById('ebDay').textContent = isDay(page) ? `第 ${dayNum(page)} 天` : page === 'cand' ? '備選' : '';
-  document.querySelector('.tab.on')?.scrollIntoView({ inline: 'center', block: 'nearest' });
+  document.getElementById('ebDay').textContent = isDay(page) ? `第${zhNum(dayNum(page))}天` : page === 'cand' ? '備選' : '';
+  springTabs(page);
   updateTabFade();
 }
 
@@ -2765,6 +2843,7 @@ function renderPage(page) {
   const onMap = mapOn(page);
   mapView.hidden = !onMap;
   document.documentElement.classList.toggle('on-map', onMap); syncTint();
+  document.documentElement.classList.toggle('btn-map', onMap);   // 右下按鈕的地圖樣子（按下去當下就先換，見 mapBtn）
   tripsEl.hidden = page !== 'trips';
   if (page === 'trips') renderTrips();
   wizEl.hidden = page !== 'new';
@@ -2780,6 +2859,7 @@ function renderPage(page) {
   renderGrid();
   cardsEl = div('cards'); tl.appendChild(cardsEl);
   curLayer = buildLayer(page, true); cardsEl.appendChild(curLayer); hideCutChips(curLayer);
+  if (keepScroll && page === current) { const k = keepScroll; keepScroll = null; scrollTo({ top: k.y > 0 ? Math.max(0, k.y + (k.st - START) * 60 * PX) : 0 }); }
   if (!loaded) tl.appendChild(div('tl-msg', loadErrText()));
   else addButton(page);
   if (keepOpen.length) {
@@ -3874,6 +3954,9 @@ const CITY_EN = { TPE: 'Taipei', TSA: 'Taipei', KHH: 'Kaohsiung', RMQ: 'Taichung
   SGN: 'Ho Chi Minh', HAN: 'Hanoi', DAD: 'Da Nang', MNL: 'Manila', CEB: 'Cebu', DPS: 'Bali', PVG: 'Shanghai', SHA: 'Shanghai', PEK: 'Beijing', PKX: 'Beijing' };
 const cityEn = e => CITY_EN[e.iata] || e.city || '';
 // 實心飛機（Tabler 沒有實心的）：Material Icons「flight」，Apache 2.0；轉 45 度變成往右上飛
+// 右下角按鈕的鉛筆、地圖：使用者給的 SVG（icon/），填色跟著按鈕文字色；class 當名字用，換圖示時比對是不是同一個
+const PENCIL_SVG = '<svg class="ti-pencil" aria-hidden="true" width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M3.34545 16.2787L0.813597 17.2384C0.612512 17.3115 0.42666 17.2658 0.256042 17.1013C0.0854235 16.9429 0.042769 16.7509 0.128078 16.5255L1.07867 14.021L12.3212 2.76937L14.588 5.02701L3.34545 16.2787ZM15.6939 3.93018L13.4272 1.67254L14.6245 0.484303C14.9109 0.197909 15.2156 0.0455711 15.5386 0.0272906C15.8676 0.00900984 16.1662 0.14002 16.4343 0.420322L16.9462 0.932176C17.2204 1.20638 17.3514 1.50497 17.3392 1.82792C17.3331 2.14478 17.1838 2.44641 16.8913 2.73281L15.6939 3.93018Z" fill="currentColor"/></svg>';
+const MAP_SVG = '<svg class="ti-map" aria-hidden="true" width="17" height="16" viewBox="0 0 17 16" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M1.23978e-05 13.8696V3.72969C1.23978e-05 3.34714 0.0780313 3.01997 0.234069 2.74816C0.39514 2.47132 0.646814 2.23978 0.989091 2.05354L3.92613 0.415144C4.12243 0.304407 4.30112 0.216321 4.46219 0.150886C4.62326 0.0804176 4.76923 0.0300828 4.9001 -0.000118017V13.7111L2.36323 15.0928C2.07632 15.2538 1.77935 15.3344 1.4723 15.3344C1.07969 15.3344 0.7349 15.2111 0.437925 14.9644C0.145983 14.7178 1.23978e-05 14.3528 1.23978e-05 13.8696ZM6.23649 13.3487V0.0451833C6.38246 0.0904846 6.54857 0.16347 6.73481 0.26414C6.92608 0.359776 7.14 0.475546 7.37657 0.61145L10.2683 2.2725V15.425C10.067 15.3897 9.8908 15.3369 9.73979 15.2664C9.59382 15.201 9.43023 15.1179 9.24903 15.0173L6.23649 13.3487ZM11.5971 15.3419V1.63073L13.8094 0.407594C14.1516 0.216321 14.5115 0.120685 14.889 0.120685C15.3521 0.120685 15.7422 0.236455 16.0593 0.467995C16.3764 0.699535 16.535 1.07705 16.535 1.60053V11.5215C16.535 11.9141 16.4519 12.2463 16.2858 12.5181C16.1197 12.79 15.8504 13.029 15.478 13.2354L11.9671 15.1909C11.9017 15.2262 11.8362 15.2564 11.7708 15.2815C11.7104 15.3067 11.6525 15.3268 11.5971 15.3419Z" fill="currentColor"/></svg>';
 const PLANE_SVG = '<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M21 16v-2l-8-5V3.5c0-.83-.67-1.5-1.5-1.5S10 2.67 10 3.5V9l-8 5v2l8-2.5V19l-2 1.5V22l3.5-1 3.5 1v-1.5L13 19v-5.5l8 2.5z"/></svg>';
 // 航班卡片（10/21，Figma node 108-726）：一整張接在一起——上面灰（報到、候機）／中間陶土色（飛行）／下面灰（入境、領行李），
 // 左邊一條虛線從頭串到尾。粗體寫人在那裡看到的時間（起飛前在台灣＝台灣時間），位置照時間線（目的地時間）放，有時差就淡淡標「日本 08:40」。
@@ -4684,8 +4767,7 @@ const acctPic = a => a.pic ? `<img src="${esc(a.pic)}" alt="" referrerpolicy="no
 function updateAcctBtn() {
   const a = getAccount();
   acctBtn.hidden = false; acctMenuClose();
-  acctBtn.classList.toggle('anon', !a);   // 沒登入：灰色的頭
-  acctBtn.innerHTML = a ? acctPic(a) : '<i class="ti ti-user-filled"></i>';
+  acctBtn.innerHTML = '<i class="ti ti-menu-2"></i>';   // 漢堡：登入資訊在選單最上面
 }
 function acctMenuClose() { acctMenu.hidden = true; acctBtn.setAttribute('aria-expanded', 'false'); }
 acctBtn.addEventListener('click', e => {
@@ -4693,18 +4775,41 @@ acctBtn.addEventListener('click', e => {
   if (!acctMenu.hidden) { acctMenuClose(); return; }
   const a = getAccount();
   // 沒登入：Google 登入、用連結搬到其他裝置（手機裡有旅程才有）
-  if (!a) acctMenu.innerHTML = `<button type="button" class="am-item" id="acctLogin"><i class="ti ti-brand-google"></i>用 Google 登入</button>
+  const inTrip = current !== 'trips' && current !== 'new';
+  const mine = inTrip ? '<button type="button" class="am-item" id="acctTrips"><i class="ti ti-layout-grid"></i>我的旅程</button>' : '';   // 旅程裡：回到我的旅程
+  const set = inTrip && TRIP ? '<button type="button" class="am-item am-set" id="acctSet"><i class="ti ti-settings"></i>旅程設定</button>' : '';   // 旅程裡：最底下放這趟的設定
+  // 最上面是帳號（還沒登入＝Google 登入；登入了＝頭像、名字），隔一條線，下面才是其他選項
+  if (!a) acctMenu.innerHTML = `<button type="button" class="am-item am-login" id="acctLogin"><i class="ti ti-brand-google"></i>用 Google 登入</button>${mine}
     ${myTrips().length ? '<button type="button" class="am-item" id="acctCarry"><i class="ti ti-link"></i>用連結帶到其他裝置</button>' : ''}
+    ${amScale()}
     <button type="button" class="am-item" id="acctTut"><i class="ti ti-hand-finger"></i>操作教學</button>
-    <a class="am-item" href="privacy.html" target="_blank" rel="noopener"><i class="ti ti-shield-lock"></i>隱私權說明</a>`;
+    <a class="am-item" href="privacy.html" target="_blank" rel="noopener"><i class="ti ti-shield-lock"></i>隱私權說明</a>${set}`;
   else acctMenu.innerHTML = `<div class="am-who"><span class="acct-pic">${acctPic(a)}</span><span><b>${esc(a.name || 'Google 帳號')}</b><small>${esc(a.email || '')}</small><small>旅程已同步</small></span></div>
+    ${mine}
     <button type="button" class="am-item" id="acctNick"><i class="ti ti-user-edit"></i>暱稱<span class="am-val">${esc(getNick() || '還沒填')}</span><i class="ti ti-chevron-right am-go"></i></button>
+    ${amScale()}
     <button type="button" class="am-item" id="acctTut"><i class="ti ti-hand-finger"></i>操作教學</button>
     <a class="am-item" href="privacy.html" target="_blank" rel="noopener"><i class="ti ti-shield-lock"></i>隱私權說明</a>
-    <button type="button" class="am-item" id="acctOut"><i class="ti ti-logout"></i>登出</button>`;
+    <button type="button" class="am-item" id="acctOut"><i class="ti ti-logout"></i>登出</button>${set}`;
   acctMenu.hidden = false; acctBtn.setAttribute('aria-expanded', 'true');
 });
+// 時間軸大小：三個並排，點了馬上重排，畫面中間那個時間留在原地
+const amScale = () => `<div class="am-item am-scale"><i class="ti ti-arrows-vertical"></i>時間軸<span class="am-seg">${TL_SCALES.map(([v, n]) => `<button type="button" data-tls="${v}"${v === tlScale() ? ' class="on"' : ''}>${n}</button>`).join('')}</span></div>`;
+function setTlScale(v) {
+  if (v === tlScale()) return;
+  try { localStorage.setItem(TL_SCALE_KEY, v); } catch {}
+  const on = isDay(current) && tl.style.display !== 'none', top0 = on ? tl.getBoundingClientRect().top + scrollY : 0;
+  const mid = on ? (scrollY + innerHeight / 2 - top0) / PX + START * 60 : 0;
+  PX = 1.25 * v;
+  acctMenu.querySelectorAll('[data-tls]').forEach(b => b.classList.toggle('on', +b.dataset.tls === v));
+  if (!on) return;
+  renderPage(current);
+  scrollTo(0, Math.max(0, tl.getBoundingClientRect().top + scrollY + (mid - START * 60) * PX - innerHeight / 2));
+}
 acctMenu.addEventListener('click', e => {
+  const sc = e.target.closest('[data-tls]'); if (sc) { setTlScale(+sc.dataset.tls); return; }
+  if (e.target.closest('#acctTrips')) { acctMenuClose(); location.hash = 'trips'; return; }
+  if (e.target.closest('#acctSet')) { acctMenuClose(); withAuth(openTripSettings); return; }
   if (e.target.closest('#acctOut')) { acctMenuClose(); logoutAccount(); }
   if (e.target.closest('#acctNick')) { acctMenuClose(); openNickEdit(); }
   if (e.target.closest('#acctLogin')) { acctMenuClose(); openLogin(); }
@@ -4946,6 +5051,9 @@ function showPage(page, animate = true) {
   else if (!['overview', 'cand', 'trips', 'new'].includes(page) && !isDay(page)) page = 'overview';
   if (page === current) return;
   const prev = current; current = page;
+  // 一天換到另一天（點天數、左右滑）：停在同一個時間，不要跳回時間軸最上面；在最上面就還是最上面（開始時間不一樣，例如航班那天，照時間換算）
+  const keep = isDay(page) && (isDay(prev) || swipeKeep) ? swipeKeep || { y: scrollY, st: START } : null;
+  swipeKeep = null; keepScroll = keep;
   if (page === 'overview' && (prev === 'trips' || prev === 'new')) ovTab = 'days';
   // 網址的 #頁面 跟著換：直接呼叫 showPage 跳頁（例如開始規劃、已訂位標籤）時網址沒變，之後點同一個分頁會因為網址一樣而沒反應
   if (location.hash !== '#' + page) history.replaceState(null, '', location.pathname + location.search + '#' + page);
@@ -4958,12 +5066,14 @@ function showPage(page, animate = true) {
     if (animate && prev === 'trips' && (page === 'overview' || page === 'new')) pageSlide('sl-in-r', page === 'new' ? wizEl : ovEl);
     else if (animate && page === 'trips' && (prev === 'overview' || prev === 'new')) pageSlide('sl-in-l', tripsEl);
   }
+  if (keep) return;   // 換天：捲動位置在 renderPage 畫好新的一天時才換算（滑動動畫中不要動）
   // 打開今天：捲到「現在」的小圓點（放在畫面上方 1/3），其他天回到最上面
   const line = tl.querySelector('.now');
   scrollTo({ top: line ? Math.max(0, line.getBoundingClientRect().top + scrollY - innerHeight / 3) : 0 });
 }
+let keepScroll = null, swipeKeep = null;
 
-document.querySelector('.tabs').addEventListener('click', e => {
+document.querySelector('.tabs-row').addEventListener('click', e => {
   const t = e.target.closest('.tab'); if (!t) return;
   if (location.hash !== '#' + t.dataset.page) location.hash = t.dataset.page;
 });
@@ -4979,11 +5089,31 @@ const mapOn = page => mapMode && !editing && (isDay(page) || page === 'cand');
 mapView.querySelector('.map-zoom').addEventListener('click', e => {
   const b = e.target.closest('[data-zoom]'); if (b && gmap) gmap.setZoom(gmap.getZoom() + +b.dataset.zoom);
 });
+// 圖示旁邊一個小字（地圖／清單、編輯／儲存），一看就知道按了做什麼
+const mapIcon = (list, anim) => (list ? `<i class="ti ti-list${anim ? ' ic-in' : ''}"></i>` : anim ? MAP_SVG.replace('class="ti-map"', 'class="ti-map ic-in"') : MAP_SVG) + `<span class="btn-lb">${list ? '卡片' : '地圖'}</span>`;
+// 切換地圖、清單：先把現在的畫面淡出（0.14 秒）再換；回到清單時捲回原本看的位置（不再一律回到最上面）
+let mapSwitching = false;
+const listScroll = {};
+const calmMotion = () => matchMedia('(prefers-reduced-motion: reduce)').matches;
 mapBtn.addEventListener('click', () => {
-  if (current === 'overview') { location.hash = 'trips'; return; }
-  mapMode = !mapMode;
-  try { sessionStorage.setItem('cm-map', mapMode ? '1' : ''); } catch {}
-  updateHeader(current); renderPage(current); scrollTo({ top: 0 });
+  if (mapSwitching) return;
+  const toMap = !mapMode, page = current, out = toMap ? [tl, candEl] : [mapView];
+  if (toMap) listScroll[page] = scrollY;
+  out.forEach(el => el.classList.add('fade-out'));
+  // 按鈕的動畫按下去就開始：等淡出完、換頁時主執行緒很忙（重畫時間軸、畫地圖），那時才開始會卡
+  document.documentElement.classList.toggle('btn-map', toMap);
+  mapBtn.innerHTML = mapIcon(toMap, true);
+  mapSwitching = true;
+  setTimeout(() => {
+    mapSwitching = false;
+    mapMode = toMap;
+    try { sessionStorage.setItem('cm-map', mapMode ? '1' : ''); } catch {}
+    [tl, candEl, mapView].forEach(el => el.classList.remove('fade-out'));
+    updateHeader(current); renderPage(current);
+    if (toMap) { scrollTo({ top: 0 }); return; }
+    scrollTo({ top: current === page ? listScroll[page] || 0 : 0 });
+    [tl, candEl].forEach(el => { el.classList.remove('fade-in'); void el.offsetWidth; el.classList.add('fade-in'); });
+  }, calmMotion() ? 0 : 140);
 });
 let mapsReady = null, gmap = null, mapPins = [], mapLine = null, PinView = null;
 function loadMaps(key) {
@@ -5469,7 +5599,7 @@ function endSwipe(cancelled = false) {
     curLayer.style.transform = `translateX(${-dir * W}px)`;
     (goNext ? next : prev).style.transform = 'translateX(0)';
     (goNext ? prev : next)?.remove();
-    const finish = () => { if (done) return; done = true; busy = false; skipAnim = true; current = null; location.hash = page; };
+    const finish = () => { if (done) return; done = true; busy = false; skipAnim = true; swipeKeep = { y: scrollY, st: START }; current = null; location.hash = page; };
     (goNext ? next : prev).addEventListener('transitionend', finish, { once: true });
     setTimeout(finish, 450);
   } else {
@@ -5703,6 +5833,7 @@ function setEditing(on) {
 }
 const editBtn = document.getElementById('editBtn');
 editBtn.addEventListener('click', () => {
+  if (editing) { document.getElementById('editDone').click(); return; }   // 編輯中的打勾＝上面的「儲存」
   if (!loaded) { toast('行程還在載入，請稍等'); return; }
   if (current === 'overview') { withAuth(openTripSettings); return; }
   if (getAuth()) { setEditing(true); offerTutorial(); } else openAuth();
@@ -8034,7 +8165,7 @@ const TUT_STEPS = [
     done: () => !!sheet.querySelector('#edPush')?.checked },
   { text: '按「儲存」<br>後面的行程會一起往後移', gesture: 'tap', inSheet: 2, el: () => sheet.querySelector('#edSave'),
     done: () => !sheet.classList.contains('on') && m(tutItem('tc').e) - m(tutItem('tc').s) >= 90 && m(tutItem('tl').s) > m('12:00'), after: '後面的行程<br>都自動往後延了！' },
-  { text: '點右上角的鉛筆<br>進入編輯模式', gesture: 'tap', el: () => document.getElementById('editBtn'), done: () => editing },
+  { text: '點右下角的鉛筆<br>進入編輯模式', gesture: 'tap', el: () => document.getElementById('editBtn'), done: () => editing },
   { text: '長按「Elite 按摩」拿起來<br>往上拖到 14:00 再放開', gesture: 'drag', el: () => tutCard('ts'), to: () => ({ dx: 0, dy: (m('14:00') - m(tutItem('ts').s)) * PX }), tag: '14:00',
     enter: st => { st.from = m(tutItem('ts').s); },
     done: st => !drag && m(tutItem('ts').s) < st.from && m(tutItem('ts').s) >= m(tutItem('tl').e) && m(tutItem('ts').s) <= m('14:30') },
