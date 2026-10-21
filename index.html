@@ -912,6 +912,7 @@ body.trips-none .trip-new{display:none !important}
 .tin-skip{display:block;margin:2px auto 4px;padding:8px;border:0;background:none;font:inherit;font-size:13px;color:var(--muted);cursor:pointer}
 @media (prefers-reduced-motion:reduce){.tin-c.b,.tin-hand{animation:none}}
 html.tut .tabs{display:none}
+html.tut .tabs-row .tab.side{visibility:hidden}   /* 練習時不能換到總覽、備選；留著位置，編輯列才有地方從左邊拉出來 */
 html.tut #mapBtn,html.tut #acctBtn,html.tut #routeFab,html.tut .sync{visibility:hidden}
 .tut-ui{position:fixed;inset:0;z-index:70;pointer-events:none}
 .tut-box{position:fixed;left:12px;right:12px;top:calc(10px + env(safe-area-inset-top));max-width:456px;height:150px;display:flex;flex-direction:column;margin:0 auto;padding:16px 20px 0;border-radius:22px;background:#fff;
