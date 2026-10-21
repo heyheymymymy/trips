@@ -522,6 +522,10 @@ html.on-map:not(.sheet-lock),html.on-map:not(.sheet-lock) body{background:#f4f0e
 .fab{position:fixed;right:max(20px,calc(50vw - 220px));bottom:calc(24px + env(safe-area-inset-bottom));z-index:40;width:52px;height:52px;border-radius:50%;
   border:0;background:var(--accent-fg);color:#fff;font-size:24px;display:none;align-items:center;justify-content:center;box-shadow:0 4px 14px rgba(60,30,10,.22);cursor:pointer}
 .fab i{display:block;line-height:1}
+/* 編輯模式：能動的卡片（一般、合併、多選一、交通）外框一圈淡淡的虛線，用自己類型的框線色；航班是自動產生的，不能拖，保持原樣。
+   被拿起來的那張另外有深咖啡色粗虛線（.drop-box），兩種深淺分得出來 */
+.editing .layer .blk:not(.flight),.editing .layer .grp{outline:1px dashed var(--c-bd,rgba(154,74,37,.35));outline-offset:-1px}
+.editing .layer .blk.ride{outline-color:rgba(154,74,37,.3)}
 .editing .fab.day{display:none}   /* 10/21 拿掉：編輯模式點空白處就能新增 */
 /* ＋ 上方的淺色小按鈕：計算這天的交通（樣式跟頁首的編輯按鈕一樣，不搶 ＋ 的風頭） */
 .fab-sub{position:fixed;right:calc(max(20px,calc(50vw - 220px)) + 7px);bottom:calc(88px + env(safe-area-inset-bottom));z-index:40;width:38px;height:38px;border-radius:50%;
@@ -3702,7 +3706,9 @@ function defaultFlightDir() {
   const lastArr = Math.max(...out.map(f => flightTimes(f).arr || utcMs(f.arr.sched?.local)));
   return lastArr && Date.now() > lastArr ? 'back' : 'out';
 }
-const legsOf = dir => tripFlights().filter(f => f.dir === dir).sort((a, b) => (utcMs(a.dep.sched?.utc) || 0) - (utcMs(b.dep.sched?.utc) || 0) || (a.dep.sched?.local || '').localeCompare(b.dep.sched?.local || ''));
+// 起飛、降落的絕對時間（毫秒）：有 UTC 用 UTC；手動輸入的只有當地時間，就當成 UTC 粗估（排順序、判斷轉機夠用）
+const flightAt = e => utcMs(e.sched?.utc) || Date.parse(((e.sched?.local || '').slice(0, 16).replace(' ', 'T') || 'x') + 'Z') || 0;
+const legsOf = dir => tripFlights().filter(f => f.dir === dir).sort((a, b) => flightAt(a.dep) - flightAt(b.dep));
 let flightOpen = null;   // 點開看登機資訊的那一段
 // 機票：去程、回程上下並排，每一段一張卡片。最大的是起飛、抵達時間；下面是機場代碼＋航廈；中間虛線上的小飛機＝進度
 // 一段航班（機票卡片、時間線點開的視窗共用）。legs：同一個方向的所有段（算轉機）
@@ -3924,18 +3930,25 @@ function flightSpan(f, kind) {
 function flightItems(day) {
   if (!isDay(day) || !TRIP) return [];
   const ymdOf = tripDates()[dayNum(day) - 1]?.ymd; if (!ymdOf) return [];
-  const out = legsOf('out'), back = legsOf('back'), list = [];
-  const a = out[out.length - 1], d = back[0];
-  // 一張卡片＝報到候機 → 飛行 → 抵達 → 出關（10/21 起；原本去程只有抵達＋入境、回程只有報到）。fly：起飛、抵達換算成時間線的時間
-  const card = (f, kind) => {
-    const fly = flightSpan(f, kind); if (!fly) return null;
-    const s = Math.max(0, fly.dep - (f.checkin || CHECKIN_MIN)), e = Math.min(fly.arr + (f.arrive || ARRIVE_MIN), DAY_END);   // 每段航班可以自己調（點卡片灰色的地方）
-    return { id: (kind === 'arr' ? 'fl-a-' : 'fl-d-') + f.id, flight: f, kind, fly, s: hhmm(s), e: hhmm(e), cls: 'other',
-      t: kind === 'arr' ? `抵達${airportZh(f.arr)}` : '前往機場、報到', loc: (kind === 'arr' ? f.arr.loc : f.dep.loc) || '',
-      ...(kind === 'dep' ? { travel: f.toAirport?.text || '', troute: f.toAirport?.troute || '' } : {}) };
-  };
-  if (a && (a.arr.sched?.local || '').slice(0, 10) === ymdOf) { const c = card(a, 'arr'); if (c) list.push(c); }
-  if (d && (d.dep.sched?.local || '').slice(0, 10) === ymdOf) { const c = card(d, 'dep'); if (c) list.push(c); }
+  // 每一段航班都有自己的卡片，放在那段的日子（10/21 起；原本只畫去程最後一段、回程第一段，旅途中間的航班——例如先飛曼谷、過幾天再飛清邁——不會出現）。
+  // 去程放在抵達那天、回程放在起飛那天。同一個方向、上一段降落的機場就是這段起飛的機場、隔不到 24 小時＝轉機：
+  // 上一段不留入境時間，這段的候機從上一段降落開始（卡片接在一起）
+  const list = [];
+  for (const dir of ['out', 'back']) {
+    const legs = legsOf(dir);
+    legs.forEach((f, i) => {
+      const kind = dir === 'out' ? 'arr' : 'dep';
+      if ((kind === 'arr' ? f.arr : f.dep).sched?.local?.slice(0, 10) !== ymdOf) return;
+      const fly = flightSpan(f, kind); if (!fly) return;
+      const conn = (a, b) => a && b && a.arr.iata === b.dep.iata && flightAt(b.dep) - flightAt(a.arr) >= 0 && flightAt(b.dep) - flightAt(a.arr) < 24 * 3600e3;
+      const prev = conn(legs[i - 1], f) ? legs[i - 1] : null, next = conn(f, legs[i + 1]) ? legs[i + 1] : null;
+      const pf = prev && (prev.arr.sched?.local || '').slice(0, 10) === (f.dep.sched?.local || '').slice(0, 10) ? flightSpan(prev, kind) : null;   // 同一天降落的上一段：候機從它降落開始
+      const s = Math.max(0, pf ? Math.min(pf.arr, fly.dep) : fly.dep - (f.checkin || CHECKIN_MIN)), e = Math.min(next ? fly.arr : fly.arr + (f.arrive || ARRIVE_MIN), DAY_END);   // 每段航班可以自己調（點卡片灰色的地方）
+      list.push({ id: (kind === 'arr' ? 'fl-a-' : 'fl-d-') + f.id, flight: f, kind, fly, s: hhmm(s), e: hhmm(Math.max(e, s + 1)), cls: 'other', transfer: !!prev, connect: !!next,
+        t: kind === 'arr' ? `抵達${airportZh(f.arr)}` : '前往機場、報到', loc: (kind === 'arr' ? f.arr.loc : f.dep.loc) || '',
+        ...(kind === 'dep' && !prev ? { travel: f.toAirport?.text || '', troute: f.toAirport?.troute || '' } : {}) });
+    });
+  }
   return list;
 }
 // 這天的行程＋航班卡片，照時間排
@@ -3970,12 +3983,12 @@ function flightBlockHtml(it, prev, h) {
   const offD = offOf('dep', fly.dep), offA = offOf('arr', fly.arr);
   const hm = (v, off) => T(hhmm(wrap(v - off)));   // 當地時間
   const term = e => e.terminal ? ` T${esc(e.terminal)}` : '';
-  const first = legsOf(it.kind === 'arr' ? 'out' : 'back')[0] === f;   // 轉機的第二段：不是報到，是轉機候機
+  const first = !it.transfer;   // 轉機的第二段：不是報到，是轉機候機
   // 回程不寫「幾點離開住處」：不一定是從住處過去，卡片只標幾點到機場（報到）
   const tA = y0(fly.dep), tB = y0(fly.arr), H = Math.max(h, tB + 30);
   const wait = `<div class="fb-seg wait" data-adj="checkin" style="top:0;height:${tA}px">
       <div class="fb-t"><i class="ti ti-plane-departure"></i> ${esc(airportZh(f.dep))}機場${term(f.dep)}</div>
-      <div class="fb-l">${hm(s0, offD)}–${hm(fly.dep, offD)} ${first ? '報到、候機' : '轉機、候機'}</div><span class="bc fb-bc">提前${fmtDur(fly.dep - s0)}</span></div>`;
+      <div class="fb-l">${hm(s0, offD)}–${hm(fly.dep, offD)} ${first ? '報到、候機' : '轉機、候機'}</div><span class="bc fb-bc">${first ? '提前' : '轉機 '}${fmtDur(fly.dep - s0)}</span></div>`;
   const air = `<div class="fb-seg air" style="top:${tA}px;height:${tB - tA}px"><span class="fb-rail in"></span>
       <div class="fb-r top"><span class="fb-dot"></span>${hm(fly.dep, offD)} ${esc(airportZh(f.dep))}起飛</div>
       <div class="fb-tags">${esc(f.number || '航班')}<br>${esc(f.dep.iata)} → ${esc(f.arr.iata)}${bd.cls ? `<br><span class="fb-st ${bd.cls}">${esc(bd.text)}</span>` : ''}</div>
@@ -8236,7 +8249,8 @@ function tutRun() {
     // 每一關開始時：要操作的卡片如果被提示框擋住、或在畫面下半部，捲到中間偏上
     if (!st.inSheet && !st.pos && st.scrolled !== true && !editingDrag()) {
       st.scrolled = true;
-      const er = el.getBoundingClientRect(), top = box.getBoundingClientRect().bottom + 16;
+      // 往上拖的關卡（拖到 14:00）：目的地也要在提示框下面看得到，卡片再往下放一點
+      const er = el.getBoundingClientRect(), up = st.gesture === 'drag' && st.to ? Math.max(0, -st.to().dy) : 0, top = box.getBoundingClientRect().bottom + 16 + (up ? up + 24 : 0);
       if (er.top < top || er.bottom > innerHeight * 0.62) { scrollBy({ top: er.top - Math.max(top, innerHeight * 0.42), behavior: 'smooth' }); hand.hidden = true; ghost.hidden = true; return; }
     }
     const r = el.getBoundingClientRect(), to = st.to ? st.to() : { dx: 0, dy: 0 };
