@@ -2021,7 +2021,8 @@ const homePrev = day => { const h = morningStay(day); return h?.loc ? { id: 'hom
 // 照片、地址都從住處拿（住處換了照片、地址，卡片跟著變）
 function homeStay(it, day) {
   const same = h => (h.pid && h.pid === it.pid) || (h.map && h.map === it.map) || (h.loc && h.loc === it.loc);
-  if (!it.home && !(it.t === '回住處休息' && tripStays().some(same))) return null;
+  // 改了名字（例如「Check in」）也還是住處：Google 地點編號或地圖連結跟某一間住處一樣就算（座標一樣不算，可能是飯店裡的餐廳）
+  if (!it.home && !(it.t === '回住處休息' && tripStays().some(same)) && !tripStays().some(h => (h.pid && h.pid === it.pid) || (h.map && h.map === it.map))) return null;
   return tripStays().find(same) || homeFor(day) || null;
 }
 const homeIc = '<i class="ti ti-home bk-home" aria-hidden="true"></i>';
@@ -6758,7 +6759,7 @@ function openEditor(id, startAt, toDay, replaceId, keep) {
   if (keep) ed = keep; else ed = it
     ? { id, isNew: false, noteKey: it.note || it.t, t: it.t, desc: it.desc || '', cls: it.cls, s: it.s, dur: m(it.e) - m(it.s), map: it.map || '', travel: it.travel || '',
         booked: !!it.booked, alert: it.alert || '', mine: it.mine || '', area: it.area || '', group: !!it.group, pick: !it.group && !!it.alts?.length, kind: 'one', orig: { s: it.s, e: it.e },
-        day: findItem(id)[0], fromDay: findItem(id)[0] }
+        day: findItem(id)[0], fromDay: findItem(id)[0], home: !it.group && !it.alts?.length ? homeStay(it, findItem(id)[0]) : null }
     : { id: null, isNew: true, noteKey: '', t: '', desc: '', cls: 'eat', s: startAt, dur: 60, map: '', travel: '', booked: false, alert: '', mine: '', group: false, pick: false, kind: 'one', day: current, fromDay: current };
   // 從備選排進某一天：帶入備選的資料，時間換成新增時點的那個時間
   if (!keep && it && toDay) Object.assign(ed, { day: toDay, s: startAt, fromCand: true });
@@ -7193,6 +7194,7 @@ function saveEditor() {
     ...(fullEl && (NOTES[noteKey] || photoTouched) ? { note: noteKey } : {}), booked: $('edBooked').checked,
     alert: $('edAlert').value.trim(), mine: $('edMine').value.trim(),
   });
+  if (ed.home && !ed.isNew) fields.home = fields.map === undefined || fields.map === ed.map || fields.map === (ed.home.map || ed.home.name);   // 回住處的卡片：改名字（Check in…）還是連到住處；地點換掉才不是
   if (fields.map !== undefined && fields.map !== ed.map) Object.assign(fields, ed.home && fields.map === (ed.home.map || ed.home.name)
     ? { loc: ed.home.loc || '', pid: ed.home.pid || '' } : { loc: '', pid: '' });   // 地點換了：座標之後在背景重查（回住處的直接用住處的座標）
   if (ed.kind !== 'one') {
