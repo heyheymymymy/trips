@@ -164,6 +164,7 @@ header{position:sticky;top:0;z-index:10;background:var(--page);padding:calc(12px
 .blk .d{font-size:14px;line-height:22px;margin:2px 0 0;display:-webkit-box;-webkit-box-orient:vertical;overflow:hidden}
 /* 卡片下面一排白色小標籤（Figma node 86:31）：時間、長度、區域、已訂位、提醒；放不下時提醒那顆縮成「…」 */
 .blk .bcs,.grp .sum .bcs{display:flex;gap:7px;align-items:center;margin-top:2px;overflow:hidden}
+.bcs.cut{visibility:hidden}   /* 被卡片底部切到一半：整排不顯示 */
 .grp .sum .d{font-size:14px;line-height:22px;margin:2px 0 0;display:-webkit-box;-webkit-box-orient:vertical;overflow:hidden}
 /* 小卡片：名稱後面接標籤，名稱太長縮成「…」 */
 .blk.compact .t{display:flex;align-items:center;gap:7px;min-width:0;width:100%}
@@ -2541,6 +2542,15 @@ function renderGrid() {
     place(div('ln'), (h - START) * 60 * PX);
   }
 }
+// 卡片太矮、底下那排標籤（時間、停留多久、區域）被切到一半：整排藏起來（要放進畫面之後才量得到）
+function hideCutChips(root) {
+  root.querySelectorAll('.blk > .bcs, .grp .sum .bcs').forEach(b => {
+    const card = b.closest('.blk, .grp'); if (card.classList.contains('open')) return;
+    b.classList.remove('cut');
+    if (b.getBoundingClientRect().bottom > card.getBoundingClientRect().bottom - 1) b.classList.add('cut');
+  });
+}
+document.fonts?.ready.then(() => curLayer && hideCutChips(curLayer));   // 字型晚到、字變寬變高：再量一次
 function buildLayer(page, isLive) {
   const layer = div('layer');
   target = layer; live = isLive;
@@ -2761,7 +2771,7 @@ function renderPage(page) {
   tl.style.display = ''; tl.style.height = baseH + 'px'; addBottom = 0;
   renderGrid();
   cardsEl = div('cards'); tl.appendChild(cardsEl);
-  curLayer = buildLayer(page, true); cardsEl.appendChild(curLayer);
+  curLayer = buildLayer(page, true); cardsEl.appendChild(curLayer); hideCutChips(curLayer);
   if (!loaded) tl.appendChild(div('tl-msg', loadErrText()));
   else addButton(page);
   if (keepOpen.length) {
@@ -4637,7 +4647,7 @@ function slideTo(page, dir) {
   const W = cardsEl.clientWidth + SLIDE_GAP;
   const next = buildLayer(page, false);
   next.style.transform = `translateX(${dir * W}px)`;
-  cardsEl.appendChild(next);
+  cardsEl.appendChild(next); hideCutChips(next);
   next.getBoundingClientRect();
   curLayer.classList.add('anim'); next.classList.add('anim');
   curLayer.style.transform = `translateX(${-dir * W}px)`;
@@ -5411,8 +5421,8 @@ tl.addEventListener('touchmove', e => {
     const n = dayNum(current);
     sw.toOv = n === 1;   // 第 1 天往右滑 → 總覽
     sw.toCand = n === DAY_KEYS.length;   // 最後一天往左滑 → 備選
-    if (n > 1) { sw.prev = buildLayer('d' + (n - 1), false); cardsEl.appendChild(sw.prev); }
-    if (n < DAY_KEYS.length) { sw.next = buildLayer('d' + (n + 1), false); cardsEl.appendChild(sw.next); }
+    if (n > 1) { sw.prev = buildLayer('d' + (n - 1), false); cardsEl.appendChild(sw.prev); hideCutChips(sw.prev); }
+    if (n < DAY_KEYS.length) { sw.next = buildLayer('d' + (n + 1), false); cardsEl.appendChild(sw.next); hideCutChips(sw.next); }
     [curLayer, sw.prev, sw.next].forEach(l => l && l.classList.add('drag'));
   }
   let d = dx;
