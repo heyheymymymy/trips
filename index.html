@@ -3814,7 +3814,10 @@ function flightLocal(f, end) {
 function flightSpan(f, kind) {
   const dl = m(hmOfLocal(flightLocal(f, 'dep'))), al = m(hmOfLocal(flightLocal(f, 'arr')));
   const du = utcMs(f.arr.sched?.utc) - utcMs(f.dep.sched?.utc), dur = du > 0 ? Math.round(du / 60000) : null;
-  if (kind === 'arr') { if (isNaN(al)) return null; return { dep: dur != null ? al - dur : dl, arr: al, dur }; }
+  // 有時差：起飛放在出發地時間、降落放在抵達地時間（兩頭都跟時間線的刻度對得上）；飛行那段的長度＝時鐘差，不是實際飛多久
+  // （去日本多 1 小時、回台灣少 1 小時；人在飛機上那段不排行程）。實際飛行時間還是寫在「預計」標籤上
+  if (!isNaN(dl) && !isNaN(al) && al > dl) return { dep: dl, arr: al, dur };
+  if (kind === 'arr') { if (isNaN(al)) return null; return { dep: dur != null ? al - dur : dl, arr: al, dur }; }   // 跨過午夜之類的：照實際飛行時間往前推
   if (isNaN(dl)) return null;
   return { dep: dl, arr: dur != null ? dl + dur : al, dur };
 }
@@ -3995,7 +3998,7 @@ function drawRide() {
       <button class="sh-close" aria-label="關閉"><i class="ti ti-x"></i></button></div>
     ${rd.embed != null ? `<div class="ed-field"><span class="ed-lab">卡片樣式</span><div class="seg n4" id="rdKind" data-i="${rd.embed}"><span class="seg-thumb"></span>
       <button type="button" data-v="one">一個地點</button><button type="button" data-v="group">多個地點</button><button type="button" data-v="pick">多選一</button><button type="button" class="on" data-v="ride">交通</button></div></div>` : ''}
-    <div class="ed-field"><span class="ed-lab">起始點</span>
+    <div class="ed-field"><span class="ed-lab">你要去哪？</span>
       <div class="rd-ends">
         ${[['from', 'rdFrom', '', '從哪裡出發', '起點'], ['to', 'rdTo', ' on', '到哪裡', '終點']].map(([k, id, on, ph, lab]) => `
         <label class="rd-end" data-k="${k}"><span class="rd-pt${on}"></span>${lk(k) ? '<i class="ti ti-map-pin-check rd-ok" aria-label="已連到卡片"></i>' : ''}<input id="${id}" type="text" value="${esc(rd[k])}" placeholder="${ph}" autocomplete="off" aria-label="${lab}"><button type="button" class="rd-unlink" aria-label="清掉${lab}"${rd[k] ? '' : ' hidden'}><i class="ti ti-x"></i></button></label>`).join('')}
