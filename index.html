@@ -2586,7 +2586,11 @@ function place(el, top) {
 function div(cls, html) { const d = document.createElement('div'); d.className = cls; d.innerHTML = html || ''; return d; }
 
 // 導航：地圖欄位是店名（不是連結）時，後面加上目的地城市再搜尋，才不會找到別的城市的同名店
-const navBtn = (q, name) => `<a class="nav" target="_blank" rel="noopener" href="${esc(mapHref(/^https?:\/\//.test(q) ? q : withCity(q)))}" aria-label="導航到 ${esc(name)}"><i class="ti ti-navigation"></i></a>`;
+// 導航：有 Google 地點編號（pid）就用官方的 query_place_id 網址——用名字＋座標的 /maps/place/ 網址，iPhone 的 Google 地圖 App 常常
+// 只打開一個空的地點（沒有地址、照片、評論）。自己貼的 Google 地圖分享連結（maps.app.goo.gl）本來就準，照用
+const placeHref = (name, pid) => `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(name || '地點')}&query_place_id=${encodeURIComponent(pid)}`;
+const navHref = (q, pid, name) => pid && !/goo\.gl|share\.google/.test(q || '') ? placeHref(name || q, pid) : mapHref(/^https?:\/\//.test(q) ? q : withCity(q));
+const navBtn = (q, name, pid) => `<a class="nav" target="_blank" rel="noopener" href="${esc(navHref(q, pid, name))}" aria-label="導航到 ${esc(name)}"><i class="ti ti-navigation"></i></a>`;
 const editIc = '<span class="edit-ic" aria-hidden="true"><i class="ti ti-pencil"></i></span>';
 const subEditIc = '<span class="sub-ed" aria-hidden="true"><i class="ti ti-pencil"></i></span>';
 // 合併區塊裡的店家、多選一選項的筆記（筆記可能是 PDF 整理的，也可能是自己寫的）
@@ -2751,13 +2755,13 @@ function renderCards(items, day) {
           <div class="stop" data-kind="alt" data-idx="${i}"><div class="num pick"></div>
             <div style="flex:1;min-width:0"><div class="n">${esc(a.name)}</div>${a.desc ? `<div class="o">${esc(a.desc)}</div>` : ''}
               ${(() => { const aal = timelineAlert(a, day, m(it.s), m(it.s) + (+a.dur || m(it.e) - m(it.s))); return aal || +a.dur ? `<div class="m">${+a.dur ? `<i class="ti ti-clock"></i> ${T(it.s)} · ${durLabel(+a.dur)}` : ''}${aal && +a.dur ? '　' : ''}${esc(aal)}</div>` : ''; })()}</div>
-            ${a.map ? navBtn(a.map, a.name) : ''}${subEditIc}
+            ${a.map ? navBtn(a.map, a.name, a.pid) : ''}${subEditIc}
           </div>`).join('')}<button type="button" class="add-sub" data-kind="alt"><i class="ti ti-plus"></i> 新增選項</button>`
         : `${it.stops.map((st, i) => `
           <div class="stop${i < it.stops.length - 1 ? ' chain' : ''}" data-kind="stop" data-idx="${i}"><div class="num">${i + 1}</div>
             <div style="flex:1;min-width:0"><div class="n">${esc(st.name)}</div>${st.orig ? `<div class="o">${esc(st.orig)}</div>` : ''}${st.desc ? `<div class="o">${esc(st.desc)}</div>` : ''}
               <div class="m"><i class="ti ti-clock"></i> ${T(st.s)} · ${durLabel(st.dur)}${st.area ? `　<i class="ti ti-map-pin"></i> ${esc(st.area)}` : ''}${(sal => sal ? `　${esc(sal)}` : '')(timelineAlert(st, day, m(st.s), m(st.s) + (+st.dur || 0)))}</div></div>
-            ${st.map ? navBtn(st.map, st.name) : ''}${subEditIc}
+            ${st.map ? navBtn(st.map, st.name, st.pid) : ''}${subEditIc}
           </div>`).join('')}<button type="button" class="add-sub" data-kind="stop"><i class="ti ti-plus"></i> 新增一站</button>`;
       g.innerHTML = `
         <div class="head"><span class="t" style="font-size:15px;font-weight:600">${pick
@@ -2779,8 +2783,8 @@ function renderCards(items, day) {
     const hs = homeStay(it, day), hi = hs ? homeIc : '', dIt = hs && !it.desc ? { ...it, desc: hs.addr || '' } : it;   // 回住處休息：房子圖示、沒寫描述就放住處地址
     const b = div('blk ' + it.cls + (showNav ? ' has-nav' : '') + (compact ? ' compact' : '') + extra,
       compact
-        ? `<div class="t"><span class="tt">${hi}${esc(it.t)}</span>${bookedTag(it.booked)}<span class="bcs in">${bcTime(it.s, it.e)}<span class="bc">${durLabel(mins)}</span>${bcExtra(false, al, it.desc === PENDING)}</span></div>${showNav ? navBtn(it.map, it.t) : ''}${editIc}`
-        : `<div class="t">${hi}${esc(it.t)}${bookedTag(it.booked)}</div>${descLines(dIt, h)}<div class="bcs">${bcTime(it.s, it.e)}<span class="bc">${durLabel(mins)}</span>${hs ? `<span class="bc"><i class="ti ti-bed"></i>${esc(shortName(hs.name))}</span>` : it.area ? `<span class="bc"><i class="ti ti-map-pin"></i>${esc(it.area)}</span>` : ''}${bcExtra(false, al, it.desc === PENDING)}</div>${showNav ? navBtn(it.map, it.t) : ''}${editIc}`);
+        ? `<div class="t"><span class="tt">${hi}${esc(it.t)}</span>${bookedTag(it.booked)}<span class="bcs in">${bcTime(it.s, it.e)}<span class="bc">${durLabel(mins)}</span>${bcExtra(false, al, it.desc === PENDING)}</span></div>${showNav ? navBtn(it.map, it.t, it.pid) : ''}${editIc}`
+        : `<div class="t">${hi}${esc(it.t)}${bookedTag(it.booked)}</div>${descLines(dIt, h)}<div class="bcs">${bcTime(it.s, it.e)}<span class="bc">${durLabel(mins)}</span>${hs ? `<span class="bc"><i class="ti ti-bed"></i>${esc(shortName(hs.name))}</span>` : it.area ? `<span class="bc"><i class="ti ti-map-pin"></i>${esc(it.area)}</span>` : ''}${bcExtra(false, al, it.desc === PENDING)}</div>${showNav ? navBtn(it.map, it.t, it.pid) : ''}${editIc}`);
     b.dataset.id = it.id;
     setCol(b, it.id);
     b.style.height = h + 'px'; place(b, top);
@@ -2908,7 +2912,7 @@ function renderCand() {
       <div class="t">${multi ? `<i class="ti ${it.group ? 'ti-stack-2' : 'ti-arrows-split-2'}"></i> ` : ''}${esc(it.t)}</div>
       ${names ? `<div class="d">${esc(names)}</div>` : it.desc === PENDING ? '<div class="d"><i class="ti ti-loader-2 spin"></i> 查詢中，查好會自動填上</div>' : it.desc ? `<div class="d">${esc(it.desc)}</div>` : ''}
       ${line ? `<div class="s cs-line">${line}</div>` : ''}
-      ${it.map && !multi ? navBtn(it.map, it.t) : ''}${editIc}</div>`;
+      ${it.map && !multi ? navBtn(it.map, it.t, it.pid) : ''}${editIc}</div>`;
   };
   let body;
   if (!all.length) body = '<div class="ov-empty">還沒有備選景點。按上面「加入新地點」搜尋店名，或貼上 Google 地圖的店家、清單連結</div>';
@@ -3645,7 +3649,7 @@ function openStayInfo(i) {
   const h = tripStays()[i]; if (!h) return;
   const n = stayNights(h);
   const line = t => `<button type="button" class="st-al" data-copy="${esc(t)}"><span>${esc(t)}</span><i class="ti ti-copy"></i></button>`;
-  openNote(h.name, { ...NOTES[h.name], orig: '' }, '', h.map || withCity(h.name), { quiet: true, html: `
+  openNote(h.name, { ...NOTES[h.name], orig: '' }, '', h.map || withCity(h.name), { pid: h.pid, quiet: true, html: `
     <div class="sh-sec">地址</div><div class="st-addrs" id="stAddrs"><div class="st-al-wait"><i class="ti ti-loader-2 spin"></i> 查英文地址…</div></div>
     <div class="sh-sec">住宿日期</div>${(() => { const ds = tripDates(), ix = stayIdx(h); if (!ix.length) return '<div class="st-al-wait">還沒選日期</div>';
       const out = new Date(ds[ix[ix.length - 1]].ymd + 'T00:00'); out.setDate(out.getDate() + 1); return stayStrip(ds[ix[0]].ymd, ymd(out), ix.length); })()}` });
@@ -4441,7 +4445,7 @@ function openStayEditor(idx, opts = {}) {
       <label class="ed-field"><span class="ed-lab">位置 <span class="ed-lab-hint" id="stLLHint">${es.loc ? '已找到座標' : '在 Google 地圖長按那個點，複製座標貼過來'}</span></span>
         ${pinIn(`<input type="text" id="stLL" value="${esc(es.llText)}" placeholder="例如：18.7967, 98.9677" autocomplete="off" inputmode="decimal">`, es.loc)}</label>
       <button type="button" class="st-own" id="stOwnOff"><i class="ti ti-search"></i> 改回從 Google 地圖搜尋</button>`
-      : `${es.addr ? `<a class="st-addr" href="${esc(mapHref(es.map || withCity(es.name)))}" target="_blank" rel="noopener"><i class="ti ti-map-pin-filled"></i><span><small>地址</small>${esc(es.addr)}</span><i class="ti ti-external-link"></i></a>` : ''}
+      : `${es.addr ? `<a class="st-addr" href="${esc(navHref(es.map || withCity(es.name), es.pid, es.name))}" target="_blank" rel="noopener"><i class="ti ti-map-pin-filled"></i><span><small>地址</small>${esc(es.addr)}</span><i class="ti ti-external-link"></i></a>` : ''}
       <button type="button" class="st-own" id="stOwnOn"><i class="ti ti-map-pin-plus"></i> Google 地圖找不到（例如 Airbnb）？自己填地址和位置</button>`}
       <div class="ed-field"><span class="ed-lab">入住、退房 <span class="ed-lab-hint">${!es.ci ? '先點入住日' : !es.co ? '再點退房日' : ''}</span></span>${cal()}</div>
       ${es.ci ? stayStrip(es.ci, es.co, ns.length) : ''}
@@ -5781,7 +5785,7 @@ function openNote(title, info, mine, q, ex = {}) {
   openSheet(`
     ${info.photo ? `<div class="ph-frame sh-photo">${photoImg(info.photo, ' onerror="this.parentNode.remove()"')}</div>` : ''}
     <div class="sh-head"><div style="flex:1;min-width:0"><div class="sh-title" id="shTitle">${esc(title)}</div><div class="sh-sub">${esc(info.orig || '')}</div></div>
-      ${q ? navBtn(q, title) : ''}<button class="sh-close" aria-label="關閉"><i class="ti ti-x"></i></button></div>
+      ${q ? navBtn(q, title, ex.pid) : ''}<button class="sh-close" aria-label="關閉"><i class="ti ti-x"></i></button></div>
     ${ex.desc ? `<div class="sh-desc">${esc(ex.desc)}</div>` : ''}
     ${ex.html || ''}
     ${ex.meta?.length ? `<div class="sh-meta">${ex.meta.map(([ic, t]) => `<div><i class="ti ${ic}"></i><span>${esc(t)}</span></div>`).join('')}</div>` : ''}
@@ -5807,7 +5811,7 @@ function openCardInfo(id) {
   const action = day === 'cand' ? { label: '排進行程', icon: 'ti-calendar-plus', fn: () => { const go = () => openDayPicker(id); if (getAuth()) go(); else openAuth(go); } } : null;
   const hs = homeStay(it, day);   // 回住處休息：照片、筆記用住處的，描述沒寫就放住處地址
   if (hs) meta.push(['ti-home', hs.name]);
-  openNote(it.t, multi ? null : NOTES[it.note] || (hs && NOTES[hs.name]), it.mine, multi ? '' : it.map || hs?.map || '', { desc: it.desc === PENDING ? '' : it.desc || hs?.addr || '', meta, action, alert: it.alert, pending: it.desc === PENDING });
+  openNote(it.t, multi ? null : NOTES[it.note] || (hs && NOTES[hs.name]), it.mine, multi ? '' : it.map || hs?.map || '', { pid: multi ? '' : it.map ? it.pid : hs?.pid, desc: it.desc === PENDING ? '' : it.desc || hs?.addr || '', meta, action, alert: it.alert, pending: it.desc === PENDING });
   sheet._infoId = id;   // 背景查好時，如果還開著這張的資訊就重畫
 }
 // 點展開後的某一站／某個選項
@@ -5816,7 +5820,7 @@ function openSubInfo(id, kind, i) {
   const info = NOTES[subNoteKey(sub)], meta = [];
   if (kind === 'stop') meta.push(['ti-clock', `${T(sub.s)} · ${durLabel(sub.dur)}${sub.area ? `　${sub.area}` : ''}`]);
   if (sub.alert) meta.push(['ti-alert-triangle', sub.alert]);
-  openNote(sub.name, { ...info, orig: sub.orig || info?.orig }, sub.mine || info?.mine, sub.map, { desc: sub.desc, meta });
+  openNote(sub.name, { ...info, orig: sub.orig || info?.orig }, sub.mine || info?.mine, sub.map, { pid: sub.pid, desc: sub.desc, meta });
 }
 const findItem = id => { for (const k of ALL_KEYS) { if (!DATA[k]) continue; const it = DATA[k].find(x => x.id === id); if (it) return [k, it]; } return [null, null]; };
 
