@@ -1714,6 +1714,7 @@ let DAY_KEYS = [], ALL_KEYS = ['cand'];   // 備選景點也是一組卡片，�
 const lastDay = () => DAY_KEYS[DAY_KEYS.length - 1];
 function setTrip(t, role) {
   TRIP = t; TRIP_ROLE = role || TRIP_ROLE;
+  (t.flights || []).forEach(fillFlightUtc);   // 手動輸入的航班：用機場時區補上 UTC，算得出飛行時間
   const n = Math.max(1, Number(t.days) || 1);
   if (DAY_KEYS.length !== n) {
     DAY_KEYS = Array.from({ length: n }, (_, i) => 'd' + (i + 1)); ALL_KEYS = [...DAY_KEYS, 'cand'];
@@ -3660,6 +3661,33 @@ const PH_RETRY = "if(!this.dataset.r){this.dataset.r=1;setTimeout(()=>{this.src=
 // TRIP.flights：每一段一筆 { id, dir: out 去程／back 回程, number, date, airline, dep, arr, cls, seat, pnr, ticket, bag, note }
 // dep、arr：{ iata, name, city, tz, terminal, sched: { utc: '2026-11-04 23:20Z', local: '2026-11-05 07:20+08:00' } }（查 AeroDataBox 帶入；手動輸入的只有 local）
 const tripFlights = () => TRIP?.flights || [];
+// 手動輸入的航班只有當地時間：用機場所在的時區換算成 UTC（飛行時間、轉機時間、飛行中進度都要用）。查到的航班本來就有 UTC，不動
+// 機場時區：查詢來的航班有 tz；手動的用這張表（常去的機場），夏令時間交給瀏覽器的時區資料算
+function airportTz(e) {
+  if (e.tz) return e.tz;
+  const T = { 'Asia/Taipei': 'TPE TSA KHH RMQ TNN MZG KNH', 'Asia/Bangkok': 'BKK DMK CNX HKT USM KBV CEI HDY UTH', 'Asia/Tokyo': 'NRT HND KIX ITM NGO FUK CTS OKA SDJ HIJ KMJ KOJ KMQ TAK OKJ MYJ AOJ HKD UKB',
+    'Asia/Seoul': 'ICN GMP PUS CJU TAE', 'Asia/Hong_Kong': 'HKG', 'Asia/Macau': 'MFM', 'Asia/Shanghai': 'PVG SHA PEK PKX CAN SZX XMN CTU HGH', 'Asia/Singapore': 'SIN',
+    'Asia/Kuala_Lumpur': 'KUL PEN BKI LGK', 'Asia/Ho_Chi_Minh': 'SGN HAN DAD CXR PQC', 'Asia/Manila': 'MNL CEB CRK', 'Asia/Makassar': 'DPS', 'Asia/Jakarta': 'CGK',
+    'Asia/Phnom_Penh': 'PNH REP SAI', 'Asia/Yangon': 'RGN', 'Asia/Vientiane': 'VTE LPQ', 'Asia/Dubai': 'DXB', 'Europe/London': 'LHR LGW', 'Europe/Paris': 'CDG',
+    'Europe/Amsterdam': 'AMS', 'Europe/Berlin': 'FRA MUC', 'America/Los_Angeles': 'LAX SFO SEA', 'America/New_York': 'JFK EWR', 'America/Vancouver': 'YVR', 'Australia/Sydney': 'SYD MEL', 'Australia/Brisbane': 'BNE', 'Pacific/Guam': 'GUM' };
+  for (const [tz, list] of Object.entries(T)) if (list.split(' ').includes(e.iata)) return tz;
+  return '';
+}
+function localToUtcMs(local, tz) {
+  const m = /^(\d{4})-(\d{2})-(\d{2})[ T](\d{2}):(\d{2})/.exec(local || ''); if (!m || !tz) return NaN;
+  const L = Date.UTC(+m[1], m[2] - 1, +m[3], +m[4], +m[5]);
+  const off = ms => { try { const p = new Intl.DateTimeFormat('en-US', { timeZone: tz, hourCycle: 'h23', year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' }).formatToParts(new Date(ms)), g = k => +p.find(x => x.type === k).value;
+    return Date.UTC(g('year'), g('month') - 1, g('day'), g('hour'), g('minute')) - ms; } catch { return NaN; } };
+  const u = L - off(L); return L - off(u);   // 算兩次：剛好碰到夏令時間切換也對
+}
+function fillFlightUtc(f) {
+  for (const e of [f.dep, f.arr]) {
+    if (!e?.sched || e.sched.utc || !e.sched.local) continue;
+    const u = localToUtcMs(e.sched.local, airportTz(e));
+    if (!isNaN(u)) e.sched.utc = new Date(u).toISOString().slice(0, 16).replace('T', ' ') + 'Z';
+  }
+  return f;
+}
 const AIRPORT_ZH = { TPE: '桃園', TSA: '松山', KHH: '高雄', RMQ: '台中', CNX: '清邁', BKK: '曼谷', DMK: '曼谷廊曼', HKT: '普吉', USM: '蘇美島', KIX: '大阪關西', ITM: '大阪伊丹', NRT: '東京成田', HND: '東京羽田', ICN: '首爾仁川', GMP: '首爾金浦', PUS: '釜山', CJU: '濟州', OKA: '沖繩', FUK: '福岡', CTS: '札幌', NGO: '名古屋', HKG: '香港', MFM: '澳門', SIN: '新加坡', KUL: '吉隆坡', SGN: '胡志明市', HAN: '河內', DAD: '峴港', MNL: '馬尼拉', CEB: '宿霧', DPS: '峇里島', REP: '暹粒', PNH: '金邊', RGN: '仰光', LPQ: '龍坡邦' };
 const AIRLINE_ZH = { BR: '長榮航空', CI: '中華航空', JX: '星宇航空', IT: '台灣虎航', AE: '華信航空', B7: '立榮航空', TG: '泰國航空', FD: '泰國亞洲航空', SL: '泰國獅子航空', VZ: '泰越捷航空', WE: '泰國微笑航空', PG: '曼谷航空', CX: '國泰航空', UO: '香港快運', JL: '日本航空', NH: '全日空', MM: '樂桃航空', GK: '捷星日本', KE: '大韓航空', OZ: '韓亞航空', '7C': '濟州航空', TW: '德威航空', LJ: '真航空', SQ: '新加坡航空', TR: '酷航', VJ: '越捷航空', VN: '越南航空', AK: '亞洲航空', D7: '全亞洲航空', MH: '馬來西亞航空', PR: '菲律賓航空', '5J': '宿霧太平洋' };
 const airportZh = e => AIRPORT_ZH[e.iata] || e.city || e.name || e.iata;
@@ -3892,6 +3920,7 @@ function openFlightEditor(id, dir0) {
         if (!/^[A-Z]{3}$/.test(fe.dep.iata) || !/^[A-Z]{3}$/.test(fe.arr.iata)) { msg = '機場代碼是 3 個英文字母，例如 TPE'; draw(); return; }
         if (!fe.dep.sched.local || !fe.arr.sched.local) { msg = '請填起飛和抵達時間'; draw(); return; }
         fe.date = fe.dep.sched.local.slice(0, 10);
+        fillFlightUtc(fe);   // 用機場時區補上 UTC，飛行時間才算得出來
       }
       const { manual: _m, ...rest } = fe;
       const item = { ...rest, manual };
