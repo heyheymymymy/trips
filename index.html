@@ -362,6 +362,18 @@ html.sheet-lock body{position:fixed;left:0;right:0;bottom:0;overflow:hidden}
 @media (prefers-reduced-motion:reduce){.edit-btn,.map-btn{transition:none}}
 .map-view{position:relative;height:calc(100dvh - var(--hd, 160px));min-height:320px;background:#F3EFE8}
 .map-view .gmap{position:absolute;inset:0}
+/* 電腦版：左邊 440px 是原本的手機畫面（頁首、天數、時間線），右邊整塊是地圖，一直開著 */
+@media (min-width:1024px){
+  .desk-map .app{max-width:440px;margin:0;border-right:1px solid var(--line)}
+  .desk-map .map-view{position:fixed;top:0;right:0;bottom:0;left:441px;height:auto;min-height:0;z-index:5}
+  .desk-map .map-strip,.desk-map #mapBtn{display:none !important}
+  .desk-map .edit-btn{left:344px;right:auto}
+  .desk-map .toast{left:12px;right:auto;margin:0;max-width:416px}
+  .desk-map .pin{cursor:pointer}
+  .desk-map .wiz-bar{left:0;right:auto;width:440px;margin:0}   /* 建立旅程：底下的按鈕列跟著左欄 */
+}
+.desk-flash{animation:deskFlash 1.2s ease}
+@keyframes deskFlash{0%,30%{box-shadow:0 0 0 3px var(--accent-fg)}100%{box-shadow:0 0 0 3px transparent}}
 /* 地圖、清單切換：清單淡出再換、回來淡入（地圖直接出現，不等它畫好：等的話開地圖感覺變慢） */
 .fade-out{opacity:0 !important;transition:opacity .14s ease}
 .fade-in{animation:fadeIn .22s ease}
@@ -859,6 +871,8 @@ html:not(.on-new) .editing .acct-btn,html.tut .acct-btn{display:none}
 .am-set{margin-top:4px;border-top:1px solid var(--line);border-radius:0 0 10px 10px}   /* 旅程設定：跟上面帳號的東西隔開 */
 .acct-menu{position:absolute;left:12px;top:calc(60px + env(safe-area-inset-top));z-index:20;min-width:240px;max-width:calc(100% - 24px);padding:6px;border-radius:14px;background:#fff;box-shadow:0 8px 28px rgba(0,0,0,.14),0 0 0 1px rgba(0,0,0,.04);animation:dropIn .16s ease}
 .acct-menu[hidden]{display:none}
+.am-priv{display:block;padding:8px 10px 4px;font-size:11px;color:var(--muted);text-decoration:none}
+.am-priv:active{color:var(--text2)}
 .am-login{margin-bottom:4px;border-bottom:1px solid var(--line);border-radius:10px 10px 0 0;padding-bottom:12px}
 .am-who{display:flex;align-items:center;gap:10px;padding:10px 10px 12px;border-bottom:1px solid var(--line);margin-bottom:4px}
 .am-who .acct-pic{width:36px;height:36px}
@@ -1203,6 +1217,7 @@ html.tut .sheet:not(.dlg){max-height:calc(100vh - 176px - env(safe-area-inset-to
 .wiz-opts.grid .wiz-opt small{display:none}
 .ps-field{position:relative}
 .tl-add{position:absolute;left:4px;right:0;z-index:3;height:40px;border:1px dashed transparent;border-radius:12px;background:#FAF7F3;color:var(--accent-fg);font:inherit;font-size:14px;font-weight:600;display:flex;align-items:center;justify-content:center;gap:4px;cursor:pointer}
+.tl-route{background:var(--page);border-color:var(--border)}   /* 自動排交通：比「加入行程」淡一階 */
 .tl-add.empty{height:auto;padding:22px 12px;flex-direction:column;gap:2px;font-size:15px}
 .tl-add.empty i{font-size:22px}
 .tl-add small{font-size:12px;font-weight:400;color:var(--text2)}
@@ -2572,7 +2587,16 @@ function addButton(page) {
   b.style.top = top + 'px'; b.classList.add('mv'); b.dataset.t = top; movable.push(b);   // 展開合併區塊時跟著往下移
   b.addEventListener('click', e => { e.stopPropagation(); withAuth(() => openAddFlow(page)); });
   (curLayer || tl).appendChild(b);
-  addBottom = top + 64; tl.style.height = Math.max(baseH, addBottom) + 'px';
+  addBottom = top + 64;
+  // 下面一格「自動排交通」：算這天每一段的交通時間（原本是編輯模式右下角的小按鈕，10/21 拿掉後改放這裡）。至少兩個行程才有交通要算
+  if (real.length + flightItems(page).length >= 2) {
+    const r = document.createElement('button'); r.type = 'button'; r.className = 'tl-add tl-route mv';
+    r.innerHTML = '<i class="ti ti-route"></i> 自動排交通';
+    const rt = top + 48; r.style.top = rt + 'px'; r.dataset.t = rt; movable.push(r);
+    r.addEventListener('click', e => { e.stopPropagation(); withAuth(() => openRoutePlanner(page)); });
+    (curLayer || tl).appendChild(r); addBottom = rt + 64;
+  }
+  tl.style.height = Math.max(baseH, addBottom) + 'px';
 }
 let addBottom = 0;
 
@@ -2850,16 +2874,18 @@ function renderPage(page) {
   tl.innerHTML = ''; movable.length = 0; expanders.length = 0;
   tl.classList.remove('sliding');
   // 地圖模式：時間軸、備選清單收起來，改顯示地圖
-  const onMap = mapOn(page);
-  mapView.hidden = !onMap;
+  const onMap = mapOn(page), side = deskMap(page);
+  mapView.hidden = !(onMap || side);
+  document.documentElement.classList.toggle('desk-map', side);
   document.documentElement.classList.toggle('on-map', onMap); syncTint();
   document.documentElement.classList.toggle('btn-map', onMap);   // 右下按鈕的地圖樣子（按下去當下就先換，見 mapBtn）
   tripsEl.hidden = page !== 'trips';
   if (page === 'trips') renderTrips();
   wizEl.hidden = page !== 'new';
-  if (page === 'new') { if (prevPage !== 'new') wizReset(); renderWiz(); }
+  if (page === 'new') { if (prevPage !== 'new') wizReset(); wizMapSig = null; renderWiz(); }   // 電腦版地圖在 renderWiz 裡畫
   if (isDay(page) && tripFlights().length && flightItems(page).length) { fillAirportLocs().then(() => fillAirportRoute(page)); refreshFlights(); }   // 航班那天：補機場座標、算到機場的交通、查最新狀態
   if (onMap) { ovEl.hidden = candEl.hidden = true; tl.style.display = 'none'; cardsEl = curLayer = null; drawMap(page); return; }
+  if (side && page !== 'new') drawMap(page);   // 電腦：右邊的地圖跟著這一頁
   ovEl.hidden = page !== 'overview';
   if (page === 'overview') renderOverview();
   candEl.hidden = page !== 'cand';
@@ -3385,7 +3411,6 @@ function openTripSettings(keep) {
       <div class="ed-field"><span class="ed-lab">每天通常幾點出門 <span class="ed-lab-hint">空白的那天從這個時間開始排</span></span>
         <input id="tsDayStart" class="ts-time" type="time" step="900" value="${st.dayStart}"></div>
       <div class="ts-more">
-        <button type="button" class="inv-btn trip-set" id="tsTut"><i class="ti ti-hand-finger"></i><span><b>操作教學</b><small>練習點、長按、拖曳、交換</small></span><i class="ti ti-chevron-right"></i></button>
         <button type="button" class="inv-btn trip-set" id="tsHistory"><i class="ti ti-history"></i><span><b>修改紀錄</b><small>誰改了什麼，救回刪掉的行程</small></span><i class="ti ti-chevron-right"></i></button>
         ${canMem ? '<button type="button" class="inv-btn trip-set" id="tsReset"><i class="ti ti-key"></i><span><b>換編輯碼或連結</b><small>傳錯人了？舊的會馬上失效</small></span><i class="ti ti-chevron-right"></i></button>' : ''}</div>
       <div class="err" id="tsErr" hidden></div>
@@ -4823,21 +4848,19 @@ acctBtn.addEventListener('click', e => {
   const a = getAccount();
   // 沒登入：Google 登入、用連結搬到其他裝置（手機裡有旅程才有）
   const inTrip = current !== 'trips' && current !== 'new';
+  const amPriv = '<a class="am-priv" href="privacy.html" target="_blank" rel="noopener">隱私權說明</a>';   // 選單最底下的小灰字
   const mine = inTrip ? '<button type="button" class="am-item" id="acctTrips"><i class="ti ti-layout-grid"></i>我的旅程</button>' : '';   // 旅程裡：回到我的旅程
   const set = inTrip && TRIP ? '<button type="button" class="am-item am-set" id="acctSet"><i class="ti ti-settings"></i>旅程設定</button>' : '';   // 旅程裡：最底下放這趟的設定
   // 最上面是帳號（還沒登入＝Google 登入；登入了＝頭像、名字），隔一條線，下面才是其他選項
   if (!a) acctMenu.innerHTML = `<button type="button" class="am-item am-login" id="acctLogin"><i class="ti ti-brand-google"></i>用 Google 登入</button>${mine}
     ${myTrips().length ? '<button type="button" class="am-item" id="acctCarry"><i class="ti ti-link"></i>用連結帶到其他裝置</button>' : ''}
     ${amScale()}
-    <button type="button" class="am-item" id="acctTut"><i class="ti ti-hand-finger"></i>操作教學</button>
-    <a class="am-item" href="privacy.html" target="_blank" rel="noopener"><i class="ti ti-shield-lock"></i>隱私權說明</a>${set}`;
+${set}${amPriv}`;
   else acctMenu.innerHTML = `<div class="am-who"><span class="acct-pic">${acctPic(a)}</span><span><b>${esc(a.name || 'Google 帳號')}</b><small>${esc(a.email || '')}</small><small>旅程已同步</small></span></div>
     ${mine}
     <button type="button" class="am-item" id="acctNick"><i class="ti ti-user-edit"></i>暱稱<span class="am-val">${esc(getNick() || '還沒填')}</span><i class="ti ti-chevron-right am-go"></i></button>
     ${amScale()}
-    <button type="button" class="am-item" id="acctTut"><i class="ti ti-hand-finger"></i>操作教學</button>
-    <a class="am-item" href="privacy.html" target="_blank" rel="noopener"><i class="ti ti-shield-lock"></i>隱私權說明</a>
-    <button type="button" class="am-item" id="acctOut"><i class="ti ti-logout"></i>登出</button>${set}`;
+    <button type="button" class="am-item" id="acctOut"><i class="ti ti-logout"></i>登出</button>${set}${amPriv}`;
   acctMenu.hidden = false; acctBtn.setAttribute('aria-expanded', 'true');
 });
 // 時間軸大小：三個並排，點了馬上重排，畫面中間那個時間留在原地
@@ -5017,6 +5040,7 @@ function calHtml(w = wiz) {   // 建立旅程、旅程設定共用：w 有 start
 }
 const parseD = v => v ? new Date(v + 'T00:00') : null;
 function wizDays() { const s = parseD(wiz.start), e = parseD(wiz.end); return s && e && e >= s ? Math.round((e - s) / 864e5) + 1 : 0; }
+let wizMapSig = null;
 function renderWiz() {
   const field = (lab, html, hint = '') => `<label class="ed-field"><span class="ed-lab">${lab}${hint ? `<span class="ed-lab-hint">${hint}</span>` : ''}</span>${html}</label>`;
   const html = legsHtml(wiz, wiz.legs.length > 1 ? '每一段是一個城市，移動那天兩段都算' : wiz.geo ? wiz.geo.label : '打城市名稱，從清單選一個');   // 先算好日期（wizDays 要用）
@@ -5030,6 +5054,9 @@ function renderWiz() {
 `;
   wizBack.textContent = '取消';
   wizNext.textContent = '建立旅程';
+  // 電腦版：右邊地圖跟著選好的目的地（目的地有變才重畫，打字不會一直閃）
+  const sig = wiz.legs.map(l => l.geo?.center || '').join('|');
+  if (deskMap('new') && sig !== wizMapSig) { wizMapSig = sig; drawMap('new'); }
   wireLegs(wizEl, wiz, () => { wiz.err = ''; renderWiz(); }, { onType: () => { const nm = wizEl.querySelector('#wizName'); if (nm) nm.placeholder = autoName() || '京都四天三夜快樂之旅'; } });
 }
 // 封面：有照片顯示照片，沒有就是淺陶土色底＋英文目的地
@@ -5132,7 +5159,12 @@ addEventListener('hashchange', () => { showPage(location.hash.slice(1), !skipAni
 const mapBtn = document.getElementById('mapBtn'), mapView = document.getElementById('mapView'), mapMsg = document.getElementById('mapMsg');
 let mapMode = false;
 try { mapMode = sessionStorage.getItem('cm-map') === '1'; } catch {}
-const mapOn = page => mapMode && !editing && (isDay(page) || page === 'cand');
+// 電腦（寬 1024 以上）：左邊時間線、右邊一直放大地圖，不用切換（手機照舊按地圖按鈕切換）
+const DESK = matchMedia('(min-width: 1024px)');
+const deskMap = page => DESK.matches && (page === 'new' || !!TRIP && (isDay(page) || page === 'cand' || page === 'overview'));   // 建立旅程：右邊地圖標出選好的目的地
+const mapOn = page => !DESK.matches && mapMode && !editing && (isDay(page) || page === 'cand');
+const mapShown = page => mapOn(page) || deskMap(page);
+DESK.addEventListener?.('change', () => { if (current) { updateHeader(current); renderPage(current); } });
 mapView.querySelector('.map-zoom').addEventListener('click', e => {
   const b = e.target.closest('[data-zoom]'); if (b && gmap) gmap.setZoom(gmap.getZoom() + +b.dataset.zoom);
 });
@@ -5473,6 +5505,9 @@ const MAP_STYLE = [
 ];
 // 地圖上要標的點：每天照時間排，一個地點一個編號（合併區塊每一站各一號，多選一的幾家同一號、虛線圈）
 function mapPoints(page) {
+  if (page === 'new') return (wiz?.legs || []).map(l => ({ l, ll: /^\s*(-?\d+(?:\.\d+)?),\s*(-?\d+(?:\.\d+)?)/.exec(l.geo?.center || '') })).filter(o => o.ll)
+    .map((o, i) => ({ p: { lat: +o.ll[1], lng: +o.ll[2] }, n: i + 1, cls: 'see', name: o.l.geo.name || o.l.name, id: '', when: '', desc: '' }));
+  if (page === 'overview') return DAY_KEYS.flatMap(k => mapPoints(k).map(p => ({ ...p, day: k })));
   const pts = [], ll = s => { const [a, b] = String(s || '').split(',').map(Number); return isFinite(a) && isFinite(b) && (a || b) ? { lat: a, lng: b } : null; };
   const items = [...(DATA[page] || [])].sort((a, b) => m(a.s) - m(b.s));
   let n = 0;
@@ -5484,6 +5519,18 @@ function mapPoints(page) {
     else { const p = ll(it.loc); if (p) pts.push({ p, n: ++n, cls, name: it.t, id: it.id, when: sub, desc: it.desc === PENDING ? '' : it.desc || '' }); }
   }
   return pts;
+}
+// 電腦：點地圖上的點 → 左邊捲到那張卡片、閃一下；滑鼠移到卡片上 → 地圖上那幾個點放大
+function deskCard(id) {
+  const el = (current === 'cand' ? candEl : tl).querySelector(`[data-id="${CSS.escape(id)}"]`); if (!el) return false;
+  el.scrollIntoView({ block: 'center', behavior: 'smooth' });
+  el.classList.remove('desk-flash'); void el.offsetWidth; el.classList.add('desk-flash');
+  return true;
+}
+const deskHover = id => { if (!DESK.matches) return; mapPins.forEach((v, k) => v.el.classList.toggle('on', id ? mapPts[k]?.id === id : k === mapActive)); };
+for (const box of [document.getElementById('tl'), document.getElementById('candPage')]) {
+  box.addEventListener('mouseover', e => { const c = e.target.closest('[data-id]'); deskHover(c?.dataset.id || ''); });
+  box.addEventListener('mouseleave', () => deskHover(''));
 }
 const mapStrip = document.getElementById('mapStrip');
 let mapPts = [], mapActive = -1, stripAuto = 0;   // 備選地圖顯示哪一類＝清單上選的那一類（candView.f，兩邊連動）
@@ -5533,10 +5580,11 @@ function showMapType() {
 async function drawMap(page) {
   document.documentElement.style.setProperty('--hd', document.querySelector('header').offsetHeight + 'px');
   const pts = mapPoints(page), day = isDay(page);
-  if (!MAPS_KEY) { mapMsg.textContent = '地圖還沒設定好：試算表 Settings 分頁要加上 MAPS_KEY'; return; }
+  const key = MAPS_KEY || await getMapsKey();   // 建立旅程時還沒有旅程，金鑰另外要
+  if (!key) { mapMsg.textContent = '地圖還沒設定好：試算表 Settings 分頁要加上 MAPS_KEY'; return; }
   mapMsg.textContent = '';
-  try { await loadMaps(MAPS_KEY); } catch { mapMsg.textContent = '地圖載入失敗，請檢查網路後再試一次'; return; }
-  if (!mapOn(current) || current !== page) return;   // 等地圖載入的時候換頁了
+  try { await loadMaps(key); } catch { mapMsg.textContent = '地圖載入失敗，請檢查網路後再試一次'; return; }
+  if (!mapShown(current) || current !== page) return;   // 等地圖載入的時候換頁了
   if (!PinView) PinView = class extends google.maps.OverlayView {
     constructor(pt, el) { super(); this.pt = pt; this.el = el; }
     onAdd() { this.getPanes().overlayMouseTarget.appendChild(this.el); google.maps.OverlayView.preventMapHitsAndGesturesFrom(this.el); }
@@ -5552,15 +5600,25 @@ async function drawMap(page) {
   mapPins.forEach(p => p.setMap(null)); mapPins = [];
   if (mapLine) { mapLine.setMap(null); mapLine = null; }
   mapStrip.innerHTML = ''; mapStrip.classList.remove('types'); mapView.classList.remove('has-strip'); mapPts = pts; mapActive = -1;
-  if (!pts.length) { mapMsg.textContent = day ? '這一天還沒有標上位置的地點' : '備選還沒有標上位置的地點'; gmap.setCenter(tripCenter()); gmap.setZoom(13); return; }
+  if (!pts.length && page === 'new') { gmap.setCenter({ lat: 25, lng: 118 }); gmap.setZoom(4); return; }   // 還沒選目的地：亞洲
+  if (!pts.length) { mapMsg.textContent = day ? '這一天還沒有標上位置的地點' : page === 'overview' ? '還沒有標上位置的地點' : '備選還沒有標上位置的地點'; gmap.setCenter(tripCenter()); gmap.setZoom(13); return; }
   for (const pt of pts) {
     const el = document.createElement('button');
     el.type = 'button'; el.className = `pin ${pt.cls}${pt.alt ? ' alt' : ''}`;
-    el.innerHTML = `<b>${day ? pt.n : ''}</b><span>${esc(shortName(pt.name))}</span>`;
+    el.innerHTML = `<b>${day || page === 'new' ? pt.n : ''}</b><span>${esc(shortName(pt.name))}</span>`;
     el.setAttribute('aria-label', pt.name);
     const i = mapPins.length;
-    el.addEventListener('click', e => { e.stopPropagation(); mapFocus(i, { pan: false, scroll: true }); openPt(pt); });
+    el.addEventListener('click', e => { e.stopPropagation(); mapFocus(i, { pan: false, scroll: true }); if (deskMap(current) && deskCard(pt.id)) return; openPt(pt); });   // 電腦：左邊捲到那張卡片、閃一下
     const v = new PinView(pt, el); v.setMap(gmap); mapPins.push(v);
+  }
+  if (page === 'new') {   // 建立旅程：目的地照順序連起來
+    if (pts.length > 1) { mapLine = new google.maps.Polyline({ path: pts.map(p => p.p), map: gmap, strokeColor: '#9A4A25', strokeOpacity: 0.45, strokeWeight: 2.5, clickable: false });
+      const b = new google.maps.LatLngBounds(); pts.forEach(p => b.extend(p.p)); gmap.fitBounds(b, { top: 80, bottom: 80, left: 80, right: 80 }); }
+    else { gmap.setCenter(pts[0].p); gmap.setZoom(10); }
+    return;
+  }
+  if (page === 'overview') {   // 電腦版總覽：整趟的地點都標上去，不連線
+    const b = new google.maps.LatLngBounds(); pts.forEach(p => b.extend(p.p)); gmap.fitBounds(b, { top: 40, bottom: 40, left: 40, right: 40 }); return;
   }
   // 備選：底下是類型標籤，點了地圖只留那一類的圖釘
   if (!day) {
@@ -8326,8 +8384,10 @@ function openTutorial() {
 if (!TUT) try { const r = sessionStorage.getItem('tut-result'); sessionStorage.removeItem('tut-result'); if (r === 'done') setTimeout(() => toast('練習完成，開始排你的行程吧！'), 900); } catch {}
 // 剛建好旅程（存連結的視窗關掉之後）：中間跳出「給我 30 秒，學會編輯」，下一步直接進練習
 function whenSheetClosed(fn) { const t = setInterval(() => { if (!sheet.classList.contains('on')) { clearInterval(t); setTimeout(fn, 350); } }, 300); }
+// 10/21 教學先整個拿掉（之後重新做）：不再主動問、選單和旅程設定也拿掉入口；練習頁本身（?tutorial=1）還留著
+const TUT_OFF = true;
 function openTutIntro() {
-  if (TUT) return;
+  if (TUT || TUT_OFF) return;
   try { if (localStorage.getItem(TUT_DONE_KEY) || localStorage.getItem(TUT_DONE_KEY + '-asked')) return; localStorage.setItem(TUT_DONE_KEY + '-asked', '1'); } catch { return; }
   openSheet(`<div class="tin">
       <div class="tin-ill" aria-hidden="true"><span class="tin-c a"></span><span class="tin-c b"></span><span class="tin-c c"></span><span class="tin-hand">${HAND_SVG}</span></div>
@@ -8341,7 +8401,7 @@ function openTutIntro() {
 }
 // 第一次拿到編輯權限（輸入編輯碼、建立旅程）：問一次要不要練習
 function offerTutorial() {
-  if (TUT) return;
+  if (TUT || TUT_OFF) return;
   try { if (localStorage.getItem(TUT_DONE_KEY) || localStorage.getItem(TUT_DONE_KEY + '-asked')) return; localStorage.setItem(TUT_DONE_KEY + '-asked', '1'); } catch { return; }
   setTimeout(() => toast('第一次編輯嗎？花 30 秒練習拖曳、交換', '開始練習', openTutorial, 9000), 2600);
 }
