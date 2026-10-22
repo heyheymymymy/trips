@@ -8314,7 +8314,8 @@ function resumeLookups() {
   if (!loaded || !getAuth()) return;
   for (const k of ALL_KEYS) for (const it of DATA[k] || [])
     if (it.desc === PENDING && !bgBusy.has(it.id)) { bgBusy.add(it.id); bgQueue.push({ id: it.id, link: /\/maps\/place\/[^/]+\/@/.test(it.map || '') ? it.map : it.t && it.t !== PENDING_T ? it.t : it.map }); }   // 地圖連結有店名和座標（清單匯入的）最準，其次用店名查
-  while (bgRunning < 2 && bgQueue.length) {   // 一次兩個（三個同時查時資料庫連線曾經被用完） bgRunning++; bgLookup(bgQueue.shift()).finally(() => { bgRunning--; resumeLookups(); }); }
+  while (bgRunning < 2 && bgQueue.length) {   // 一次兩個（三個同時查時資料庫連線曾經被用完）
+    bgRunning++; bgLookup(bgQueue.shift()).finally(() => { bgRunning--; resumeLookups(); }); }
 }
 async function bgLookup({ id, link }) {
   let p = null, fail = '';
