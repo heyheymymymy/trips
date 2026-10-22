@@ -1979,6 +1979,9 @@ function applyMine(items) {
   }
   try { localStorage.setItem(MINE_KEY, JSON.stringify(list)); localStorage.setItem(SYNC_KEY, JSON.stringify(l)); } catch {}
   if (changed) { tripsFetched = false; if (current === 'trips') renderTrips(); }
+  // 正在看的這趟：帳號裡有編輯碼、這支手機還沒有 → 直接用，重新載入拿到編輯權限（登入了就不用自己再輸入）
+  const cur = TRIP_ID && !TRIP_CODE && list.find(y => y.id === TRIP_ID && y.code);
+  if (cur) { const go = () => { if (loading) return setTimeout(go, 400); if (!TRIP_CODE) { TRIP_CODE = cur.code; load(true); } }; go(); }   // 第一次載入還沒回來：等它好了再換（不然回來時會把編輯碼清掉）
 }
 let mineSyncing = false;
 async function syncMine() {
@@ -1992,6 +1995,8 @@ async function syncMine() {
   catch (e) { if (e.code === 'bad_account') { try { localStorage.removeItem(ACCT_KEY); } catch {} if (current === 'trips') renderTrips(); toast(e.message); } }
   finally { mineSyncing = false; }
 }
+// 直接打開某一趟（從 LINE、主畫面、書籤，不經過「我的旅程」）也跟帳號同步一次：帳號裡的編輯碼、擁有者鑰匙才會帶到這支手機
+if (TRIP_ID) setTimeout(() => { if (getAccount() && !syncMine.done) { syncMine.done = true; syncMine(); } });
 const inLine = () => /\bLine\//i.test(navigator.userAgent);
 let gisReady = null;
 function loadGis() {
