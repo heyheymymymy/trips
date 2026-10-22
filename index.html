@@ -27,6 +27,7 @@
   --shop-bg:#E5EEF3;--shop-bd:#9DBDD0;--shop-fg:#355C74; /* 購物：霧藍 */
   --bar-bg:#F4E3E7;--bar-bd:#D7A2AE;--bar-fg:#7A2E40;    /* 酒吧：酒紅 */
   --see-bg:#EEEAF4;--see-bd:#BFB3D6;--see-fg:#5B4B7A;    /* 景點、活動：薰衣草 */
+  --hotel-bg:#E3EDEB;--hotel-bd:#9EC2BC;--hotel-fg:#2F5C56; /* 飯店：青瓷綠 */
   --other-bg:#EFEDEA;--other-bd:#CFC8BF;--other-fg:#5E5850; /* 其他（交通、住宿）：灰米 */
   --now:#E24B4A;
   --hour:60px;
@@ -204,13 +205,14 @@ header{position:sticky;top:0;z-index:10;background:var(--page);padding:calc(12px
 .shop{background:var(--shop-bg);border-color:var(--shop-bd);color:var(--shop-fg);--c-bg:var(--shop-bg);--c-bd:var(--shop-bd);--c-fg:var(--shop-fg)}
 .bar{background:var(--bar-bg);border-color:var(--bar-bd);color:var(--bar-fg);--c-bg:var(--bar-bg);--c-bd:var(--bar-bd);--c-fg:var(--bar-fg)}
 .see{background:var(--see-bg);border-color:var(--see-bd);color:var(--see-fg);--c-bg:var(--see-bg);--c-bd:var(--see-bd);--c-fg:var(--see-fg)}
+.hotel{background:var(--hotel-bg);border-color:var(--hotel-bd);color:var(--hotel-fg);--c-bg:var(--hotel-bg);--c-bd:var(--hotel-bd);--c-fg:var(--hotel-fg)}
 .other{background:var(--other-bg);border-color:var(--other-bd);color:var(--other-fg);--c-bg:var(--other-bg);--c-bd:var(--other-bd);--c-fg:var(--other-fg)}
 .grp{position:absolute;left:4px;right:0;z-index:2;background:var(--eat-bg);border:0;
   border-radius:8px;padding:6px 10px 5px;color:var(--eat-fg);cursor:pointer;overflow:hidden;transition:height .25s ease}
 /* 合併區塊跟著類型換顏色（預設是吃） */
 .grp.spa{background:var(--spa-bg);color:var(--spa-fg)}.grp.cafe{background:var(--cafe-bg);color:var(--cafe-fg)}
 .grp.shop{background:var(--shop-bg);color:var(--shop-fg)}.grp.see{background:var(--see-bg);color:var(--see-fg)}
-.grp.bar{background:var(--bar-bg);color:var(--bar-fg)}.grp.other{background:var(--other-bg);color:var(--other-fg)}
+.grp.bar{background:var(--bar-bg);color:var(--bar-fg)}.grp.hotel{background:var(--hotel-bg);color:var(--hotel-fg)}.grp.other{background:var(--other-bg);color:var(--other-fg)}
 .grp .head{display:flex;justify-content:space-between;align-items:center}
 .list{display:none;margin:8px -10px 0;background:#fff;background:color-mix(in srgb,var(--c-bg,var(--eat-bg)) 30%,#fff);border-top:1px solid var(--c-bd,var(--eat-bd));padding:2px 12px 4px;color:var(--text);cursor:default}
 .grp.open .list{display:block}
@@ -320,13 +322,18 @@ html.sheet-lock body{position:fixed;left:0;right:0;bottom:0;overflow:hidden}
 .ri-leg span{display:flex;flex-wrap:wrap;align-items:center;gap:2px 6px;min-width:0;font-weight:600}
 .ri-leg span i{font-size:16px;color:var(--text2)}
 .ri-leg small{flex-basis:100%;font-size:12px;font-weight:400;color:var(--text2)}
+.ri-leg small.ri-ab{font-size:13px;color:var(--text)}
+.ri-leg small.ri-ab b{width:auto;font-weight:600}
+.ri-walks{display:flex;gap:8px;margin-top:12px}
+.ri-walks .btn{flex:1;min-width:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:0;height:auto;min-height:48px;padding:6px 8px;font-size:14px;line-height:1.3;text-align:center;text-decoration:none}
+.ri-walks .btn small{font-size:12px;font-weight:400;color:var(--text2)}
 .ri-gm{display:flex;align-items:center;justify-content:center;gap:6px;flex-wrap:wrap;margin-top:12px;text-decoration:none}
 .ri-gm small{font-size:12px;color:var(--text2);font-weight:400}
 .sh-meta{margin-top:8px;display:flex;flex-direction:column;gap:4px;font-size:13px;color:var(--text2)}
 .sh-meta div{display:flex;align-items:flex-start;gap:6px;line-height:1.5}
 .sh-meta i{flex:none;font-size:15px;margin-top:1px}
 .sh-empty{margin-top:14px;font-size:13px;color:var(--muted)}
-.sh-close{flex:none;width:30px;height:30px;border-radius:50%;border:0;background:var(--fill2);color:var(--text2);font-size:16px;
+.sh-close,.ed-back{flex:none;width:30px;height:30px;border-radius:50%;border:0;background:var(--fill2);color:var(--text2);font-size:16px;
   display:flex;align-items:center;justify-content:center;cursor:pointer}
 /* 同一張面板裡往下一層：內容從右邊滑進來；返回：從左邊滑回來 */
 .sh-back{flex:none;width:30px;height:30px;margin:0 -4px 0 -6px;border:0;background:none;color:var(--text);font-size:22px;display:flex;align-items:center;justify-content:center;cursor:pointer}
@@ -650,6 +657,13 @@ html.on-map:not(.sheet-lock),html.on-map:not(.sheet-lock) body{background:#f4f0e
 .eb-btn{flex:none;height:30px;padding:0 16px;border-radius:999px;border:0;background:#fff;color:var(--text2);font-size:14px;font-weight:600;cursor:pointer}
 .eb-btn.done{color:var(--accent-fg)}
 .car.stale,.car-line.stale{opacity:.5}
+.car.late{color:#B4412F;border-color:#EBB7AD}
+a.car.walk-go{text-decoration:none;cursor:pointer}
+a.car.walk-go.late{color:#B4412F}
+.car .go{font-size:10px;margin-left:2px;opacity:.7}   /* 走到車站的時間比空檔長：可能趕不上 */
+.rd-ab{display:flex;align-items:center;box-shadow:inset 0 1px 0 var(--border)}
+.sheet.soft .rd-in .rd-ab input{flex:1;min-width:0;padding:0 8px 0 14px;font-size:15px}
+.rd-ab > i{flex:none;font-size:14px;color:var(--muted)}
 .car .q{margin-left:2px;font-weight:600}
 .rt-list{display:flex;flex-direction:column;gap:2px;margin-top:4px}
 .rt-row{display:flex;align-items:center;gap:10px;padding:9px 2px;border-bottom:1px solid var(--line);font-size:13px;line-height:1.45}
@@ -817,7 +831,7 @@ html.on-map:not(.sheet-lock),html.on-map:not(.sheet-lock) body{background:#f4f0e
 .pick-chips .pick-other i{font-size:14px}
 .chip.on.eat{background:var(--eat-bg);color:var(--eat-fg)}.chip.on.spa{background:var(--spa-bg);color:var(--spa-fg)}
 .chip.on.cafe{background:var(--cafe-bg);color:var(--cafe-fg)}.chip.on.shop{background:var(--shop-bg);color:var(--shop-fg)}
-.chip.on.bar{background:var(--bar-bg);color:var(--bar-fg)}.chip.on.see{background:var(--see-bg);color:var(--see-fg)}.chip.on.other{background:var(--other-bg);color:var(--other-fg)}
+.chip.on.bar{background:var(--bar-bg);color:var(--bar-fg)}.chip.on.see{background:var(--see-bg);color:var(--see-fg)}.chip.on.hotel{background:var(--hotel-bg);color:var(--hotel-fg)}.chip.on.other{background:var(--other-bg);color:var(--other-fg)}
 .ed-row{display:flex;align-items:center;gap:12px}
 .ed-to{font-size:15px;color:var(--text2)}
 .ed-dur{min-width:96px;text-align:center;font-size:15px;font-weight:600}
@@ -1297,7 +1311,7 @@ html.tut .sheet:not(.dlg){max-height:calc(100vh - 176px - env(safe-area-inset-to
 .rd-l b{font-weight:600}
 .rd-ov{display:inline-block;margin-left:6px;padding:0 6px;border-radius:999px;background:#FBE9DD;color:#9A4A25;font-size:11px;font-weight:600;line-height:16px;vertical-align:1px}   /* 跟起點、終點卡片重疊的分鐘數 */
 .rd-d{font-size:12px;color:var(--text2)}
-.rd-sum{margin-top:2px;font-size:12px;line-height:18px;color:var(--text2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.rd-sum{margin-top:2px;font-size:12px;line-height:18px;color:var(--text2);overflow:hidden;display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:1}
 .blk.ride .edit-ic{background:var(--fill)}
 .bk-home{font-size:.95em;margin-right:4px;vertical-align:-1px}   /* 回住處休息的房子圖示 */
 .blk.ride .chev{flex:none;margin-left:auto;font-size:15px;color:var(--muted)}
@@ -1652,6 +1666,25 @@ html.tut .sheet:not(.dlg){max-height:calc(100vh - 176px - env(safe-area-inset-to
 .cand-open .cnt{margin-left:auto;font-size:12px;font-weight:600;padding:1px 8px;border-radius:999px;background:var(--accent-bg,#f3e6dc)}
 .cand-pick{display:flex;flex-direction:column;gap:6px}
 .sh-head + .day-pick{margin-top:16px}
+/* 編輯既有卡片（照資訊頁排）：照片、店名、描述跟資訊頁同樣的位置和大小，下面的內容淡入 */
+.sheet.ed-look .ed-photo-top{margin:0 0 14px}
+.sheet.ed-look .ed-photo-top .ph-frame{border-radius:0}   /* 資訊頁的照片是直角 */
+.sheet.ed-look .ed-photo-top .ph-st:empty{display:none}
+.sheet.ed-look .ed-head{align-items:flex-start}
+.sheet.ed-look .ed-head .ed-field{margin:0}
+.sheet.ed-look .ed-head .ed-field > .ed-lab{display:none}
+.sheet.ed-look .ed-head .ed-lab-row .ed-lab{display:none}
+.sheet.ed-look .ed-head .ed-field:has(.multi) .ed-lab{display:block}   /* 改成多個地點／多選一：名稱變成「第一站」，標籤要看得到 */
+.sheet.ed-look .ed-head .ed-lab-row{margin-bottom:8px}
+.sheet.ed-look .ed-head #edT{font-size:18px;font-weight:600}
+.sheet.ed-look .ed-head .sh-sub{margin-top:6px}
+.sheet.ed-look .ed-head .sh-sub i{font-size:13px;vertical-align:-1px}
+.sheet.ed-look .ed-head > button{margin-top:7px}
+.sheet.ed-look .ed-desc{margin-top:12px}
+.sheet.ed-look .ed-del-row{width:100%;margin-top:24px}
+.ed-more{margin:28px 0 0;padding-top:16px;border-top:1px solid var(--line);font-size:13px;font-weight:600;color:var(--muted)}
+@keyframes edIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+.sheet.ed-in > :not(.grab):not(.ed-photo-top):not(.ed-head),.sheet.info-in > :not(.grab):not(.sh-photo):not(.sh-head){animation:edIn .25s ease both}
 .cand-drop{margin-top:8px;padding:8px;border:1px solid var(--border);border-radius:12px;animation:dropIn .18s ease}
 .cand-drop .cand-pick{max-height:248px;overflow-y:auto;margin:0;-webkit-overflow-scrolling:touch}
 .cand-drop .cp-filter{flex-wrap:nowrap;overflow-x:auto;margin-bottom:8px;scrollbar-width:none}
@@ -1854,8 +1887,8 @@ const MIN_NAV_H = 40;                // 區塊夠高才直接放導航鈕
 const COMPACT_H = 46;                // 低於這個高度，時間改放在標題同一行
 // 地圖欄位可以貼 Google 地圖網址，也可以只寫店名
 const mapHref = q => /^https?:\/\//.test(q) ? q : 'https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent(q);
-const BASE_TYPES = [['eat', '吃'], ['spa', '按摩'], ['cafe', '咖啡'], ['bar', '酒吧'], ['shop', '購物'], ['see', '景點'], ['other', '其他']];
-// 類型＝內建 7 種＋這趟旅程自己加的（放在「其他」前面）。TYPES、TYPE_NAME 換旅程或改自訂類型時原地更新
+const BASE_TYPES = [['eat', '吃'], ['spa', '按摩'], ['cafe', '咖啡'], ['bar', '酒吧'], ['shop', '購物'], ['see', '景點'], ['hotel', '飯店'], ['other', '其他']];
+// 類型＝內建 8 種＋這趟旅程自己加的（放在「其他」前面）。TYPES、TYPE_NAME 換旅程或改自訂類型時原地更新
 const TYPES = [...BASE_TYPES], TYPE_NAME = Object.fromEntries(TYPES);
 // 自訂類型的 8 個預設色：[名稱, 淡底, 邊框, 深字]
 const TYPE_COLORS = { pink: ['粉紅', '#FBE6EF', '#E9A9C3', '#8E3A5E'], yellow: ['鵝黃', '#FBF1D3', '#E5C76B', '#7A5F12'], teal: ['湖水綠', '#DDF1EE', '#8CCBC2', '#24645B'], coral: ['珊瑚紅', '#FDE4DE', '#F0A595', '#9A3B28'],
@@ -1909,7 +1942,7 @@ function applyCustomTypes() {
   let el = document.getElementById('customTypes');
   if (!el) { el = document.createElement('style'); el.id = 'customTypes'; document.head.appendChild(el); }
   el.textContent = list.map(t => { const [, bg, bd, fg] = TYPE_COLORS[t.c] || TYPE_COLORS.slate;
-    return `:root{--${t.k}-bg:${bg};--${t.k}-bd:${bd};--${t.k}-fg:${fg}}.${t.k}{background:${bg};border-color:${bd};color:${fg};--c-bg:${bg};--c-bd:${bd};--c-fg:${fg}}.chip.on.${t.k}{background:${bg};color:${fg}}`; }).join('\n');
+    return `:root{--${t.k}-bg:${bg};--${t.k}-bd:${bd};--${t.k}-fg:${fg}}.${t.k}{background:${bg};border-color:${bd};color:${fg};--c-bg:${bg};--c-bd:${bd};--c-fg:${fg}}.chip.on.${t.k}{background:${bg};color:${fg}}.chip.${t.k}:not(.on){background:var(--fill);color:var(--text2)}`; }).join('\n');   // 沒選的標籤跟內建一樣是灰的（這段樣式放在最後，不另外蓋掉會整顆上色）
 }
 
 // 筆記資料（從試算表的 Notes 分頁載入）：orig＝原文名稱，points＝重點整理，links＝參考連結
@@ -1932,10 +1965,14 @@ try { history.scrollRestoration = 'manual'; } catch {}
 const QS = new URLSearchParams(location.search);
 // ?tutorial=1：操作練習（開在 iframe 裡）。用假的旅程跑網站本來的程式，所有雲端請求都攔下來（tutApi），手機裡的資料也分開存
 const TUT = QS.get('tutorial') === '1';
-const API = TUT ? 'tutorial' : QS.get('api') || APP_API;
+// 測試站（不是 github.io 的網址：家裡、公司、手機熱點的 IP、localhost）一律連測試的雲端，網址的 ?api= 寫正式版也不理，
+// 測試站怎麼改都不會碰到正式版的資料（10/22 用 api=正式版 看朋友的旅程，差點在測試站改到朋友的真實行程）
+const DEV_API = 'https://yuaynahknyetyjkcrzjw.supabase.co/functions/v1/api?forceFunctionRegion=ap-southeast-1';
+const PROD_HOST = /(^|\.)github\.io$/.test(location.hostname);
+const API = TUT ? 'tutorial' : PROD_HOST ? QS.get('api') || APP_API : DEV_API;
 const API_Q = API.includes('?') ? '&' : '?';   // API 網址本身帶參數時（例如 Supabase 的 ?forceFunctionRegion=）用 & 接
 // 用 ?api= 指到測試伺服器時，手機裡的資料分開存，不會跟正式的混在一起
-const TEST_SUFFIX = TUT ? '-tut' : QS.get('api') ? '-test' : '';
+const TEST_SUFFIX = TUT ? '-tut' : !PROD_HOST || QS.get('api') ? '-test' : '';
 // ---------- 旅程 ----------
 // 每趟旅程有自己的網址：?t=旅程代號&k=鑰匙（拿到連結就能看）；要修改再輸入 4 位數編輯碼（記在這支手機）；沒有 t 就是「我的旅程」
 const TRIP_ID = QS.get('t') || '', TRIP_KEY = QS.get('k') || '';
@@ -2497,8 +2534,12 @@ function warmPhotos(page) {
 const PH_PICK = '<span class="ph-pick"><i class="ti ti-photo-plus"></i>點這裡上傳照片</span>';
 const PH_CAM = '<button type="button" class="ph-cam" aria-label="換一張照片"><i class="ti ti-camera"></i></button>';
 // 編輯視窗裡的「照片」：放在筆記最上方。可以貼圖片網址，也可以從手機上傳（存到雲端硬碟）
-function photoField(id, key, hint) {
+function photoField(id, key, hint, split) {
   const url = splitPhoto(NOTES[key]?.photo).src, n = noteUsers(key);
+  // split：編輯卡片照資訊頁排時，照片放最上面（跟資訊頁同一個位置），網址欄位另外放到「其他設定」
+  if (split) return [`<div class="ed-field ed-photo ed-photo-top"><div class="ph-prev" id="${id}Prev"></div><input type="file" accept="image/*" id="${id}File" hidden><div class="ph-st" id="${id}St"></div></div>`,
+    `<div class="ed-field"><span class="ed-lab">照片網址 <span class="ed-lab-hint">清掉就拿掉照片${n > 1 ? `，${n} 個地方共用` : ''}</span></span>
+      <div class="ph-row"><span class="clr-wrap"><input id="${id}" type="text" value="${esc(url)}" placeholder="貼上圖片網址" autocomplete="off" inputmode="url"><button type="button" class="clr-btn" aria-label="清除" tabindex="-1"><i class="ti ti-x"></i></button></span></div></div>`];
   return `
     <div class="ed-field ed-photo"><span class="ed-lab">照片 <span class="ed-lab-hint">${hint || `放在筆記最上方${n > 1 ? `，${n} 個地方共用` : ''}`}</span></span>
       <div class="ph-prev" id="${id}Prev"></div>
@@ -3012,11 +3053,22 @@ function renderCards(items, day) {
   items.forEach((it, i) => {
     const prev = items[i - 1] || (i === 0 ? homePrev(day) : null);
     // 交通卡片跟起點、終點卡片中間的空白（走到車站、出站走過去）：虛線連起來，標「🚶 13 分」
-    const conn = (from, to) => { const gap = to - from; if (gap <= 0) return; const a = y(hhmm(from)) - 3, h = y(hhmm(to)) - a;
+    // 這段只是時間差，不是算出來的走路時間：超過 WALK_GAP 分鐘就不當成走路，什麼都不標（10/22 標了「🚶 85分」被以為是交通算錯；使用者：空檔不要標）
+    const conn = (from, to) => { const gap = to - from; if (gap <= 0 || gap > WALK_GAP) return; const a = y(hhmm(from)) - 3, h = y(hhmm(to)) - a;
       if (h > 18) { const ln = div('car-line'); ln.style.height = h + 'px'; place(ln, Math.round(a)); }
       place(div('car', `<i class="ti ti-walk"></i>${gap}分`), Math.round(a + Math.max(h, 0) / 2 - 9)); };
-    if (it.ride?.legs?.length) { const o = items.find(x => x.id === it.ride.fromId); if (o) conn(m(o.e), S(it)); }
-    if (prev?.ride?.legs?.length && prev.ride.toId === it.id) conn(E(prev), m(it.s));
+    // 有上下車站：照走路的分鐘畫，泡泡貼著交通卡片（上車前走 8 分＝上車前 8 分鐘那段），空出來的時間不標；走路比空檔還久就標紅
+    // 泡泡可以點：打開 Google 地圖走路導航（走到上車站／下車後走到下一張）
+    const walk = (s0, e0, w, late, go) => { const a = y(hhmm(s0)) - 3, h = y(hhmm(e0)) - a;
+      if (h > 18) { const ln = div('car-line'); ln.style.height = h + 'px'; place(ln, Math.round(a)); }
+      const el = document.createElement('a'); el.className = 'car walk-go' + (late ? ' late' : ''); el.innerHTML = `<i class="ti ti-walk"></i>${w}分<i class="ti ti-navigation go"></i>`;
+      if (go) { el.href = go; el.target = '_blank'; el.rel = 'noopener'; }
+      el.title = late ? '走路的時間比空出來的時間長，可能趕不上' : '走路導航';
+      place(el, Math.round(a + Math.max(h, 0) / 2 - 9)); };
+    const rideGo = (x, end) => { const r = x.ride, sts = legStops(x), st = end ? sts[sts.length - 1]?.b : sts[0]?.a, { b } = rideEnds(x);
+      return end ? (b && firstLoc(b) ? walkHref(firstLoc(b)) : '') : st ? walkHref(r.fromSt?.loc || withCity(st)) : ''; };
+    if (it.ride?.legs?.length) { const o = items.find(x => x.id === it.ride.fromId); if (o) { const w = rideWalks(it).wa, f = m(o.e), t = S(it); w ? walk(Math.max(f, t - w), t, w, w > t - f, rideGo(it)) : conn(f, t); } }
+    if (prev?.ride?.legs?.length && prev.ride.toId === it.id) { const w = rideWalks(prev).wb, f = E(prev), t = m(it.s); w ? walk(f, Math.min(t, f + w), w, w > t - f, rideGo(prev, true)) : conn(f, t); }
     if (it.travel && prev && !it.ride && !prev.ride) {   // 交通卡片前後不畫泡泡（那段移動就是交通卡片）
       // 交通時間：小泡泡放在上一張結尾和這一張開頭的正中間（太近就壓在兩張中間，重疊的話放在這一張的上緣）；
       // 空隙比泡泡高時，虛線把兩張卡片連起來。前後地點變了（換店、搬動）就變淡加問號
@@ -3304,11 +3356,11 @@ function renderOverview() {
   const days = DAY_KEYS.map(k => ({ k, info: dayInfo(k), items: [...(DATA[k] || [])].sort((a, b) => m(a.s) - m(b.s)) }));
   let html = '';
   if (!loaded) { ovEl.innerHTML = `<div class="ov-empty">${loadErrText()}</div>`; return; }
-  // 小統計：按摩算次數，其他類型同一家只算一次；合併區塊裡的每一站各算一家，多選一算一家；交通、住宿（其他）不算
+  // 小統計：按摩算次數，其他類型同一家只算一次；合併區塊裡的每一站各算一家，多選一算一家；交通、住宿（其他、飯店）不算
   const count = {}, seen = new Set();
   for (const d of days) for (const it of d.items) {
     const add = (cls, name) => {
-      if (cls === 'other') return;
+      if (cls === 'other' || cls === 'hotel') return;
       if (cls !== 'spa' && name && seen.has(name)) return;
       seen.add(name); count[cls] = (count[cls] || 0) + 1;
     };
@@ -3391,7 +3443,7 @@ function loadSerif(text) {
 function ovPics() {
   const got = {};
   for (const k of [...DAY_KEYS, 'cand']) for (const it of k === 'cand' ? DATA.cand || [] : [...(DATA[k] || [])].sort((a, b) => m(a.s) - m(b.s))) {
-    const cls = it.cls || 'eat'; if (cls === 'other') continue;
+    const cls = it.cls || 'eat'; if (cls === 'other' || cls === 'hotel') continue;
     const keys = it.group || it.alts?.length ? (it.stops || it.alts || []).map(subNoteKey) : [it.note || it.t];
     for (const x of keys) { const src = NOTES[x]?.photo; if (!src || ovBad.has(splitPhoto(ovThumb(src)).src)) continue; (got[cls] ||= { go: k === 'cand' ? 'cand' : k, name: it.t, srcs: [] }); if (got[cls].srcs.length < 6 && !got[cls].srcs.includes(src)) got[cls].srcs.push(src); }
   }
@@ -4406,6 +4458,18 @@ const rideEnds = it => {
   const r = it.ride || {}, a = rideEnd(r.fromId), b = rideEnd(r.toId), day = (a || b) && findItem(it.id)[0];
   return { from: a ? endName(a, day) : r.from || '', to: b ? endName(b, day) : r.to || '', a, b };
 };
+// 上車站、下車站（ride.fromSt、toSt＝{ name, loc }）：前一張卡片走到上車站、下車站走到下一張要幾分。
+// 截圖上寫的（walkA、walkB）優先；沒有就用直線距離估（繞路算 1.3 倍、每分鐘走 75 公尺），不用查 Google
+function walkEst(a, b) {
+  const p = llOf(a), q = llOf(b); if (!p || !q) return 0;
+  const r = Math.PI / 180, h = Math.sin((q.lat - p.lat) * r / 2) ** 2 + Math.cos(p.lat * r) * Math.cos(q.lat * r) * Math.sin((q.lng - p.lng) * r / 2) ** 2;
+  return Math.max(1, Math.round(2 * 6371000 * Math.asin(Math.sqrt(h)) * 1.3 / 75));
+}
+function rideWalks(it) {
+  const r = it.ride || {}, { a, b } = rideEnds(it);
+  const est = (x, p, q) => x && !x.flight ? walkEst(p, q) : 0;   // 航班卡片的座標是整個機場的中心，估不準：不估（截圖上有寫才標）
+  return { wa: r.walkA || (r.fromSt?.loc ? est(a, a && lastLoc(a), r.fromSt.loc) : 0), wb: r.walkB || (r.toSt?.loc ? est(b, r.toSt.loc, b && firstLoc(b)) : 0) };
+}
 // 每一段的出發、抵達時間：整張被拖到別的時間就跟著平移；抵達不會超過卡片結束（被縮短時）
 const rideShift = it => { const r = it.ride || {}, at = r.at || r.legs?.[0]?.s; return at ? m(it.s) - m(at) : 0; };
 const rideLegs = it => { const sh = rideShift(it); return (it.ride?.legs || []).map(l => ({ ...l, s: l.s ? hhmm(m(l.s) + sh) : '' })); };
@@ -4419,6 +4483,7 @@ function fitRide(it) {
 }
 // 畫的範圍：跟連著的起點、終點卡片重疊 30 分鐘以內就讓位（起點還沒結束、終點已經開始的那幾分鐘不畫）；超過 30 分鐘是真的排錯，照樣重疊、標紅框
 const RIDE_YIELD = 30;
+const WALK_GAP = 20;   // 交通卡片前後的空白在這以內才標「🚶 走路」，超過就不標
 function rideDisp(it, items) {
   let s = m(it.s), e = m(it.e);
   const a = items.find(x => x.id === it.ride.fromId), b = items.find(x => x.id === it.ride.toId);   // 同一天畫出來的卡片（含航班）
@@ -4445,11 +4510,21 @@ function rideHref(it, day) {
   const time = `${h % 12 || 12}:${mi}${h < 12 ? 'am' : 'pm'}`;
   return `https://www.google.com/maps?saddr=${encodeURIComponent(o)}&daddr=${encodeURIComponent(d)}&dirflg=r&ttype=dep&date=${mo}/${dd}/${y.slice(2)}&time=${time}`;
 }
+// 每一段的上車站 a、下車站 b（10/22 加；舊的只有整趟的 fromSt、toSt）：沒寫的用前後推（這段下車＝下一段上車）
+function legStops(it) {
+  const r = it.ride || {}, legs = r.legs || [];
+  return legs.map((l, i) => ({ a: l.a || (i === 0 ? r.fromSt?.name : legs[i - 1]?.b) || '', b: l.b || legs[i + 1]?.a || (i === legs.length - 1 ? r.toSt?.name : '') || '' }));
+}
+// 月台那格（往哪、幾號月台）裡跟站名重複的那段拿掉
+const legDir = (d, st) => String(d || '').split('．').filter(x => x && x !== st.a && x !== st.b).join('．');
+const legAB = st => st.a || st.b ? `${st.a || '?'} → ${st.b || '?'}` : '';
+// 走路導航：不帶起點（Google 地圖用現在的位置），走到上車站／從下車站走到下一個地方
+const walkHref = to => `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(to)}&travelmode=walking`;
 function rideBlockHtml(it, h, day, s0 = m(it.s), ov = {}) {   // s0：卡片畫的開始（讓位給起點卡片時比第一段晚）；ov：讓位的分鐘數 { s: 起點, e: 終點 }
-  const { from, to } = rideEnds(it), legs = rideLegs(it), n = legs.length - 1;
+  const { from, to } = rideEnds(it), legs = rideLegs(it), n = legs.length - 1, sts = legStops(it);
   const rows = [...legs.map((l, i) => {
     const next = legs[i + 1]?.s || rideArr(it), dur = l.s && next ? m(next) - m(l.s) : 0;
-    return { s: l.s, t: l.t || '交通', d: [l.d, dur > 0 ? durLabel(dur) : ''].filter(Boolean).join('．'), ic: legIcon(l.t), ov: i === 0 ? ov.s : 0 };
+    return { s: l.s, t: l.t || '交通', st: sts[i], d: [legAB(sts[i]), legDir(l.d, sts[i]), dur > 0 ? durLabel(dur) : ''].filter(Boolean).join('．'), ic: legIcon(l.t), ov: i === 0 ? ov.s : 0 };
   }), { s: rideArr(it), t: `抵達${to ? ' ' + to : ''}`, end: true, ov: ov.e }];
   // 跟起點、終點卡片重疊（讓位了）：那一行後面標「重疊 5 分」，一定要準時的時候才看得出來
   const ovTag = r => r.ov > 0 ? `<span class="rd-ov">重疊 ${r.ov} 分</span>` : '';
@@ -4469,7 +4544,9 @@ function rideBlockHtml(it, h, day, s0 = m(it.s), ov = {}) {   // s0：卡片畫�
   }
   const headC = head.replace('</div>', chev + '</div>');   // 放不下：標題列加展開箭頭
   if (h >= slim) return { short: true, html: `${headC}<div class="rd-rail slim">${rows.map(r => legHtml(r, false)).join('')}</div>${more}${nav}${editIc}` };
-  return { short: true, html: `${headC}${h >= 44 ? `<div class="rd-sum">${rows.map(r => `${T(r.s)} ${esc(r.end ? '抵達' : r.t)}`).join(' → ')}</div>` : ''}${more}${nav}${editIc}` };
+  // 最精簡：一句話寫完，站名也要有（「18:40 立飛 多摩單軌 → 18:53 玉川上水 西武拜島線 → 19:37 西武新宿 抵達」），放得下幾行就幾行
+  const lines = Math.max(1, Math.floor((h - 30) / 18)), endSt = sts[n]?.b;
+  return { short: true, html: `${headC}${h >= 44 ? `<div class="rd-sum" style="-webkit-line-clamp:${lines}">${rows.map(r => `${T(r.s)} ${esc(r.end ? (endSt ? endSt + ' ' : '') + '抵達' : (r.st?.a ? r.st.a + ' ' : '') + r.t)}`).join(' → ')}</div>` : ''}${more}${nav}${editIc}` };
 }
 // 新增：從點的空白處找前後兩張卡片（沒有就用住處），時間從上一張結束排到下一張開始
 // 加入行程畫面上「交通」那一列的小字：從點的時段抓前後兩張卡片（沒有就用住處）
@@ -4484,7 +4561,8 @@ function openRideEditor(id, opt = {}) {
   const [day0, it] = id ? findItem(id) : [opt.day, null];
   if (it) {
     const e = rideEnds(it);
-    rd = { id, day: day0, from: e.from, to: e.to, fromId: e.a ? it.ride.fromId : '', toId: e.b ? it.ride.toId : '', legs: rideLegs(it).map(l => ({ ...l })), e: rideArr(it), alert: it.alert || '', booked: !!it.booked };
+    rd = { id, day: day0, from: e.from, to: e.to, fromId: e.a ? it.ride.fromId : '', toId: e.b ? it.ride.toId : '', legs: rideLegs(it).map(l => ({ ...l })), e: rideArr(it), alert: it.alert || '', booked: !!it.booked,
+      fromSt: it.ride.fromSt ? { ...it.ride.fromSt } : null, toSt: it.ride.toSt ? { ...it.ride.toSt } : null, walkA: it.ride.walkA || 0, walkB: it.ride.walkB || 0 };
   } else {
     const list = withFlights(itemsOf(opt.day), opt.day).filter(x => !x.ride), at = opt.at;   // 前一張可能是航班（抵達、入境）
     const prev = list.filter(x => m(x.s) <= at).pop(), next = list.find(x => m(x.s) > at);
@@ -4492,7 +4570,7 @@ function openRideEditor(id, opt = {}) {
     const s = prev && at - m(prev.e) <= 60 ? m(prev.e) : at, e = next && m(next.s) > s && m(next.s) - s <= 6 * 60 ? m(next.s) : s + 60;   // 空隙太大：從點的地方開始
     const from = prev ? endName(prev, opt.day) : home ? home.t : '';
     rd = { id: null, day: opt.day, from, to: next ? endName(next, opt.day) : night && night.name !== from ? night.name : '',   // 最後一張是「回住處休息」：終點空著自己填
-      fromId: prev?.id || '', toId: next?.id || '', legs: [{ s: hhmm(s), t: '', d: '' }], e: hhmm(Math.min(e, DAY_END)), alert: '', booked: false };
+      fromId: prev?.id || '', toId: next?.id || '', legs: [{ s: hhmm(s), t: '', d: '' }], e: hhmm(Math.min(e, DAY_END)), alert: '', booked: false, fromSt: null, toSt: null, walkA: 0, walkB: 0 };
   }
   rd.embed = opt.embed ?? null; rd.back = opt.back || null;   // back：從加入行程（地圖搜尋）推進來的，左上角返回   // 從「新增行程」切過來的：上面保留卡片樣式，可以切回別的樣式
   drawRide();
@@ -4519,6 +4597,7 @@ function drawRide() {
         <div class="rd-row" data-i="${i}"><span class="rd-pt"></span>
           <input type="time" step="60" class="rd-s" value="${l.s ? T(l.s) : ''}" aria-label="第 ${i + 1} 段出發時間">
           <div class="rd-in"><input type="text" class="rd-t" value="${esc(l.t)}" placeholder="${i ? '例如：JR 特急 信濃 13 號' : '搭什麼，例如：機場巴士'}" autocomplete="off" aria-label="第 ${i + 1} 段搭什麼">
+            <span class="rd-ab"><input type="text" class="rd-a" value="${esc(l.a || (i === 0 ? rd.fromSt?.name : '') || '')}" placeholder="上車站" autocomplete="off" aria-label="第 ${i + 1} 段上車站"><i class="ti ti-arrow-right"></i><input type="text" class="rd-b" value="${esc(l.b || (i === rd.legs.length - 1 ? rd.toSt?.name : '') || '')}" placeholder="下車站" autocomplete="off" aria-label="第 ${i + 1} 段下車站"></span>
             <input type="text" class="rd-dd" value="${esc(l.d)}" placeholder="月台、往哪裡（選填）" autocomplete="off" aria-label="第 ${i + 1} 段月台、往哪裡">
             ${rd.legs.length > 1 ? `<button type="button" class="rd-rm" data-rm="${i}" aria-label="拿掉第 ${i + 1} 段"><i class="ti ti-x"></i></button>` : ''}</div>
         </div>`).join('')}
@@ -4558,10 +4637,13 @@ function drawRide() {
       if (rd !== me || !sheet.contains(btn)) return;   // 讀的途中關掉了
       const x = r.ride, hm = v => v ? hhmm(fromInput(v)) : '';
       if (rd.legs.some(l => l.t || l.d) && !confirm('要用截圖的內容換掉現在填的轉乘嗎？')) { btn.disabled = false; ic.className = 'ti ti-photo-scan'; small.textContent = was; small.hidden = true; return; }
-      rd.legs = x.legs.map((l, i) => ({ s: hm(l.s) || (i === 0 ? rd.legs[0]?.s || '' : ''), t: l.t, d: l.d }));
+      rd.legs = x.legs.map((l, i) => ({ s: hm(l.s) || (i === 0 ? rd.legs[0]?.s || '' : ''), t: l.t, d: l.d, a: l.a || '', b: l.b || '' }));
       if (x.arr) rd.e = hm(x.arr);
       if (!rd.from && x.from) rd.from = x.from;
       if (!rd.to && x.to) rd.to = x.to;
+      const sa = x.legs[0]?.a || x.from, sb = x.legs[x.legs.length - 1]?.b || x.to;
+      rd.fromSt = sa ? { name: sa, loc: '' } : null; rd.toSt = sb ? { name: sb, loc: '' } : null;   // 截圖上的上下車站，存的時候查座標
+      rd.walkA = x.walkA || 0; rd.walkB = x.walkB || 0;
       drawRide();
       const miss = rd.legs.filter(l => !l.s).length;
       toast(`已從截圖帶入 ${rd.legs.length} 段${miss ? `，有 ${miss} 段沒有時間，請補上` : '，請確認一下時間'}`);
@@ -4618,11 +4700,30 @@ function rideGrab() {
   const $ = id => sheet.querySelector('#' + id);
   const name = (k, v) => { if (v !== rd[k]) { rd[k] = v; rd[k + 'Id'] = ''; } };   // 自己改了名字：不再連到那張卡片
   name('from', $('rdFrom').value.trim()); name('to', $('rdTo').value.trim());
-  rd.legs = [...sheet.querySelectorAll('.rd-row[data-i]')].map(r => ({ s: r.querySelector('.rd-s').value ? hhmm(fromInput(r.querySelector('.rd-s').value)) : '', t: r.querySelector('.rd-t').value.trim(), d: r.querySelector('.rd-dd').value.trim() }));
+  rd.legs = [...sheet.querySelectorAll('.rd-row[data-i]')].map(r => ({ s: r.querySelector('.rd-s').value ? hhmm(fromInput(r.querySelector('.rd-s').value)) : '', t: r.querySelector('.rd-t').value.trim(), d: r.querySelector('.rd-dd').value.trim(),
+    a: r.querySelector('.rd-a').value.trim(), b: r.querySelector('.rd-b').value.trim() }));
   rd.e = $('rdE').value ? hhmm(fromInput($('rdE').value)) : '';
   rd.alert = $('rdAlert').value.trim(); rd.booked = $('rdBooked').checked;
+  // 車站改了名字：座標和截圖上的走路分鐘都不算了，存的時候重查
+  const st = (k, w, v) => { if (v !== (rd[k]?.name || '')) { rd[k] = v ? { name: v, loc: '' } : null; rd[w] = 0; } };
+  st('fromSt', 'walkA', rd.legs[0]?.a || ''); st('toSt', 'walkB', rd.legs[rd.legs.length - 1]?.b || '');   // 整趟的上下車站＝第一段上車、最後一段下車
 }
-function saveRide() {
+// 儲存前：上下車站還沒有座標就先查（找離前後卡片近的那個站），查不到也照樣存
+async function saveRide() {
+  rideGrab();
+  const need = ['fromSt', 'toSt'].filter(k => rd[k]?.name && !rd[k].loc);
+  if (need.length && getAuth()) {
+    const btn = sheet.querySelector('#rdSave'), me = rd, was = btn.textContent;
+    const near = k => { const e = rideEnd(k === 'fromSt' ? rd.fromId : rd.toId); return e ? (k === 'fromSt' ? lastLoc(e) : firstLoc(e)) || '' : ''; };
+    btn.disabled = true; btn.textContent = '查車站位置…';
+    try { const r = await api({ ...getAuth(), action: 'stationLocs', day: rd.day, names: need.map(k => ({ name: rd[k].name, near: near(k) })) }, 20000);
+      if (rd === me) need.forEach((k, i) => { if (r.locs?.[i]) rd[k].loc = r.locs[i]; }); } catch { /* 查不到：先不畫走路 */ }
+    if (rd !== me || !sheet.contains(btn)) return;
+    btn.disabled = false; btn.textContent = was;
+  }
+  saveRideNow();
+}
+function saveRideNow() {
   const $ = id => sheet.querySelector('#' + id), err = msg => { $('rdErr').textContent = msg; $('rdErr').hidden = false; };
   rideGrab();
   const legs = rd.legs.filter((l, i) => i === 0 || l.t || l.d);   // 中間空白的那幾段拿掉
@@ -4641,7 +4742,8 @@ function saveRide() {
     later.forEach(x => { x.s = hhmm(m(x.s) + late); x.e = hhmm(m(x.e) + late); (x.group ? x.stops : []).forEach(st => st.s = hhmm(m(st.s) + late)); });   // 合併區塊裡每一站一起移
   }
   const fields = { cls: 'other', t: `${rd.from || '出發'} → ${rd.to || '抵達'}`, s: legs[0].s, e: rd.e, travel: '', troute: '', alert: rd.alert, booked: rd.booked,
-    ride: { from: rd.from, to: rd.to, fromId: rd.fromId, toId: rd.toId, legs, arr: rd.e, at: legs[0].s } };   // 撐滿前後的空白：saveData 裡的 fitRides 算
+    ride: { from: rd.from, to: rd.to, fromId: rd.fromId, toId: rd.toId, legs, arr: rd.e, at: legs[0].s,
+      ...(rd.fromSt ? { fromSt: rd.fromSt } : {}), ...(rd.toSt ? { toSt: rd.toSt } : {}), ...(rd.walkA ? { walkA: rd.walkA } : {}), ...(rd.walkB ? { walkB: rd.walkB } : {}) } };   // 撐滿前後的空白：saveData 裡的 fitRides 算
   const isNew = !rd.id, day = rd.day;
   if (isNew) DATA[day].push({ id: uid(), ...fields }); else Object.assign(findItem(rd.id)[1], fields);
   rd = null;
@@ -6264,7 +6366,7 @@ wireTypeForms();
 let lastFocus = null;
 function openSheet(html, focusSel, dialog) {
   sheet.innerHTML = '<div class="grab"></div>' + html;
-  sheet.classList.remove('soft', 'center');   // 要淺色表單樣式（旅程設定、編輯卡片）、內容置中（Google 登入）的面板打開後自己加
+  sheet.classList.remove('soft', 'center', 'ed-look', 'ed-in', 'info-in');   // 要淺色表單樣式（旅程設定、編輯卡片）、內容置中（Google 登入）的面板打開後自己加
   sheet._infoId = null;   // 換成別的面板：背景查好時不要蓋掉
   sheet._photoJob = null;
   lastFocus = document.activeElement;
@@ -6348,9 +6450,10 @@ function openNote(title, info, mine, q, ex = {}) {
       <div class="full-txt">${linkify(info.full)}</div></details>` : ''}
     ${info.links ? `<div class="sh-sec">參考連結</div><div class="sh-links">${info.links.map(([t, u]) => `<a href="${esc(u)}" target="_blank" rel="noopener"><i class="ti ti-external-link"></i> ${esc(t)}</a>`).join('')}</div>` : ''}
     ${ex.pending ? '<div class="sh-pending"><i class="ti ti-loader-2 spin"></i> 正在用 Google 查詢這個地點的資訊（描述、營業時間、評分），查好會自動出現</div>' : ''}
-    ${!ex.pending && !ex.quiet && !mine && !info.points && !info.full && !info.links && !ex.desc ? '<div class="sh-empty">還沒有筆記，長按卡片可以編輯</div>' : ''}
-    ${ex.action ? `<div class="ed-actions"><button type="button" class="btn primary sh-act" style="flex:1"><i class="ti ${ex.action.icon}"></i> ${esc(ex.action.label)}</button></div>` : ''}`);
+    ${!ex.pending && !ex.quiet && !mine && !info.points && !info.full && !info.links && !ex.desc ? `<div class="sh-empty">還沒有筆記，${ex.edit ? '按下面的「編輯卡片」' : '長按卡片'}可以編輯</div>` : ''}
+    ${ex.action || ex.edit ? `<div class="ed-actions">${ex.edit ? '<button type="button" class="btn ghost sh-edit" style="flex:1"><i class="ti ti-pencil"></i> 編輯卡片</button>' : ''}${ex.action ? `<button type="button" class="btn primary sh-act" style="flex:1"><i class="ti ${ex.action.icon}"></i> ${esc(ex.action.label)}</button>` : ''}</div>` : ''}`);
   if (ex.action) sheet.querySelector('.sh-act').onclick = ex.action.fn;
+  if (ex.edit) sheet.querySelector('.sh-edit').onclick = () => withAuth(ex.edit);   // 沒有編輯碼的先輸入編輯碼
 }
 // 點卡片：打開這張卡片的資訊（有筆記就一起顯示）；備選的卡片多一顆「排進行程」
 function openCardInfo(id) {
@@ -6364,21 +6467,30 @@ function openCardInfo(id) {
   const action = day === 'cand' ? { label: '排進行程', icon: 'ti-calendar-plus', fn: () => { const go = () => openDayPicker(id); if (getAuth()) go(); else openAuth(go); } } : null;
   const hs = homeStay(it, day);   // 回住處休息：照片、筆記用住處的，描述沒寫就放住處地址
   if (hs) meta.push(['ti-home', hs.name]);
-  openNote(it.t, multi ? null : NOTES[it.note] || (hs && NOTES[hs.name]), it.mine, multi ? '' : it.map || hs?.map || '', { pid: multi ? '' : it.map ? it.pid : hs?.pid, desc: it.desc === PENDING ? '' : it.desc || hs?.addr || '', meta, action, alert: it.alert, pending: it.desc === PENDING });
+  openNote(it.t, multi ? null : NOTES[it.note] || (hs && NOTES[hs.name]), it.mine, multi ? '' : it.map || hs?.map || '', { pid: multi ? '' : it.map ? it.pid : hs?.pid, desc: it.desc === PENDING ? '' : it.desc || hs?.addr || '', meta, action, alert: it.alert, pending: it.desc === PENDING,
+    edit: () => { if (!findItem(id)[1]) return; edFromInfo = id; openEditor(id); sheet.classList.add('ed-in'); } });
   sheet._infoId = id;   // 背景查好時，如果還開著這張的資訊就重畫
 }
 // 點交通卡片：完整路線（每一段幾點、搭什麼、往哪、多久，最後抵達）、Google 地圖看路線、編輯
 function openRideInfo(id) {
   const [day, it] = findItem(id); if (!it?.ride) return;
-  const { from, to } = rideEnds(it), legs = rideLegs(it), arr = rideArr(it), dep = rideDepart(it);
+  const { from, to } = rideEnds(it), legs = rideLegs(it), arr = rideArr(it), dep = rideDepart(it), sts = legStops(it);
   const rows = legs.map((l, i) => { const next = legs[i + 1]?.s || arr, dur = l.s && next ? m(next) - m(l.s) : 0;
-    return `<div class="ri-leg"><b>${l.s ? T(l.s) : '--:--'}</b><span><i class="ti ti-${legIcon(l.t)}"></i>${esc(l.t || '交通')}${l.d || dur > 0 ? `<small>${esc([l.d, dur > 0 ? durLabel(dur) : ''].filter(Boolean).join(' · '))}</small>` : ''}</span></div>`; }).join('');
+    const st = sts[i], dd = legDir(l.d, st);
+    return `<div class="ri-leg"><b>${l.s ? T(l.s) : '--:--'}</b><span><i class="ti ti-${legIcon(l.t)}"></i>${esc(l.t || '交通')}${st.a || st.b ? `<small class="ri-ab">${st.a ? `<b>${esc(st.a)}</b> 上車` : ''}${st.a && st.b ? ' → ' : ''}${st.b ? `<b>${esc(st.b)}</b> 下車` : ''}</small>` : ''}${dd || dur > 0 ? `<small>${esc([dd, dur > 0 ? durLabel(dur) : ''].filter(Boolean).join(' · '))}</small>` : ''}</span></div>`; }).join('');
   const sum = `${T(legs[0]?.s || it.s)} 出發 → ${T(arr)} 抵達 · ${durLabel(m(arr) - m(legs[0]?.s || it.s))}${legs.length > 1 ? `・轉 ${legs.length - 1} 次` : ''}`, meta = [];
+  const { wa, wb } = rideWalks(it), r = it.ride;
+  const stA = sts[0]?.a || r.fromSt?.name || '', stB = sts[sts.length - 1]?.b || r.toSt?.name || '', { b: dest } = rideEnds(it);
+  if (wa && legs[0]?.s) meta.push(['ti-walk', `${T(hhmm(m(legs[0].s) - wa))} 前出發，走 ${wa} 分到${stA ? ' ' + stA : '車站'}`]);
+  if (wb) meta.push(['ti-walk', `${stB ? stB + ' ' : ''}下車後走 ${wb} 分到${to ? ' ' + to : '目的地'}`]);
+  // 走路導航：走到上車站、下車後走到下一個地方（從現在的位置出發）
+  const goA = stA ? walkHref(r.fromSt?.loc || withCity(stA)) : '', goB = stB && (dest || to) ? walkHref((dest && firstLoc(dest)) || withCity(to)) : '';
+  const walkBtns = goA || goB ? `<div class="ri-walks">${goA ? `<a class="btn ghost" target="_blank" rel="noopener" href="${esc(goA)}"><i class="ti ti-walk"></i> 走到${esc(stA)}${wa ? `<small>${wa} 分</small>` : ''}</a>` : ''}${goB ? `<a class="btn ghost" target="_blank" rel="noopener" href="${esc(goB)}"><i class="ti ti-walk"></i> 下車後走到${esc(to || '目的地')}${wb ? `<small>${wb} 分</small>` : ''}</a>` : ''}</div>` : '';
   if (it.booked) meta.push(['ti-circle-check', '已訂票']);
   if (it.alert) meta.push(['ti-alert-triangle', it.alert]);
   openNote(`${from || '出發'} → ${to || '抵達'}`, null, it.mine, '', { quiet: true, meta, alert: it.alert,
     html: `<div class="ri-sum"><i class="ti ti-clock"></i>${sum}</div><div class="ri-legs">${rows}<div class="ri-leg end"><b>${T(arr)}</b><span><i class="ti ti-map-pin-filled"></i>抵達${to ? ' ' + esc(to) : ''}</span></div></div>
-      <a class="btn ghost ri-gm" target="_blank" rel="noopener" href="${esc(rideHref(it, day))}"><i class="ti ti-map-2"></i> 在 Google 地圖看路線${dep && isDay(day) ? `<small>${esc(dayInfo(day).date || '')} ${T(dep)} 出發</small>` : ''}</a>`,
+      ${walkBtns}<a class="btn ghost ri-gm" target="_blank" rel="noopener" href="${esc(rideHref(it, day))}"><i class="ti ti-map-2"></i> 在 Google 地圖看路線${dep && isDay(day) ? `<small>${esc(dayInfo(day).date || '')} ${T(dep)} 出發</small>` : ''}</a>`,
     action: { label: '編輯交通', icon: 'ti-pencil', fn: () => withAuth(() => openRideEditor(id)) } });
 }
 // 點展開後的某一站／某個選項
@@ -6387,7 +6499,7 @@ function openSubInfo(id, kind, i) {
   const info = NOTES[subNoteKey(sub)], meta = [];
   if (kind === 'stop') meta.push(['ti-clock', `${T(sub.s)} · ${durLabel(sub.dur)}${sub.area ? `　${sub.area}` : ''}`]);
   if (sub.alert) meta.push(['ti-alert-triangle', sub.alert]);
-  openNote(sub.name, { ...info, orig: sub.orig || info?.orig }, sub.mine || info?.mine, sub.map, { pid: sub.pid, desc: sub.desc, meta });
+  openNote(sub.name, { ...info, orig: sub.orig || info?.orig }, sub.mine || info?.mine, sub.map, { pid: sub.pid, desc: sub.desc, meta, edit: () => subList(findItem(id)[1], kind)[i] && openSubEditor(id, kind, i) });
 }
 const findItem = id => { for (const k of ALL_KEYS) { if (!DATA[k]) continue; const it = DATA[k].find(x => x.id === id); if (it) return [k, it]; } return [null, null]; };
 
@@ -7176,11 +7288,11 @@ let ed = null;   // 正在編輯的內容
 // Google 的地點類型 → 我們的類型
 function guessCls(types) {
   const t = (types || []).join(' ');
-  return /spa|massage|beauty/.test(t) ? 'spa' : /cafe|coffee|bakery|dessert|tea_house|ice_cream/.test(t) ? 'cafe' : /bar|pub|night_club|wine/.test(t) ? 'bar'
+  return /^(lodging|hotel|resort_hotel|hostel|guest_house|motel|bed_and_breakfast)\b/.test(t) ? 'hotel' : /spa|massage|beauty/.test(t) ? 'spa' : /cafe|coffee|bakery|dessert|tea_house|ice_cream/.test(t) ? 'cafe' : /bar|pub|night_club|wine/.test(t) ? 'bar'
     : /restaurant|food|meal|diner/.test(t) ? 'eat' : /shopping|store|market|mall/.test(t) ? 'shop'
-    : /tourist|museum|temple|church|park|zoo|aquarium|landmark|gallery|attraction|historical|place_of_worship|hiking/.test(t) ? 'see' : /lodging|hotel|airport|station/.test(t) ? 'other' : 'eat';
+    : /tourist|museum|temple|church|park|zoo|aquarium|landmark|gallery|attraction|historical|place_of_worship|hiking/.test(t) ? 'see' : /lodging|hotel|resort|hostel|guest_house/.test(t) ? 'hotel' : /airport|station/.test(t) ? 'other' : 'eat';
 }
-const CLS_DUR = { eat: 60, cafe: 45, bar: 90, spa: 90, see: 90, shop: 60, other: 30 };
+const CLS_DUR = { eat: 60, cafe: 45, bar: 90, spa: 90, see: 90, shop: 60, hotel: 60, other: 30 };
 // 搜尋地點的中心：旅程的目的地座標；沒有（舊資料、建立時沒查到）就用住處、已經排的店家，再沒有就用 Google 查一次目的地名稱
 let biasAt = null, biasFor = '';
 async function tripBias() {
@@ -7586,6 +7698,7 @@ function saveAdd() {
 // 編輯卡片的交通方式選項：這趟會用到的幾種，再加上這張原本存的方式（例如旅程改過主要方式）
 const editModes = () => { const ms = tripModes(), cur = parseRoute(ed?.troute).mode; return cur in ROUTE_MODES && ed?.troute && !ms.includes(cur) ? [...ms, cur] : ms; };
 // keep：從「加入第二站」的搜尋地點回來，用原本暫存的內容重畫（改到一半的欄位、已經加的站都還在）
+let edFromInfo = null;
 function openEditor(id, startAt, toDay, replaceId, keep) {
   const [, it] = id ? findItem(id) : [null, null];
   if (it?.ride?.legs?.length && !keep && !toDay && !replaceId) { openRideEditor(id); return; }
@@ -7601,6 +7714,7 @@ function openEditor(id, startAt, toDay, replaceId, keep) {
   if (old) Object.assign(ed, { replaceId, oldT: old.t, s: old.s, dur: m(old.e) - m(old.s), travel: '' });
   if (!keep) { ed.troute = ed.fromCand ? '' : it?.troute || ''; ed.extra = []; }
   if (!keep && it && (ed.group || ed.pick)) Object.assign(ed, { subs: clone(it.group ? it.stops : it.alts), subTaken: [], subsDirty: false });   // 合併區塊／多選一：裡面的每一站，按儲存才寫回去
+  if (!keep) { ed.fromInfo = edFromInfo === id; edFromInfo = null; }   // 從卡片資訊按「編輯卡片」進來：✕ 回到資訊頁
   ed._restore = !!keep;   // extra：還沒存的第二站、第三站…
   // 一般的單一地點卡片（或正在替換中）可以從備選替換
   const swapFrom = old || (it && !toDay && !ed.group && !ed.pick && isDay(ed.day) ? it : null);
@@ -7608,13 +7722,10 @@ function openEditor(id, startAt, toDay, replaceId, keep) {
   // 多選一的選項有設停留時間：整張的長度取最久的那一家，外層不能改長度
   ed.fixedLen = ed.group || (ed.pick && (it?.alts || []).some(a => +a.dur > 0));
   const cands = ed.isNew && isDay(current) ? DATA.cand || [] : [];
-  openSheet(`
-    <div class="sh-head"><div style="flex:1;min-width:0"><div class="sh-title" id="shTitle">${ed.isNew ? '新增行程' : old ? '從備選替換' : ed.fromCand ? '從備選排入' : '編輯行程'}</div>
-      <div class="sh-sub">${current === 'cand' ? '備選景點' : `${dayInfo(current).date}．${esc(dayInfo(current).zh)}`}</div></div>
-      <button class="sh-close" aria-label="關閉"><i class="ti ti-x"></i></button></div>
-    ${old ? `<div class="ed-hint"><i class="ti ti-arrows-exchange"></i> 儲存後，「${esc(old.t)}」會移到備選</div>` : ''}
+  const f_hints = `    ${old ? `<div class="ed-hint"><i class="ti ti-arrows-exchange"></i> 儲存後，「${esc(old.t)}」會移到備選</div>` : ''}
     ${ed.booked ? '<div class="ed-lock"><i class="ti ti-lock"></i> 這是已訂位的行程，改時間前請先確認</div>' : ''}
-    ${ed.group || ed.pick ? `
+`;
+  const f_kind = `    ${ed.group || ed.pick ? `
     <div class="ed-field"><span class="ed-lab">卡片樣式</span><div class="seg" id="edConv" data-i="${ed.group ? 1 : 2}"><span class="seg-thumb"></span>
       <button type="button" data-v="split">一個地點</button>
       <button type="button" class="${ed.group ? 'on' : ''}" data-v="group">多個地點</button>
@@ -7626,12 +7737,14 @@ function openEditor(id, startAt, toDay, replaceId, keep) {
       <button type="button" data-v="pick">多選一</button>${ed.isNew && isDay(ed.day) ? '<button type="button" data-v="ride">交通</button>' : ''}</div></div>
     ${cands.length ? `<div id="edCandWrap">${candDropHtml(cands)}</div>` : ''}
 `}
-    <${swaps.length ? 'div' : 'label'} class="ed-field">${swaps.length ? `<span class="ed-lab-row"><span class="ed-lab" id="edTLab">名稱</span>
+`;
+  const f_name = `    <${swaps.length ? 'div' : 'label'} class="ed-field">${swaps.length ? `<span class="ed-lab-row"><span class="ed-lab" id="edTLab">名稱</span>
       <button type="button" class="swap-btn" id="edSwapBtn" aria-expanded="false"><i class="ti ti-arrows-exchange"></i> 從備選替換</button></span>` : '<span class="ed-lab" id="edTLab">名稱</span>'}
       ${swaps.length ? `<div id="edSwapWrap">${candListHtml(swaps)}</div>` : ''}
       <span class="ed-t-wrap" id="edTWrap"><span class="num" aria-hidden="true">1</span><input id="edT" type="text" aria-label="名稱" value="${esc(ed.t)}" placeholder="例如：Ristr8to 拉花咖啡" autocomplete="off"><button type="button" class="ed-stop-x" id="edTX" aria-label="拿掉第一站" hidden><i class="ti ti-x"></i></button></span></${swaps.length ? 'div' : 'label'}>
     <div class="err" id="edTErr" hidden>請輸入名稱</div>
-    ${ed.group || ed.pick ? `<div class="ed-field"><span class="ed-lab">${ed.group ? '每一站' : '選項'} <span class="ed-lab-hint">點名字改那一${ed.group ? '站' : '家'}的時間、地圖</span></span>
+`;
+  const f_subs = `    ${ed.group || ed.pick ? `<div class="ed-field"><span class="ed-lab">${ed.group ? '每一站' : '選項'} <span class="ed-lab-hint">點名字改那一${ed.group ? '站' : '家'}的時間、地圖</span></span>
       <div class="ed-stops" id="edSubs"></div>
       <button type="button" class="ed-add-stop" id="edSubAdd"><i class="ti ti-plus"></i> <span></span></button></div>` : `<div id="edGTWrap" hidden>
       <div class="ed-stops" id="edStops"></div>
@@ -7639,16 +7752,19 @@ function openEditor(id, startAt, toDay, replaceId, keep) {
       <label class="ed-field"><span class="ed-lab">卡片標題 <span class="ed-lab-hint">選填，沒填就用站名自動取</span></span>
         <input id="edGT" type="text" value="" placeholder="" autocomplete="off"></label>
       <div class="ed-hint" id="edKindHint"></div></div>`}
-    ${ed.group || ed.pick ? '' : `
+`;
+  const f_desc = `    ${ed.group || ed.pick ? '' : `
     <label class="ed-field"><span class="ed-lab">描述 <span class="ed-lab-hint">顯示在卡片上，半小時左右的小卡片不顯示</span></span>
       <input id="edDesc" type="text" value="${esc(ed.desc)}" placeholder="例如：當地最大的傳統市場，可吃可買" autocomplete="off" maxlength="80"></label>
     <div class="ed-field ed-fold"><button type="button" class="ed-fold-h" aria-expanded="false"><span class="ed-lab">區域</span><span class="ed-fold-v">${esc(ed.area || '未填寫')}</span><i class="ti ti-chevron-down"></i></button>
       <input id="edArea" type="text" value="${esc(ed.area || '')}" placeholder="例如：寧曼、古城、塔佩門" autocomplete="off" maxlength="20" hidden></div>`}
-    ${ed.group ? '' : `
+`;
+  const f_cls = `    ${ed.group ? '' : `
     <div class="ed-field ed-fold"><button type="button" class="ed-fold-h" aria-expanded="false"><span class="ed-lab">類型</span><span class="ed-fold-v" id="edClsV">${esc((TYPES.find(([k]) => k === ed.cls) || [, ''])[1])}</span><i class="ti ti-chevron-down"></i></button>
       <div class="chips" id="edCls" hidden>
       ${TYPES.map(([k, n]) => `<button type="button" class="chip ${k}${k === ed.cls ? ' on' : ''}" data-v="${k}">${n}</button>`).join('')}${typeAddChip()}</div>${typeFormHtml()}</div>`}
-    <div class="ed-field"${old ? ' hidden' : ''}><span class="ed-lab">日期 <span class="ed-lab-hint">選別天就搬過去，時間不變</span></span>
+`;
+  const f_time = `    <div class="ed-field"${old ? ' hidden' : ''}><span class="ed-lab">日期 <span class="ed-lab-hint">選別天就搬過去，時間不變</span></span>
       <div class="chips sm day-chips" id="edDay">${ALL_KEYS.map(k => `<button type="button" class="chip${k === ed.day ? ' on' : ''}${k === 'cand' ? ' cand' : ''}" data-v="${k}">${k === 'cand' ? '備選' : dayNum(k)}</button>`).join('')}</div></div>
     <div class="ed-field"><span class="ed-lab">時間</span>
       <div class="ed-time"><input id="edS" type="time" step="300" value="${T(ed.s)}" aria-label="開始時間">
@@ -7661,13 +7777,14 @@ function openEditor(id, startAt, toDay, replaceId, keep) {
       <div class="err" id="edTimeErr" hidden></div>
     </div>
     ${ed.group ? '' : `<label class="ed-switch"><input type="checkbox" class="sw" id="edBooked"${ed.booked ? ' checked' : ''}><span>已訂位</span></label>`}
-    <hr class="ed-sep">
-    ${ed.group || ed.pick ? '' : `
+`;
+  const f_map = `    ${ed.group || ed.pick ? '' : `
     <label class="ed-field"><span class="ed-lab">地圖 <span class="ed-lab-hint">貼上 Google 地圖的分享連結最準確</span></span>
       ${pinIn(`<span class="clr-wrap"><input id="edMap" type="text" value="${esc(ed.map)}" placeholder="貼上分享連結，或輸入店名" autocomplete="off" inputmode="url"><button type="button" class="clr-btn" aria-label="清除" tabindex="-1"><i class="ti ti-x"></i></button></span>`, isGMap(ed.map))}</label>
     <div class="map-status" id="edMapStatus"></div>
     <div class="map-status" id="edMates"${placeMates(ed.id && !ed.group && !ed.pick ? findItem(ed.id)[1] : null, ed.id ? findItem(ed.id)[1] : null).length ? '' : ' hidden'}>${mateHint(placeMates(ed.id && !ed.group && !ed.pick ? findItem(ed.id)[1] : null, ed.id ? findItem(ed.id)[1] : null).length)}</div>`}
-    <div class="ed-field"><span class="ed-lab-row"><span class="ed-lab">交通時間（從上一站過來）</span>
+`;
+  const f_travel = `    <div class="ed-field"><span class="ed-lab-row"><span class="ed-lab">交通時間（從上一站過來）</span>
         ${isDay(ed.day) ? '<button type="button" class="swap-btn" id="edRoute"><i class="ti ti-route"></i> 自動計算</button>' : ''}</span>
       <div class="ed-travel"><div class="seg ed-modes${editModes().length > 2 ? ' m3' : ''}" id="edModes" style="--n:${editModes().length}"><span class="seg-thumb"></span>${editModes().map(k =>
         `<button type="button" data-v="${k}"><i class="ti ti-${modeIcon(k)}"></i> ${modeName(k)}<span class="md-min"></span></button>`).join('')}</div>
@@ -7675,7 +7792,8 @@ function openEditor(id, startAt, toDay, replaceId, keep) {
         <span class="ed-tmin" id="edTminWrap" hidden><input id="edTmin" type="number" inputmode="numeric" min="0" max="600" aria-label="交通分鐘數"><span>分</span></span></div>
       <div class="ed-travel-foot"><div class="ed-travel-st" id="edRouteSt"></div>
         <label class="ed-switch sm"><input type="checkbox" class="sw" id="edTself"><span>手動填</span></label></div></div>
-    ${ed.group ? '' : `
+`;
+  const f_notes = `    ${ed.group ? '' : `
     <hr class="ed-sep">
     ${photoField('edPhoto', ed.noteKey)}
     <label class="ed-field"><span class="ed-lab">重點提醒</span>
@@ -7683,11 +7801,50 @@ function openEditor(id, startAt, toDay, replaceId, keep) {
     <label class="ed-field"><span class="ed-lab">筆記摘要</span>
       <textarea id="edMine" rows="3" placeholder="想提醒大家的事">${esc(ed.mine)}</textarea></label>
     ${fullNoteField('edFull', ed.noteKey)}`}
-    <div class="ed-actions">
+`;
+  const f_acts = `    <div class="ed-actions">
       ${ed.isNew || old ? '' : '<button type="button" class="btn ghost danger" id="edDel"><i class="ti ti-trash"></i> 刪除</button>'}
       <button type="button" class="btn primary" id="edSave">${ed.isNew ? '新增' : old ? '替換' : ed.fromCand ? '排入' : '儲存'}</button>
-    </div>`, ed.isNew ? '#edT' : '.sh-close');
+    </div>`;
+
+  // 編輯既有的卡片：照卡片資訊的順序（照片、店名、描述、時間、提醒、筆記），資訊頁沒有的設定放到最後「其他設定」，從資訊頁按「編輯卡片」過來時畫面不會整個換掉
+  const look = !ed.isNew && !old && !ed.fromCand;
+  // 照片：資訊頁有照片才放最上面（同一個位置）；沒有照片、多選一（資訊頁不顯示照片）就整個放到「其他設定」
+  const [phTop, phUrl] = !look || ed.group ? ['', ''] : !ed.pick && NOTES[ed.noteKey]?.photo ? photoField('edPhoto', ed.noteKey, '', true) : ['', photoField('edPhoto', ed.noteKey)];
+  const lookHtml = () => `
+    ${phTop}
+    <div class="sh-head ed-head"><div style="flex:1;min-width:0">${f_name}
+      <div class="sh-sub"><i class="ti ti-pencil"></i> 編輯中．${current === 'cand' ? '備選景點' : `${dayInfo(current).date}．${esc(dayInfo(current).zh)}`}</div></div>
+      <button class="${ed.fromInfo ? 'ed-back' : 'sh-close'}" aria-label="${ed.fromInfo ? '回到卡片資訊' : '關閉'}"><i class="ti ti-x"></i></button></div>
+    ${f_hints}${f_subs}
+    ${ed.group || ed.pick ? '' : `<label class="ed-field ed-desc"><input id="edDesc" type="text" value="${esc(ed.desc)}" placeholder="例如：當地最大的傳統市場，可吃可買" autocomplete="off" maxlength="80"></label>`}
+    ${f_time}
+    ${ed.group ? '' : `
+    <label class="ed-field"><span class="ed-lab">重點提醒</span>
+      <input id="edAlert" type="text" value="${esc(ed.alert)}" placeholder="例如：只收現金、16:30 關門" autocomplete="off"></label>
+    <label class="ed-field"><span class="ed-lab">筆記摘要</span>
+      <textarea id="edMine" rows="3" placeholder="想提醒大家的事">${esc(ed.mine)}</textarea></label>
+    ${fullNoteField('edFull', ed.noteKey)}`}
+    <div class="ed-more">其他設定</div>
+    ${f_cls}
+    ${ed.group || ed.pick ? '' : `    <div class="ed-field ed-fold"><button type="button" class="ed-fold-h" aria-expanded="false"><span class="ed-lab">區域</span><span class="ed-fold-v">${esc(ed.area || '未填寫')}</span><i class="ti ti-chevron-down"></i></button>
+      <input id="edArea" type="text" value="${esc(ed.area || '')}" placeholder="例如：寧曼、古城、塔佩門" autocomplete="off" maxlength="20" hidden></div>`}
+    ${f_map}${f_travel}
+    ${phUrl}
+    ${f_kind}
+    <button type="button" class="btn ghost danger ed-del-row" id="edDel"><i class="ti ti-trash"></i> 刪除這張卡片</button>
+    <div class="ed-actions">
+      <button type="button" class="btn ghost ${ed.fromInfo ? 'ed-back' : 'ed-cancel'}" style="flex:1">取消</button>
+      <button type="button" class="btn primary" id="edSave" style="flex:1">儲存</button>
+    </div>`;   // 跟資訊頁的「編輯卡片／排進行程」同樣兩顆各一半；刪除不常用，放到其他設定最後面
+  openSheet(look ? lookHtml() : `    <div class="sh-head"><div style="flex:1;min-width:0"><div class="sh-title" id="shTitle">${ed.isNew ? '新增行程' : old ? '從備選替換' : ed.fromCand ? '從備選排入' : '編輯行程'}</div>
+      <div class="sh-sub">${current === 'cand' ? '備選景點' : `${dayInfo(current).date}．${esc(dayInfo(current).zh)}`}</div></div>
+      <button class="sh-close" aria-label="關閉"><i class="ti ti-x"></i></button></div>
+${f_hints}${f_kind}${f_name}${f_subs}${f_desc}${f_cls}${f_time}    <hr class="ed-sep">
+${f_map}${f_travel}${f_notes}${f_acts}`, ed.isNew ? '#edT' : look ? '.ed-head button' : '.sh-close');
   sheet.classList.add('soft');   // 淺色底、沒有框線的輸入框，圓角統一 12px
+  sheet.classList.toggle('ed-look', look);
+  sheet.querySelectorAll('.ed-back').forEach(b => b.addEventListener('click', () => { const id = ed.id; openCardInfo(id); sheet.classList.add('info-in'); }));   // ✕ 和取消：沒存的修改不保留（跟按 ✕ 關掉一樣）
   // 區域、類型預設收起來（大多是自動填的）：點標題列才展開（區域不自動跳鍵盤，要改再點輸入框）；類型展開時把選中的那顆捲到看得見
   sheet.querySelectorAll('.ed-fold-h').forEach(h => h.addEventListener('click', () => {
     const box = h.nextElementSibling, open = box.hidden; box.hidden = !open;
@@ -7739,6 +7896,7 @@ function wireEditor() {
     $('edTWrap').classList.toggle('multi', multi);   // 多個地點／多選一：前面加數字 1，跟下面加的第 2、3 站對齊
     $('edGT').placeholder = ed.kind === 'group' ? '例如：寧曼小吃巡禮' : '例如：早餐二選一';
     drawStops();
+    if (sheet.classList.contains('ed-look') && multi) $('edTWrap').scrollIntoView({ block: 'center', behavior: 'smooth' });   // 卡片樣式在最下面，第一站、加第二站在最上面：捲上去讓人看到變了什麼
     $('edKindHint').innerHTML = '<i class="ti ti-info-circle"></i> ' + (ed.kind === 'group'
       ? '加好按儲存就一起存。之後也可以展開卡片按「新增一站」，或在編輯模式長按別張卡片拖進來'
       : '加好按儲存就一起存。之後也可以展開卡片按「新增選項」，或在編輯模式長按別張卡片拖進來');
