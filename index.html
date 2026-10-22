@@ -190,6 +190,7 @@ header{position:sticky;top:0;z-index:10;background:var(--page);padding:calc(12px
 .bc .ti{font-size:13px}
 .bk-ok{margin-left:6px;vertical-align:2px;font-size:11px;padding:1px 5px}   /* 名稱後面的已訂位 */
 .blk.compact .t .bk-ok{margin-left:0}
+.bk-warn{color:#B4532A;vertical-align:0}   /* 不在營業時間：名稱後面，字偏紅提醒 */
 .bc.grow{flex-shrink:1;min-width:0}
 .bc.grow > span{overflow:hidden;text-overflow:ellipsis}
 /* 交通時間：小泡泡，左右置中在卡片欄（卡片 left:4px），放在上一張結尾和這一張開頭的正中間；離得遠就用虛線把兩張卡片連起來 */
@@ -1135,6 +1136,8 @@ body.trips-none .trip-new{display:none !important}
 html.tut .tabs{display:none}
 html.tut .tabs-row .tab.side{visibility:hidden}   /* 練習時不能換到總覽、備選；留著位置，編輯列才有地方從左邊拉出來 */
 html.tut #mapBtn,html.tut #acctBtn,html.tut #routeFab,html.tut .sync{visibility:hidden}
+.android .editing .layer [data-id]{touch-action:none}   /* 安卓編輯模式：卡片上不讓瀏覽器自己捲（不然長按拖曳攔不住），上下滑改由網站自己捲（dragPan） */
+.dbg-touch{position:fixed;left:6px;bottom:6px;z-index:9999;max-width:calc(100% - 12px);padding:6px 8px;border-radius:8px;background:rgba(0,0,0,.8);color:#7CFC7C;font:10px/1.35 ui-monospace,Menlo,monospace;white-space:pre-wrap;pointer-events:none}   /* 觸控偵錯（debug=touch） */
 .tut-ui{position:fixed;inset:0;z-index:70;pointer-events:none}
 .tut-box{position:fixed;left:12px;right:12px;top:calc(10px + env(safe-area-inset-top));max-width:456px;height:150px;display:flex;flex-direction:column;margin:0 auto;padding:16px 20px 0;border-radius:22px;background:#fff;
   box-shadow:0 6px 24px rgba(60,40,20,.18),0 0 0 1px var(--line);pointer-events:auto;transition:top .2s,bottom .2s}
@@ -2723,7 +2726,7 @@ async function load(force) {
     // 第一次在這支手機打開：網址指定的那一天，或旅行期間的今天
     const go = wantPage && isDay(wantPage) ? wantPage : first && current === 'overview' && tripNow()?.day;
     wantPage = null;
-    if (go && go !== current) { shownToday = tripNow()?.day || null; showPage(go, false); if (location.hash !== '#' + go) history.replaceState(null, '', '#' + go); }
+    if (go && go !== current) { shownToday = tripNow()?.day || null; showPage(go, false); if (location.hash !== '#' + go) history.replaceState(history.state, '', '#' + go); }
   } catch (e) {
     if (e.code === 'bad_key' || e.code === 'no_trip' || e.code === 'no_api') { loadErr = e.message; loaded = false; refreshView(); return; }   // 連結失效：不用再試
     if (!loaded) { loadErr = true; refreshView(); setTimeout(load, 10000); }   // 還沒有任何資料：10 秒後再試
@@ -2777,7 +2780,7 @@ document.addEventListener('visibilitychange', () => {
   if (!editing && Date.now() - lastLoad > 60000) load();
   // 隔天再打開（換日了）：自動跳到新的今天；同一天就停在原本看的那頁
   const today = tripNow()?.day || null;
-  if (today && today !== shownToday && !editing && !sheet.classList.contains('on')) { shownToday = today; location.hash = today; }
+  if (today && today !== shownToday && !editing && !sheet.classList.contains('on')) { shownToday = today; goHash(today); }
   else if (isDay(current)) markNow();
 });
 
@@ -2942,11 +2945,10 @@ function buildLayer(page, isLive, st) {
 // x：卡片／一站／選項（有 hours＝[[星期, 開門分鐘, 打烊分鐘]…] 或提醒文字裡的「營業 08:30–16:30」），s、e：排的開始、結束
 // 只把「營業 08:00–22:00」「07:00–15:30」「週三公休」這種當成營業時間；「05:20 集合」「18:00 回來」這種自己寫的提醒照常顯示
 const HR_PART = /^(營業.*|\d{1,2}:\d{2}\s*[–\-~～]\s*\d{1,2}:\d{2}|(週[日一二三四五六、]+)?(公休|休息))$/;
-function timelineAlert(x, day, s, e) {
+// warn：不在營業時間、當天公休（放在名稱後面）；rest：其他自己寫的提醒（放在下面那排標籤）
+function alertParts(x, day, s, e) {
   const parts = String(x.alert || '').split(/\s*[・·]\s*/).filter(Boolean);
-  const keep = parts.filter(p => !HR_PART.test(p));
-  const warn = hoursWarn(x, day, s, e, parts.filter(p => HR_PART.test(p)).join(' '));
-  return [warn, ...keep].filter(Boolean).join('・');
+  return { warn: hoursWarn(x, day, s, e, parts.filter(p => HR_PART.test(p)).join(' ')), rest: parts.filter(p => !HR_PART.test(p)).join('・') };
 }
 function hoursWarn(x, day, s, e, text) {
   const ymd = isDay(day) && tripDates()[dayNum(day) - 1]?.ymd; if (!ymd || isNaN(s) || isNaN(e)) return '';
@@ -2968,7 +2970,10 @@ function hoursWarn(x, day, s, e, text) {
 // 卡片下面的白色小標籤：時間、長度，加上已訂位、提醒（太長縮成「…」）、查詢中
 const bcTime = (s, e) => `<span class="bc"><i class="ti ti-clock"></i>${T(s)}–${T(e)}</span>`;
 // 已訂位：放在卡片名稱後面（10/21 從下面那排標籤移上來）
-const bookedTag = booked => booked ? '<span class="bc bk-ok"><i class="ti ti-circle-check"></i>已訂位</span>' : '';
+// 不在營業時間、當天公休：放在名稱後面（10/22 起；已訂位搬回下面那排標籤）
+// 名稱後面只寫「不在營業時間」「當天公休」（括號裡的營業時間太長會擠到下一行，點開卡片看得到）
+const warnTag = w => w ? `<span class="bc bk-ok bk-warn" title="${esc(w)}"><i class="ti ti-alert-triangle"></i>${esc(w.replace(/（.*）$/, ''))}</span>` : '';
+const bcBooked = booked => booked ? '<span class="bc"><i class="ti ti-circle-check"></i>已訂位</span>' : '';   // 已訂位：放在時間後面，標籤太多被切掉也看得到
 const bcExtra = (booked, al, pending) => (booked ? '<span class="bc"><i class="ti ti-circle-check"></i>已訂位</span>' : '') +
   (al ? `<span class="bc grow"><i class="ti ti-alert-triangle"></i><span>${esc(al)}</span></span>` : '') +
   (pending ? '<span class="bc"><i class="ti ti-loader-2 spin"></i>查詢資訊中</span>' : '');
@@ -3034,28 +3039,28 @@ function renderCards(items, day) {
       const g = div('grp ' + (it.cls || 'eat') + extra);
       g.dataset.id = it.id;
       g.setAttribute('role', 'button'); g.tabIndex = 0;
-      const gal = timelineAlert(it, day, m(it.s), m(it.e));
+      const gal = alertParts(it, day, m(it.s), m(it.e));
       const sumN = Math.max(1, Math.floor((h - 56) / 22));   // 站名放得下幾行（至少一行）
       const rows = pick
         ? `<div class="cap">這幾間都可以去，到時候再一起選一間</div>${it.alts.map((a, i) => `
           <div class="stop" data-kind="alt" data-idx="${i}"><div class="num pick"></div>
-            <div style="flex:1;min-width:0"><div class="n">${esc(a.name)}</div>${a.desc ? `<div class="o">${esc(a.desc)}</div>` : ''}
-              ${(() => { const aal = timelineAlert(a, day, m(it.s), m(it.s) + (+a.dur || m(it.e) - m(it.s))); return aal || +a.dur ? `<div class="m">${+a.dur ? `<i class="ti ti-clock"></i> ${T(it.s)} · ${durLabel(+a.dur)}` : ''}${aal && +a.dur ? '　' : ''}${esc(aal)}</div>` : ''; })()}</div>
+            <div style="flex:1;min-width:0"><div class="n">${esc(a.name)}${warnTag(alertParts(a, day, m(it.s), m(it.s) + (+a.dur || m(it.e) - m(it.s))).warn)}</div>${a.desc ? `<div class="o">${esc(a.desc)}</div>` : ''}
+              ${(() => { const aal = alertParts(a, day, m(it.s), m(it.s) + (+a.dur || m(it.e) - m(it.s))).rest; return aal || +a.dur ? `<div class="m">${+a.dur ? `<i class="ti ti-clock"></i> ${T(it.s)} · ${durLabel(+a.dur)}` : ''}${aal && +a.dur ? '　' : ''}${esc(aal)}</div>` : ''; })()}</div>
             ${a.map ? navBtn(a.map, a.name, a.pid) : ''}${subEditIc}
           </div>`).join('')}<button type="button" class="add-sub" data-kind="alt"><i class="ti ti-plus"></i> 新增選項</button>`
         : `${it.stops.map((st, i) => `
           <div class="stop${i < it.stops.length - 1 ? ' chain' : ''}" data-kind="stop" data-idx="${i}"><div class="num">${i + 1}</div>
-            <div style="flex:1;min-width:0"><div class="n">${esc(st.name)}</div>${st.orig ? `<div class="o">${esc(st.orig)}</div>` : ''}${st.desc ? `<div class="o">${esc(st.desc)}</div>` : ''}
-              <div class="m"><i class="ti ti-clock"></i> ${T(st.s)} · ${durLabel(st.dur)}${st.area ? `　<i class="ti ti-map-pin"></i> ${esc(st.area)}` : ''}${(sal => sal ? `　${esc(sal)}` : '')(timelineAlert(st, day, m(st.s), m(st.s) + (+st.dur || 0)))}</div></div>
+            <div style="flex:1;min-width:0"><div class="n">${esc(st.name)}${warnTag(alertParts(st, day, m(st.s), m(st.s) + (+st.dur || 0)).warn)}</div>${st.orig ? `<div class="o">${esc(st.orig)}</div>` : ''}${st.desc ? `<div class="o">${esc(st.desc)}</div>` : ''}
+              <div class="m"><i class="ti ti-clock"></i> ${T(st.s)} · ${durLabel(st.dur)}${st.area ? `　<i class="ti ti-map-pin"></i> ${esc(st.area)}` : ''}${(sal => sal ? `　${esc(sal)}` : '')(alertParts(st, day, m(st.s), m(st.s) + (+st.dur || 0)).rest)}</div></div>
             ${st.map ? navBtn(st.map, st.name, st.pid) : ''}${subEditIc}
           </div>`).join('')}<button type="button" class="add-sub" data-kind="stop"><i class="ti ti-plus"></i> 新增一站</button>`;
       g.innerHTML = `
         <div class="head"><span class="t" style="font-size:15px;font-weight:600">${pick
           ? `<i class="ti ti-arrows-split-2"></i> ${esc(it.t)}`
-          : `<i class="ti ti-stack-2"></i> ${esc(it.t)} · ${it.stops.length} 站`}${bookedTag(it.booked)}${editIc}</span><span class="hd-tm">${T(it.s)}–${T(it.e)}</span><i class="ti ti-chevron-down chev"></i></div>
+          : `<i class="ti ti-stack-2"></i> ${esc(it.t)} · ${it.stops.length} 站`}${warnTag(gal.warn)}${editIc}</span><span class="hd-tm">${T(it.s)}–${T(it.e)}</span><i class="ti ti-chevron-down chev"></i></div>
         <div class="sum"><div class="d" style="-webkit-line-clamp:${pick ? 1 : sumN}">${pick
           ? esc(it.alts.map(a => a.name).join('／'))
-          : esc(it.stops.map(st => st.short || st.name).join(' → '))}</div><div class="bcs">${bcTime(it.s, it.e)}<span class="bc">${durLabel(mins)}</span>${bcExtra(false, gal)}</div></div>
+          : esc(it.stops.map(st => st.short || st.name).join(' → '))}</div><div class="bcs">${bcTime(it.s, it.e)}${bcBooked(it.booked)}<span class="bc">${durLabel(mins)}</span>${bcExtra(false, gal.rest)}</div></div>
         <div class="list">${rows}</div>`;
       setCol(g, it.id);
       makeExpander(g, top, h, g);
@@ -3065,12 +3070,12 @@ function renderCards(items, day) {
     // 描述：標題（22）＋標籤（19）＋內距和間距（15）之外，每 22px 放一行；放不下就不顯示
     const descLines = (it, h) => { const n = Math.floor((h - 56) / 22); return it.desc && it.desc !== PENDING && n >= 1 ? `<div class="d" style="-webkit-line-clamp:${n}">${esc(it.desc)}</div>` : ''; };
     const compact = h < COMPACT_H;
-    const al = timelineAlert(it, day, m(it.s), m(it.e));
+    const al = alertParts(it, day, m(it.s), m(it.e));
     const hs = homeStay(it, day), hi = hs ? homeIc : '', dIt = hs && !it.desc ? { ...it, desc: hs.addr || '' } : it;   // 回住處休息：房子圖示、沒寫描述就放住處地址
     const b = div('blk ' + it.cls + (showNav ? ' has-nav' : '') + (compact ? ' compact' : '') + extra,
       compact
-        ? `<div class="t"><span class="tt">${hi}${esc(it.t)}</span>${bookedTag(it.booked)}<span class="bcs in">${bcTime(it.s, it.e)}<span class="bc">${durLabel(mins)}</span>${bcExtra(false, al, it.desc === PENDING)}</span></div>${showNav ? navBtn(it.map, it.t, it.pid) : ''}${editIc}`
-        : `<div class="t">${hi}${esc(it.t)}${bookedTag(it.booked)}</div>${descLines(dIt, h)}<div class="bcs">${bcTime(it.s, it.e)}<span class="bc">${durLabel(mins)}</span>${hs ? `<span class="bc"><i class="ti ti-bed"></i>${esc(shortName(hs.name))}${hs.cin && stayIdx(hs)[0] === dayNum(day) - 1 ? `・${hs.cin} 後入住` : ''}</span>` : it.area ? `<span class="bc"><i class="ti ti-map-pin"></i>${esc(it.area)}</span>` : ''}${bcExtra(false, al, it.desc === PENDING)}</div>${showNav ? navBtn(it.map, it.t, it.pid) : ''}${editIc}`);
+        ? `<div class="t"><span class="tt">${hi}${esc(it.t)}</span>${warnTag(al.warn)}<span class="bcs in">${bcTime(it.s, it.e)}${bcBooked(it.booked)}<span class="bc">${durLabel(mins)}</span>${bcExtra(false, al.rest, it.desc === PENDING)}</span></div>${showNav ? navBtn(it.map, it.t, it.pid) : ''}${editIc}`
+        : `<div class="t">${hi}${esc(it.t)}${warnTag(al.warn)}</div>${descLines(dIt, h)}<div class="bcs">${bcTime(it.s, it.e)}${bcBooked(it.booked)}<span class="bc">${durLabel(mins)}</span>${hs ? `<span class="bc"><i class="ti ti-bed"></i>${esc(shortName(hs.name))}${hs.cin && stayIdx(hs)[0] === dayNum(day) - 1 ? `・${hs.cin} 後入住` : ''}</span>` : it.area ? `<span class="bc"><i class="ti ti-map-pin"></i>${esc(it.area)}</span>` : ''}${bcExtra(false, al.rest, it.desc === PENDING)}</div>${showNav ? navBtn(it.map, it.t, it.pid) : ''}${editIc}`);
     b.dataset.id = it.id;
     setCol(b, it.id);
     b.style.height = h + 'px'; place(b, top);
@@ -3497,7 +3502,7 @@ function runSetup(k) {
   }
   if (k === 'stay') withAuth(() => { if (ovTab !== 'stay') { ovTab = 'stay'; renderOverview(); } openStayEditor(null); });
   else if (k === 'mode') withAuth(openTripSettings);
-  else if (k === 'import') { markSetup('import'); location.hash = 'cand'; setTimeout(() => withAuth(() => openAddFlow('cand')), 350); }
+  else if (k === 'import') { markSetup('import'); goHash('cand'); setTimeout(() => withAuth(() => openAddFlow('cand')), 350); }
   else if (k === 'invite') { markSetup('invite'); shareTrip('edit'); setTimeout(renderOverview, 600); }
   else if (k === 'first') withAuth(() => { showPage('d1'); openAddFlow('d1'); });   // 到第 1 天，打開「加入行程」
   else if (k === 'save') {
@@ -3625,7 +3630,7 @@ function importCarry() {
     mine.push({ id, key, code: code || '', role: code ? 'edit' : 'view', ...(owner ? { owner } : {}) }); added++;
   }
   try { localStorage.setItem(MINE_KEY, JSON.stringify(mine.slice(0, 50))); } catch {}
-  history.replaceState(null, '', location.pathname + location.search + '#trips');
+  history.replaceState(history.state, '', location.pathname + location.search + '#trips');
   tripsFetched = false;
   return list.length ? added || -1 : 0;
 }
@@ -5445,7 +5450,7 @@ function showPage(page, animate = true) {
   swipeKeep = null; keepScroll = keep;
   if (page === 'overview' && (prev === 'trips' || prev === 'new')) ovTab = 'days';
   // 網址的 #頁面 跟著換：直接呼叫 showPage 跳頁（例如開始規劃、已訂位標籤）時網址沒變，之後點同一個分頁會因為網址一樣而沒反應
-  if (location.hash !== '#' + page) history.replaceState(null, '', location.pathname + location.search + '#' + page);
+  if (location.hash !== '#' + page) history.replaceState(history.state, '', location.pathname + location.search + '#' + page);
   updateHeader(page);
   if (animate && !reduceMotion && prev && isDay(prev) && isDay(page) && cardsEl && !busy && !mapOn(page)) {
     slideTo(page, dayNum(page) > dayNum(prev) ? 1 : -1);
@@ -5464,10 +5469,35 @@ let keepScroll = null, swipeKeep = null;
 
 document.querySelector('.tabs-row').addEventListener('click', e => {
   const t = e.target.closest('.tab'); if (!t) return;
-  if (location.hash !== '#' + t.dataset.page) location.hash = t.dataset.page;
+  if (location.hash !== '#' + t.dataset.page) goHash(t.dataset.page);
 });
 let skipAnim = false;
 addEventListener('hashchange', () => { showPage(location.hash.slice(1), !skipAnim); skipAnim = false; });
+// 旅程裡換天、換總覽／備選：取代目前的網址，不多一筆瀏覽紀錄（安卓的上一頁才不會一天一天往回跳）
+function goHash(page) {
+  if (location.hash === '#' + page) return;
+  history.replaceState(history.state, '', '#' + page);
+  dispatchEvent(new HashChangeEvent('hashchange'));
+}
+// 安卓的上一頁（瀏覽器的返回）：先關掉開著的東西（選單、面板、週視圖、編輯模式、地圖），都沒開才真的離開。
+// 做法：旅程頁在目前這筆紀錄（base）上面多墊一筆一樣網址的（guard）；按上一頁退到 base 時，關掉一樣東西、再墊回去
+const backGuard = () => { if (!history.state?.guard) history.pushState({ guard: 1 }, '', location.href); };
+function closeTop() {
+  if (!acctMenu.hidden) { acctMenuClose(); return true; }
+  if (sheet.classList.contains('on')) { closeSheet(); return true; }
+  if (weekOpen) { weekOpen = false; renderWeek(); return true; }
+  if (editing) { document.getElementById('editCancel').click(); return true; }   // 有改東西會先問要不要放棄
+  if (mapOn(current)) { mapBtn.click(); return true; }   // 手機的地圖模式：回到時間線
+  return false;
+}
+if (TRIP_ID) { history.replaceState({ base: 1 }, '', location.href); backGuard(); }
+addEventListener('popstate', e => {
+  if (!e.state?.base) return;   // 不是退到 base（例如從「我的旅程」退回旅程）：照常換頁
+  if (current && location.hash !== '#' + current) history.replaceState(e.state, '', '#' + current);   // base 記的還是剛打開時的那一天：改回現在這一頁，不要跳回去
+  if (closeTop()) backGuard(); else history.back();   // 沒有東西可以關：真的離開
+});
+// 從連結直接打開（前面沒有紀錄）時，上面那個 history.back() 退不出去、墊的那筆也沒了：之後一點畫面就再墊回去
+addEventListener('click', () => { if (TRIP_ID && history.state?.base) backGuard(); }, true);
 
 // ---------- 地圖 ----------
 // 頁首左下角的按鈕切換「時間軸／清單」和「地圖」；每天的地圖照時間順序編號、用線連起來，備選的地圖只標類型顏色
@@ -6103,7 +6133,7 @@ function endSwipe(cancelled = false) {
     const finish = () => {
       if (done) return; done = true; busy = false;
       const page = goOv ? 'overview' : 'cand';
-      showPage(page, false); location.hash = page;
+      showPage(page, false); goHash(page);
       playIn(goOv ? ovEl : candEl, goOv ? 'in-l' : 'in-r');
     };
     curLayer.addEventListener('transitionend', finish, { once: true });
@@ -6114,7 +6144,7 @@ function endSwipe(cancelled = false) {
     curLayer.style.transform = `translateX(${-dir * W}px)`;
     (goNext ? next : prev).style.transform = 'translateX(0)';
     (goNext ? prev : next)?.remove();
-    const finish = () => { if (done) return; done = true; busy = false; skipAnim = true; swipeKeep = { y: scrollY, st: START }; current = null; location.hash = page; };
+    const finish = () => { if (done) return; done = true; busy = false; skipAnim = true; swipeKeep = { y: scrollY, st: START }; current = null; goHash(page); };
     (goNext ? next : prev).addEventListener('transitionend', finish, { once: true });
     setTimeout(finish, 450);
   } else {
@@ -6163,7 +6193,7 @@ function edgeSwipe(el, dir, target) {
     el.style.transition = 'transform .22s ease';
     el.style.transform = go ? `translateX(${dir * W}px)` : '';
     setTimeout(() => {
-      if (go) { const page = pageOf(); showPage(page, false); location.hash = page; if (cardsEl) playIn(cardsEl, dir < 0 ? 'in-r' : 'in-l'); }
+      if (go) { const page = pageOf(); showPage(page, false); goHash(page); if (cardsEl) playIn(cardsEl, dir < 0 ? 'in-r' : 'in-l'); }
       el.style.transition = ''; el.style.transform = '';
     }, go ? 200 : 240);
   };
@@ -6353,7 +6383,7 @@ document.addEventListener('keydown', e => {
   if ((e.key === 'ArrowLeft' || e.key === 'ArrowRight') && !editing) {
     const order = ['overview', ...DAY_KEYS, 'cand'], i = order.indexOf(current); if (i < 0) return;
     const to = order[i + (e.key === 'ArrowRight' ? 1 : -1)]; if (!to) return;
-    e.preventDefault(); location.hash = to; return;
+    e.preventDefault(); goHash(to); return;
   }
   if (e.key === '/' && deskMap(current) && isDay(current)) { e.preventDefault(); dsQ.focus(); return; }
   if ((e.key === 'e' || e.key === 'E') && (isDay(current) || current === 'cand')) { e.preventDefault(); (editing ? document.getElementById('editDone') : editBtn).click(); }
@@ -6518,7 +6548,9 @@ tl.addEventListener('click', e => {
   openAddFlow(current, hhmm(Math.max(0, Math.min(mins, DAY_END - 60))));   // 跟「＋ 加入行程」一樣是地圖搜尋，時間用點的那個時段
 }, true);
 // ---------- 長按拖曳：拖到空白處＝改時間；停在另一張卡片正中間＝兩個行程交換時段 ----------
-const LONG_PRESS = 350, MOVE_TOL = 8;
+const ANDROID = /Android/i.test(navigator.userAgent);
+if (ANDROID) document.documentElement.classList.add('android');
+const LONG_PRESS = 350, MOVE_TOL = 8, DRAG_TOL = 14;   // DRAG_TOL：長按拖曳等待的那 0.35 秒，手指可以晃多少（安卓按著不動也會抖好幾 px，8 太嚴、一抖就變成捲動）
 let drag = null, suppressClick = false;
 const cardAt = (x, y) => {
   const el = document.elementFromPoint(x, y)?.closest('.layer [data-id]');
@@ -6529,7 +6561,7 @@ function dragStart(x, y, el, sub) {
   drag.timer = setTimeout(drag.activate = () => {
     if (!drag || drag.active) return;
     pressCancel();
-    drag.active = true;
+    drag.active = true; dbg('◎ 長按到了，開始拖曳');
     if (sub) {
       // 某一站／某個選項：卡片有裁切，所以另外做一張跟著手指走的小卡片
       const r = el.getBoundingClientRect(), g = el.cloneNode(true);
@@ -6552,9 +6584,21 @@ function dragStart(x, y, el, sub) {
 }
 function dragMove(x, y, e) {
   if (!drag) return;
+  if (drag.pan) {   // 安卓編輯模式：手指在卡片上上下滑＝網站自己捲畫面（卡片上關掉了瀏覽器的捲動）
+    if (e?.cancelable) e.preventDefault();
+    const p = drag.pan, now = performance.now(), dy = p.y - y;
+    scrollBy(0, dy);
+    p.v = 0.8 * (dy / Math.max(1, now - p.t)) + 0.2 * p.v; p.y = y; p.t = now;   // 速度（px/ms）抓最近的，放開時接著滑
+    return;
+  }
   if (!drag.active) {
     // 還沒長按到時間就移動 → 當成一般捲動；滑鼠：一移動就開始拖（不用長按）
-    if (Math.abs(x - drag.x0) > MOVE_TOL || Math.abs(y - drag.y0) > MOVE_TOL) { if (drag.mouse) { clearTimeout(drag.timer); drag.activate(); } else dragCancel(); }
+    const tol = drag.mouse ? MOVE_TOL : DRAG_TOL;
+    // 還在等長按、手指只是小小晃動：攔下來。安卓 Chrome 只要看到一次沒被攔的移動就開始捲畫面，之後整個手勢都攔不住，
+    // 長按到了卡片也只會跟著畫面跑（10/22 安卓朋友的偵錯畫面：拖曳中每一筆 move 都是「可攔=否」、畫面一直在捲）
+    if (!drag.mouse && Math.abs(x - drag.x0) <= tol && Math.abs(y - drag.y0) <= tol) { if (e?.cancelable) e.preventDefault(); return; }
+    if (Math.abs(x - drag.x0) > tol || Math.abs(y - drag.y0) > tol) { if (drag.mouse) { clearTimeout(drag.timer); drag.activate(); } else if (ANDROID && editing) { clearTimeout(drag.timer); drag.pan = { y, t: performance.now(), v: 0 }; dbg('↕ 網站自己捲'); if (e?.cancelable) e.preventDefault(); }
+      else { dbg(`✕ 還沒到長按就移動 ${Math.round(x - drag.x0)},${Math.round(y - drag.y0)}（超過 ${tol}px）→ 當成捲動`); dragCancel('moved'); } }
     return;
   }
   e?.preventDefault();
@@ -6673,8 +6717,19 @@ function autoScroll() {
   if (v) { scrollBy(0, v); dragMove(drag.x ?? drag.x0, drag.y); }
   requestAnimationFrame(autoScroll);
 }
+// 網站自己捲的放開：照放開前的速度繼續滑，慢慢停下來（跟瀏覽器原本的慣性差不多）
+function panFling(v) {
+  if (Math.abs(v) < 0.05) return;
+  let last = performance.now(), stop = false;
+  const halt = () => { stop = true; };
+  addEventListener('touchstart', halt, { once: true, passive: true });   // 再按下去就停
+  const step = now => { if (stop) return; const dt = Math.min(32, now - last); last = now; scrollBy(0, v * dt); v *= Math.pow(0.996, dt); if (Math.abs(v) > 0.03) requestAnimationFrame(step); else removeEventListener('touchstart', halt); };
+  requestAnimationFrame(step);
+}
 function dragEnd() {
   if (!drag) return;
+  if (drag.pan) { const v = drag.pan.v; drag = null; suppressClick = true; setTimeout(() => suppressClick = false, 400); panFling(v); return; }   // 滑過了：放開不要當成點卡片
+  dbg('dragEnd ' + (drag.active ? '放下' : '沒拖到'));
   clearTimeout(drag.timer);
   if (!drag.active) { drag = null; return; }
   suppressClick = true; setTimeout(() => suppressClick = false, 400);
@@ -6697,8 +6752,10 @@ function dragEnd() {
   el.style.transform = '';
   setTimeout(() => { el.classList.remove('dragging'); el.style.transition = ''; }, 200);
 }
-function dragCancel() {
+function dragCancel(why) {
   if (!drag) return;
+  if (drag.pan) { drag = null; return; }
+  dbg('dragCancel ' + (typeof why === 'string' ? why : why?.type || ''));
   clearTimeout(drag.timer);
   if (drag.active) {
     drag.el.classList.remove('dragging', 'sub-dragging'); drag.el.style.transform = ''; drag.ghost?.remove();
@@ -6836,6 +6893,28 @@ tl.addEventListener('touchstart', e => {
 tl.addEventListener('touchmove', e => { if (drag) { const t = e.touches[0]; dragMove(t.clientX, t.clientY, e); } }, { passive: false });
 tl.addEventListener('touchend', dragEnd);
 tl.addEventListener('touchcancel', dragCancel);
+// ---------- 觸控偵錯：網址加 debug=touch，左下角列出手指的事件（安卓拖不動時，請朋友開來截圖） ----------
+const dbg = QS.get('debug') !== 'touch' ? () => {} : (() => {
+  const box = document.createElement('div'); box.className = 'dbg-touch'; document.body.appendChild(box);
+  const ua = navigator.userAgent, lines = [];
+  const br = /Line\//i.test(ua) ? 'LINE' : /SamsungBrowser/i.test(ua) ? 'Samsung' : /; wv\)/.test(ua) ? 'WebView' : /Chrome\/(\d+)/.exec(ua) ? 'Chrome ' + /Chrome\/(\d+)/.exec(ua)[1] : /Safari/.test(ua) ? 'Safari' : '?';
+  const head = `${/Android/.test(ua) ? 'Android ' + (/Android ([\d.]+)/.exec(ua)?.[1] || '') : /iPhone|iPad/.test(ua) ? 'iOS' : 'PC'} · ${br} · ${innerWidth}×${innerHeight} · dpr ${devicePixelRatio}`;
+  const draw = () => { box.textContent = head + '\n' + lines.join('\n'); };
+  const log = msg => { lines.push((performance.now() / 1000).toFixed(2) + ' ' + msg); if (lines.length > 16) lines.shift(); draw(); };
+  draw();
+  const xy = e => { const t = e.touches[0] || e.changedTouches[0]; return t ? Math.round(t.clientX) + ',' + Math.round(t.clientY) : ''; };
+  let n = 0, x0 = 0, y0 = 0, lastScroll = 0;
+  addEventListener('touchstart', e => { n = 0; const t = e.touches[0]; x0 = t.clientX; y0 = t.clientY;
+    log(`start ${xy(e)} 編輯=${editing ? '是' : '否'} 卡片=${e.target.closest?.('.layer [data-id]') ? '是' : '否'}${e.touches.length > 1 ? ' 多指' : ''}`); }, { passive: true, capture: true });
+  addEventListener('touchmove', e => { if (++n > 8 && !drag?.active) return; if (n > 30) return; const t = e.touches[0];   // 看前 8 次就好；拖曳中多看一點
+    log(`move ${Math.round(t.clientX - x0)},${Math.round(t.clientY - y0)} 可攔=${e.cancelable ? '是' : '否'} 已攔=${e.defaultPrevented ? '是' : '否'} 拖曳=${drag ? drag.active ? '中' : '等' : '無'}`); }, { passive: true });
+  addEventListener('touchend', e => log(`end ${xy(e)}`), { passive: true });
+  addEventListener('touchcancel', () => log('★ touchcancel（系統把手勢收走）'), { passive: true, capture: true });
+  addEventListener('contextmenu', e => log(`contextmenu 已攔=${e.defaultPrevented ? '是' : '否'}`));
+  addEventListener('pointercancel', () => log('★ pointercancel'), { passive: true });
+  addEventListener('scroll', () => { const t = performance.now(); if (t - lastScroll > 400) { lastScroll = t; log('scroll y=' + Math.round(scrollY)); } }, { passive: true });
+  return log;
+})();
 // 電腦版：不用進編輯模式，滑鼠按住卡片拖一下就能改時間、交換（存檔照一般模式直接送雲端，提示裡有「復原」）
 const deskDrag = () => !editing && deskMap(current) && isDay(current) && !!getAuth() && !sheet.classList.contains('on');
 tl.addEventListener('mousedown', e => {
@@ -7442,7 +7521,7 @@ function saveAdd() {
   }
   const was = current;
   saveData('新增'); closeSheet(); af = null;
-  if (day !== was && isDay(day)) location.hash = day; else renderPage(current);
+  if (day !== was && isDay(day)) goHash(day); else renderPage(current);
   // 復原：從備選排進來的放回備選，新加的刪掉
   toast(day === 'cand' ? `已加入備選「${name}」` : `已加入「${name}」`, '復原', () => { const [d2, x] = findItem(it.id); if (!x) return;
     if (from) moveDay(x.id, d2, from); else DATA[d2] = DATA[d2].filter(z => z.id !== x.id);
@@ -7945,7 +8024,7 @@ function saveEditor() {
   if (ed.fromCand && ed.day === current) { toast(`已從備選排入「${t}」${clashText(ed.id, current)}`, '復原', undo, UNDO_MS); return; }
   if (ed.day !== current) {
     const where = ed.day === 'cand' ? '備選' : `第 ${dayNum(ed.day)} 天`, to = ed.day;
-    toast(`已${ed.isNew ? '新增' : '移'}到${where}`, '前往', () => { location.hash = to; });
+    toast(`已${ed.isNew ? '新增' : '移'}到${where}`, '前往', () => { goHash(to); });
     return;
   }
   toast((ed.isNew ? '已新增' : push && delta ? `已儲存，後面 ${laterItems().length} 個行程一起${delta > 0 ? '順延' : '提前'}` : '已儲存') + syncNote(mates || []), '復原', undo, UNDO_MS);
@@ -8357,7 +8436,7 @@ function openDayPicker(id) {
     moveDay(id, 'cand', day);
     const to = day;
     saveData(`排到第 ${dayNum(to)} 天`); closeSheet(); renderPage(current); updateHeader(current);
-    toast(`已把「${it.t}」排到第 ${dayNum(to)} 天 ${T(it.s)}${clashText(id, to)}`, '前往', () => { location.hash = to; });
+    toast(`已把「${it.t}」排到第 ${dayNum(to)} 天 ${T(it.s)}${clashText(id, to)}`, '前往', () => { goHash(to); });
   });
   $('dpEdit').addEventListener('click', () => openEditor(id));
   // 一打開就先選好第 1 天，下面的時間和行程直接出現，點別天只是換內容，畫面不會跳
@@ -8638,7 +8717,7 @@ function toast(msg, actionText, action, ms) {
 // 例外：網址停在「我的旅程」、建立旅程，或是按重新整理（留在原本那頁）
 const reloaded = performance.getEntriesByType?.('navigation')?.[0]?.type === 'reload';
 let shownToday = /^#(trips|new)$/.test(location.hash) || reloaded ? null : tripNow()?.day || null;
-if (shownToday) history.replaceState(null, '', '#' + shownToday);
+if (shownToday) history.replaceState(history.state, '', '#' + shownToday);
 if (TRIP_ID && TRIP && TRIP_ROLE) rememberTrip(TRIP, TRIP_ROLE, TRIP_KEY, TRIP_CODE);
 showPage(shownToday || location.hash.slice(1) || (TRIP_ID ? 'overview' : 'trips'), false);
 try { if (sessionStorage.getItem('trip-enter')) { sessionStorage.removeItem('trip-enter'); if (current === 'overview') pageSlide('sl-in-r', ovEl); } } catch {}
@@ -8687,6 +8766,7 @@ const HAND_SVG = '<svg class="hand-svg" viewBox="0 0 80 88" aria-hidden="true"><
 const editingDrag = () => !!drag;
 function tutCard(id) { return document.querySelector(`.layer [data-id="${id}"]`); }
 function tutItem(id) { return findItem(id)[1]; }
+const tutDragTo = () => Math.ceil(m(tutItem('tl').e) / 15) * 15;   // 拖曳那關的目的地：THE HOUSE 結束後的下一個整刻
 // 時間軸上沒有卡片的地方：滑動示範放這裡，手指才不會壓在卡片上（箭頭在手指旁邊，上下只要留手掌的高度）
 function tutBlank() {
   const cards = [...document.querySelectorAll(`#tl .layer [data-id]`)].map(c => c.getBoundingClientRect()).filter(r => r.height && r.bottom > 0 && r.top < innerHeight);
@@ -8712,15 +8792,16 @@ const TUT_STEPS = [
     done: () => sheet.classList.contains('on') && !!sheet.querySelector('#edT') && !editing },
   // 下面三關都在修改面板裡；中途把面板關掉就回到「長按 Ristr8to」那一關
   { text: '停留時間的尺往左滑<br>改成 1 小時 30 分', gesture: 'swipe', inSheet: 2, el: () => sheet.querySelector('.dr-win'), to: () => ({ dx: -60, dy: 0 }),
-    done: () => ed && ed.dur >= 90 && ed.dur <= 150 },
+    done: () => ed && ed.dur >= 90 && ed.dur <= 120 },   // 最多 2 小時：太長的話 THE HOUSE 被推到 14:30 之後，下一關就沒地方往上拖
   { text: '待久一點，後面也要跟著延後<br>打開「後面的行程自動移動」', gesture: 'tap', inSheet: 2, el: () => sheet.querySelector('#edPushWrap.on .sw'),
     done: () => !!sheet.querySelector('#edPush')?.checked },
   { text: '按「儲存」<br>後面的行程會一起往後移', gesture: 'tap', inSheet: 2, el: () => sheet.querySelector('#edSave'),
     done: () => !sheet.classList.contains('on') && m(tutItem('tc').e) - m(tutItem('tc').s) >= 90 && m(tutItem('tl').s) > m('12:00'), after: '後面的行程<br>都自動往後延了！' },
   { text: '點右下角的鉛筆<br>進入編輯模式', gesture: 'tap', el: () => document.getElementById('editBtn'), done: () => editing },
-  { text: '長按「Elite 按摩」拿起來<br>往上拖到 14:00 再放開', gesture: 'drag', el: () => tutCard('ts'), to: () => ({ dx: 0, dy: (m('14:00') - m(tutItem('ts').s)) * PX }), tag: '14:00',
+  // 目的地跟著 THE HOUSE 的結束時間（前一關停留時間調多少，THE HOUSE 就被推多少；原本寫死 14:00，調到 2 小時時 14:00 被 THE HOUSE 蓋住、放了也不過關）
+  { text: () => `長按「Elite 按摩」拿起來<br>往上拖到 ${hhmm(tutDragTo())} 再放開`, gesture: 'drag', el: () => tutCard('ts'), to: () => ({ dx: 0, dy: (tutDragTo() - m(tutItem('ts').s)) * PX }), tag: () => hhmm(tutDragTo()),
     enter: st => { st.from = m(tutItem('ts').s); },
-    done: st => !drag && m(tutItem('ts').s) < st.from && m(tutItem('ts').s) >= m(tutItem('tl').e) && m(tutItem('ts').s) <= m('14:30') },
+    done: st => !drag && m(tutItem('ts').s) < st.from && m(tutItem('ts').s) >= m(tutItem('tl').e) - 5 && m(tutItem('ts').s) <= tutDragTo() + 15 },
   { text: '長按「Elite 按摩」<br>停在「酒吧」正中間放開<br>兩個行程就會交換', gesture: 'drag', el: () => tutCard('ts'),
     // 交換要「按摩卡片的中心」停在酒吧的中段，所以手指移動的距離＝兩張卡片中心的距離
     to: () => { const a = tutCard('ts')?.getBoundingClientRect(), b = tutCard('tj')?.getBoundingClientRect(); return a && b ? { dx: 0, dy: (b.top + b.height / 2) - (a.top + a.height / 2) } : { dx: 0, dy: 120 }; }, tag: '⇅ 交換',
@@ -8746,6 +8827,7 @@ function tutRun() {
   addEventListener('touchstart', () => { touching = true; }, { passive: true, capture: true });
   addEventListener('touchend', () => { touching = false; }, { passive: true, capture: true });
   addEventListener('pointerdown', () => { touching = true; }, true); addEventListener('pointerup', () => { touching = false; }, true);
+  let scrolledAt = 0; addEventListener('scroll', () => { scrolledAt = Date.now(); }, { passive: true });   // 畫面還在捲：先不出手指（安卓 Chrome 捲動中按下去，網站攔不住手指移動，拖曳會變成捲動）
   const say = (html, cls = '') => { if (shown === html + cls) return; shown = html + cls; txt.innerHTML = html; box.className = 'tut-box ' + cls; };
   function finish() {
     clearInterval(timer); hand.hidden = true; ui.classList.add('done');
@@ -8791,6 +8873,7 @@ function tutRun() {
       const er = el.getBoundingClientRect(), up = st.gesture === 'drag' && st.to ? Math.max(0, -st.to().dy) : 0, top = box.getBoundingClientRect().bottom + 16 + (up ? up + 24 : 0);
       if (er.top < top || er.bottom > innerHeight * 0.62) { scrollBy({ top: er.top - Math.max(top, innerHeight * 0.42), behavior: 'smooth' }); hand.hidden = true; ghost.hidden = true; return; }
     }
+    if (Date.now() - scrolledAt < 350) { hand.hidden = true; ghost.hidden = true; return; }   // 等捲動停了才出手指
     const r = el.getBoundingClientRect(), to = st.to ? st.to() : { dx: 0, dy: 0 };
     // 卡片：手指放在右半邊、偏下，比較不會蓋住店名；小按鈕、面板裡的東西：放正中間
     const wide = !st.inSheet && r.width > 120;
@@ -8802,7 +8885,7 @@ function tutRun() {
     if (hand.dataset.g !== st.gesture + i) {
       hand.dataset.g = st.gesture + i; hand.className = 'tut-hand g-' + st.gesture;
       // 拖曳示範：跟真的拖曳一樣只有虛線框，跟著手指移到目的地，顯示時間或「交換」
-      if (st.gesture === 'drag') ghost.innerHTML = `<span class="tut-tag">${st.tag || ''}</span>`;
+      if (st.gesture === 'drag') ghost.innerHTML = `<span class="tut-tag">${typeof st.tag === 'function' ? st.tag() : st.tag || ''}</span>`;
       ghost.className = 'tut-ghost';
       [hand, ghost].forEach(x => { x.style.animation = 'none'; void x.offsetWidth; x.style.animation = ''; });   // 手指和分身的動畫同時開始
     }
@@ -8815,7 +8898,7 @@ function tutRun() {
   }, 150);
 }
 if (TUT) {
-  if (location.hash !== '#d1') history.replaceState(null, '', '#d1');   // 第一關：從第 1 天往左滑到第 2 天
+  if (location.hash !== '#d1') history.replaceState(history.state, '', '#d1');   // 第一關：從第 1 天往左滑到第 2 天
   if (current !== 'd1') showPage('d1', false);
   tutRun();
 }
@@ -8825,7 +8908,7 @@ function openTutorial() {
   if (TUT) return;
   try { sessionStorage.setItem('tut-return', location.href); } catch {}
   const api = QS.get('api');   // 測試站：練完回來還是接測試的雲端（練習本身不連雲端）
-  location.href = `${location.pathname}?tutorial=1&t=tut&k=tut&nick=${encodeURIComponent(getNick() || '我')}${api ? '&api=' + encodeURIComponent(api) : ''}#d1`;
+  location.href = `${location.pathname}?tutorial=1&t=tut&k=tut&nick=${encodeURIComponent(getNick() || '我')}${api ? '&api=' + encodeURIComponent(api) : ''}${QS.get('debug') ? '&debug=' + encodeURIComponent(QS.get('debug')) : ''}#d1`;   // 觸控偵錯也帶過去
 }
 // 練完回來：說一聲
 if (!TUT) try { const r = sessionStorage.getItem('tut-result'); sessionStorage.removeItem('tut-result'); if (r === 'done') setTimeout(() => toast('練習完成，開始排你的行程吧！'), 900); } catch {}
@@ -9188,7 +9271,7 @@ wkEl.addEventListener('click', e => {
   if (e.target.closest('#wkBack')) { weekOpen = false; renderWeek(); return; }
   const card = e.target.closest('.wk-col [data-id]'), col = e.target.closest('.wk-col');
   if (!col) return;
-  weekOpen = false; renderWeek(); location.hash = col.dataset.day;
+  weekOpen = false; renderWeek(); goHash(col.dataset.day);
   if (card) setTimeout(() => openCardInfo(card.dataset.id), 450);
 });
 // 拖曳：按住卡片移動 → 半透明的卡片跟著滑鼠，放開的那一欄、那個時間就是新位置（15 分鐘一格）
