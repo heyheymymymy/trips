@@ -1066,6 +1066,8 @@ a.am-item{text-decoration:none;box-sizing:border-box}
 .sheet.center .g-note{margin-top:18px}
 .g-note a{white-space:nowrap}
 .sheet.center .sh-head > div{padding-left:40px}   /* 右邊有關閉鈕，左邊空一樣寬，標題才會在正中間 */
+.line-out{display:flex;flex-direction:column;align-items:center;padding:8px 0 4px}
+.line-out .btn.primary{flex:none;height:48px;display:flex;align-items:center;justify-content:center;gap:6px;width:100%;max-width:280px;text-decoration:none;box-sizing:border-box}
 .g-skip{display:block;margin:10px auto 0;padding:6px 4px;border:0;background:none;font:inherit;font-size:13px;color:var(--text2);text-decoration:underline;text-underline-offset:3px;cursor:pointer}
 .trips-carry button{display:inline-flex;align-items:center;gap:6px;height:38px;padding:0 14px;border:1px solid var(--border);border-radius:999px;background:#fff;font:inherit;font-size:14px;color:var(--text);cursor:pointer}
 .trips-carry small{display:block;margin:8px auto 0;max-width:280px;font-size:12px;line-height:1.5;color:var(--muted)}
@@ -2008,21 +2010,17 @@ function loadGis() {
   });
   return gisReady;
 }
-// opts.then：建立旅程前問的（下面有「先不登入，直接建立」；登入好或略過都接著建立）
+// opts.then：建立旅程前問的（10/22 起建立旅程一定要登入，沒有「先不登入」；登入好接著建立）
 function openLogin(opts = {}) {
   openSheet(`
-    <div class="sh-head"><div style="flex:1;min-width:0"><div class="sh-title" id="shTitle">${opts.title || (opts.then ? '建立旅程前，先登入嗎？' : '用 Google 登入')}</div>
+    <div class="sh-head"><div style="flex:1;min-width:0"><div class="sh-title" id="shTitle">${opts.title || (opts.then ? '建立旅程前，先用 Google 登入' : '用 Google 登入')}</div>
       <div class="sh-sub">旅程會存在你的 Google 帳號，切換任何裝置都能同步！</div></div>
       <button class="sh-close" aria-label="關閉"><i class="ti ti-x"></i></button></div>
     ${inLine() ? `<div class="ed-hint"><i class="ti ti-info-circle"></i> LINE 裡沒辦法用 Google 登入：請點右上角「⋯」或右下角的分享圖示，選「用預設瀏覽器開啟」（Safari），再登入一次</div>`
       : '<div class="g-btn" id="gBtn"><span class="st-al-wait"><i class="ti ti-loader-2 spin"></i> 載入中…</span></div><div class="err" id="gErr" hidden></div>'}
     <div class="g-note">只用來記住你的旅程列表，不會存你的名字和信箱。<a href="privacy.html" target="_blank" rel="noopener">隱私權說明</a></div>
-    ${opts.then ? '<button type="button" class="g-skip" id="gSkip">先不登入，直接建立</button>' : ''}`, null, true);
+`, null, true);
   sheet.classList.add('center');   // 中間彈出、內容左右置中
-  sheet.querySelector('#gSkip')?.addEventListener('click', () => {
-    try { localStorage.setItem(LOGIN_SKIP_KEY, '1'); } catch {}
-    closeSheet(); opts.then();
-  });
   if (inLine()) return;
   const box = sheet.querySelector('#gBtn'), err = m => { const el = sheet.querySelector('#gErr'); if (el) { el.textContent = m; el.hidden = false; } };
   loadGis().then(() => {
@@ -2054,12 +2052,12 @@ function logoutAccount() {
   try { google.accounts.id.disableAutoSelect(); } catch {}
   renderTrips(); toast('已登出');
 }
-// 能不能刪除這趟：手機裡有擁有者鑰匙；有鑰匙之前建立的舊旅程，暱稱跟建立的人一樣也可以
-const canDeleteTrip = () => TRIP_ROLE === 'edit' && !!(myTrips().find(x => x.id === TRIP_ID)?.owner || (TRIP && TRIP.has_owner === false && TRIP.created_by && TRIP.created_by === getNick()));
-// 「我的旅程」列表上的判斷（還沒打開過、不知道建立的人是誰時先當作可以，打開後再確認）
+// 能不能刪除這趟（也管同行的人、換編輯碼）：手機裡有擁有者鑰匙才行；10/22 起不再看暱稱
+const canDeleteTrip = () => TRIP_ROLE === 'edit' && !!myTrips().find(x => x.id === TRIP_ID)?.owner;
+// 「我的旅程」列表上的判斷：這支手機有擁有者鑰匙＝建立的人
 // 確定是建立的人：不給「從列表拿掉」（拿掉就看不到、也刪不掉了，擁有者鑰匙也會跟著不見）
-const listIsCreator = t => t.role === 'edit' && (!!t.owner || (t.has_owner === false && t.created_by === getNick()));
-const listCanDelete = t => t.role === 'edit' && (!!t.owner || (t.has_owner === false ? t.created_by === getNick() : t.has_owner === undefined));
+const listIsCreator = t => t.role === 'edit' && !!t.owner;
+const listCanDelete = listIsCreator;
 // 旅程網址：保留測試用的 api、now 參數
 function tripUrl(id, key, hash = 'overview') {
   const q = new URLSearchParams();
@@ -5162,7 +5160,7 @@ addEventListener('scroll', tripPressEnd, { passive: true });
 tripsEl.addEventListener('contextmenu', e => { if (e.target.closest('[data-trip]')) e.preventDefault(); });
 function runTripAct(act) {
   if (act === 'del') withAuth(() => canDeleteTrip() ? openDeleteTrip()
-    : toast(TRIP.has_owner === false && TRIP.created_by ? `這趟是「${TRIP.created_by}」建立的，暱稱要一樣才能刪除（你現在是「${getNick()}」）` : '只有創建旅程的人可以刪除旅程', '知道了', () => {}, 8000));
+    : toast('只有創建旅程的人可以刪除旅程（要在當初建立的瀏覽器，或登入同一個 Google 帳號）', '知道了', () => {}, 8000));
   else withAuth(openTripSettings);
 }
 function openTripMenu(id) {
@@ -5176,8 +5174,7 @@ function openTripMenu(id) {
       ${t.role === 'edit' ? opt('set', 'ti-settings', '旅程設定', '名稱、目的地、日期、交通方式、行程封面') : ''}
       ${listIsCreator(t) ? '' : opt('hide', 'ti-eye-off', '從列表拿掉', '只有創建旅程的人可以刪除旅程，從你的列表拿掉後，原本的旅程不受影響')}
       ${listCanDelete(t) ? opt('del', 'ti-trash', '刪除旅程', '確定不去了嗎？刪掉後大家都看不到這趟旅程囉', ' danger') : ''}
-    </div>
-    ${t.role === 'edit' && t.has_owner === false && t.created_by && t.created_by !== getNick() ? `<div class="sh-empty">這趟是「${esc(t.created_by)}」建立的，你現在的暱稱是「${esc(getNick() || '還沒填')}」，暱稱一樣才能刪除</div>` : ''}`);
+    </div>`);
   sheet.querySelector('.tm-list').addEventListener('click', e => {
     const b = e.target.closest('[data-tm]'); if (!b) return;
     if (b.dataset.tm === 'share') { closeSheet(); shareTrip('view', t); return; }
@@ -5202,15 +5199,22 @@ tripsEl.addEventListener('click', e => {
   if (t.id === TRIP_ID && t.key === TRIP_KEY) location.hash = 'overview';
   else { try { sessionStorage.setItem('trip-enter', '1'); } catch {} location.href = tripUrl(t.id, t.key); }   // 別趟旅程，或這趟有可以編輯的鑰匙：換網址重新載入；載入後一樣從右邊滑進來
 });
-// 第一次建立旅程、還沒登入：先問要不要用 Google 登入（選「先不登入」就記住，之後不再問）
-const LOGIN_SKIP_KEY = 'login-skip' + TEST_SUFFIX;
+// 建立旅程一定要登入 Google（擁有者鑰匙存在帳號裡，換手機、換瀏覽器都還能刪除、管理）；只看、編輯不用
 tripsEl.addEventListener('click', e => {
   if (e.target.closest('#tripFirstLogin')) { e.stopPropagation(); openLogin(); return; }
   if (e.target.closest('#tripFirst')) document.getElementById('tripNew').click();
 });
+// LINE 內建瀏覽器：建立旅程前先請他換到手機的瀏覽器（在 LINE 裡建的旅程，擁有者鑰匙只在 LINE 裡、也不能 Google 登入，換瀏覽器就刪不掉）
+// 網址加 openExternalBrowser=1，LINE 會直接用預設瀏覽器打開；不另外寫說明，只給一顆按鈕
+function openLineOut() {
+  const q = new URLSearchParams(location.search); q.delete('t'); q.delete('k'); q.set('openExternalBrowser', '1');
+  const url = location.pathname + '?' + q + '#new', ios = /iPhone|iPad|iPod/i.test(navigator.userAgent);
+  openSheet(`<div class="line-out"><a class="btn primary" id="lineGo" href="${esc(url)}"><i class="ti ti-${ios ? 'brand-safari' : 'world'}"></i>${ios ? '用 Safari 開啟' : '用瀏覽器開啟'}</a></div>`, null, true);
+  sheet.classList.add('center');
+}
 document.getElementById('tripNew').addEventListener('click', () => {
-  let skipped = false; try { skipped = !!localStorage.getItem(LOGIN_SKIP_KEY); } catch {}
-  if (getAccount() || skipped) { location.hash = 'new'; return; }
+  if (inLine()) { openLineOut(); return; }   // LINE 裡不能登入 Google：直接請他換瀏覽器
+  if (getAccount()) { location.hash = 'new'; return; }
   openLogin({ then: () => { location.hash = 'new'; } });
 });
 
@@ -5287,6 +5291,7 @@ wizNext.addEventListener('click', () => {
 // 建立旅程：只要暱稱（記在這支手機）；建好會拿到這趟的編輯碼
 // 跟開始編輯一樣是「哈囉，［名字］」：點虛線框直接打字（框跟著字變寬，最多 6 字）；登入又有暱稱＝框裡是暱稱，下面「改名」
 function openCreateAuth() {
+  if (!getAccount()) { openLogin({ then: () => setTimeout(openCreateAuth, 250) }); return; }
   const folded = nickFolded(), nick0 = getNick();
   openSheet(`<button class="sh-close au-x" aria-label="關閉"><i class="ti ti-x"></i></button><div class="au">
     <div class="au-hi" id="shTitle">哈囉，<span class="au-box ${folded ? 'on' : 'typing'}" id="auBox"><span id="auName">${esc(folded ? nick0 : '')}</span>
@@ -5308,13 +5313,15 @@ function openCreateAuth() {
       legsFix(wiz);
       const dest = wiz.dest.trim();
       const g = wiz.geo || {};
-      const r = await api({ action: 'createTrip', nick, name: wizName(), dest, en: wizEn(), region: g.region || '', center: g.center || '',
+      const a = getAccount();
+      const r = await api({ action: 'createTrip', sub: a?.sub, akey: a?.akey, nick, name: wizName(), dest, en: wizEn(), region: g.region || '', center: g.center || '',
         start: wiz.start, days: wizDays(), ...(wiz.legs.length > 1 ? { cities: cityPayload(wiz) } : {}) }, 60000);
       setNick(nick);
       rememberTrip(r.trip, 'edit', r.trip.view_key, r.trip.code); setTripOwner(r.trip.id, r.owner);
       try { sessionStorage.setItem('trip-created', r.trip.code); } catch {}
       location.href = tripUrl(r.trip.id, r.trip.view_key);   // 換到新旅程（整頁重新載入）
     } catch (e) {
+      if (e.code === 'bad_account' || e.code === 'need_login') { try { localStorage.removeItem(ACCT_KEY); } catch {} closeSheet(); setTimeout(() => openLogin({ then: () => setTimeout(openCreateAuth, 250) }), 250); return; }   // 登入失效：重新登入後接著建立
       err(e.code === 'network' ? '連不上雲端，請檢查網路' : e.message);
       $('crGo').disabled = false; $('crGo').textContent = '建立旅程';
     }
