@@ -2338,9 +2338,9 @@ function renderDayHome(page) {
   if (dayHomeEl.hidden) { dayHomeEl.innerHTML = ''; return; }
   if (off) { dayHomeEl.innerHTML = `<i class="ti ti-plus"></i> 從 ${esc(shortName(h.name))} 出發`; return; }   // 編輯模式：拿掉的起點留一個虛線框，點了加回來
   const out = !(h.nights || []).includes(dayInfo(page).date), night = tonightStay(page), next = night && night !== h ? night : null;   // 今晚不住這間＝今天退房
-  dayHomeEl.innerHTML = `<div class="t">${homeIc}${esc(set || `從 ${shortName(h.name)} 出發`)}</div><div class="bcs"><span class="bc"><i class="ti ti-bed"></i>${esc(shortName(h.name))}</span>`
-    + (out ? `<span class="bc"><i class="ti ti-clock"></i>${h.cout ? `${h.cout} 前退房` : '今天退房'}</span>` : '')
-    + (next ? `<span class="bc"><i class="ti ti-home"></i>今晚入住 ${esc(shortName(next.name))}${next.cin ? `（${next.cin} 後）` : ''}</span>` : '') + '</div>';
+  const tags = (out ? `<span class="bc"><i class="ti ti-clock"></i>${h.cout ? `${h.cout} 前退房` : '今天退房'}</span>` : '')   // 住處名稱標題已經有了，不另外放標籤；只有退房、換住處那天才有標籤
+    + (next ? `<span class="bc"><i class="ti ti-home"></i>今晚入住 ${esc(shortName(next.name))}${next.cin ? `（${next.cin} 後）` : ''}</span>` : '');
+  dayHomeEl.innerHTML = `<div class="t">${homeIc}${esc(set || `從 ${shortName(h.name)} 出發`)}</div>${tags ? `<div class="bcs">${tags}</div>` : ''}`;
 }
 // 點起點：改標題、拿掉（不是從住處出發的日子）、看住處資訊；拿掉的（編輯模式的虛線框）點了直接加回來
 function setDayHome(page, v, msg) {
