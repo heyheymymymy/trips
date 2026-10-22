@@ -1067,7 +1067,7 @@ a.am-item{text-decoration:none;box-sizing:border-box}
 .g-note a{white-space:nowrap}
 .sheet.center .sh-head > div{padding-left:40px}   /* 右邊有關閉鈕，左邊空一樣寬，標題才會在正中間 */
 .line-out{display:flex;flex-direction:column;align-items:center;padding:8px 0 4px}
-.line-out .btn.primary{flex:none;height:48px;display:flex;align-items:center;justify-content:center;gap:6px;width:100%;max-width:280px;text-decoration:none;box-sizing:border-box}
+.line-out .btn.primary{flex:none;height:48px;background:#2F2C29;color:#fff;font-size:16px;display:flex;align-items:center;justify-content:center;gap:6px;width:100%;max-width:280px;text-decoration:none;box-sizing:border-box}
 .g-skip{display:block;margin:10px auto 0;padding:6px 4px;border:0;background:none;font:inherit;font-size:13px;color:var(--text2);text-decoration:underline;text-underline-offset:3px;cursor:pointer}
 .trips-carry button{display:inline-flex;align-items:center;gap:6px;height:38px;padding:0 14px;border:1px solid var(--border);border-radius:999px;background:#fff;font:inherit;font-size:14px;color:var(--text);cursor:pointer}
 .trips-carry small{display:block;margin:8px auto 0;max-width:280px;font-size:12px;line-height:1.5;color:var(--muted)}
@@ -5208,8 +5208,8 @@ tripsEl.addEventListener('click', e => {
 // 網址加 openExternalBrowser=1，LINE 會直接用預設瀏覽器打開；不另外寫說明，只給一顆按鈕
 function openLineOut() {
   const q = new URLSearchParams(location.search); q.delete('t'); q.delete('k'); q.set('openExternalBrowser', '1');
-  const url = location.pathname + '?' + q + '#new', ios = /iPhone|iPad|iPod/i.test(navigator.userAgent);
-  openSheet(`<div class="line-out"><a class="btn primary" id="lineGo" href="${esc(url)}"><i class="ti ti-${ios ? 'brand-safari' : 'world'}"></i>${ios ? '用 Safari 開啟' : '用瀏覽器開啟'}</a></div>`, null, true);
+  const url = location.pathname + '?' + q + '#new';
+  openSheet(`<div class="line-out"><a class="btn primary" id="lineGo" href="${esc(url)}"><i class="ti ti-browser"></i>用預設瀏覽器開啟</a></div>`, null, true);
   sheet.classList.add('center');
 }
 document.getElementById('tripNew').addEventListener('click', () => {
