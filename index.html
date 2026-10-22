@@ -403,7 +403,15 @@ html.sheet-lock body{position:fixed;left:0;right:0;bottom:0;overflow:hidden}
 @media (prefers-reduced-motion:reduce){.edit-btn,.map-btn,.undo-btn{transition:none}}
 .map-view{position:relative;height:calc(100dvh - var(--hd, 160px));min-height:320px;background:#F3EFE8}
 .map-view .gmap{position:absolute;inset:0}
-.map-pick{display:none}   /* 電腦版「我的旅程」才出現 */
+html.on-map .day-home{display:none}
+html.on-map .map-strip{position:fixed}   /* 地點列改成跟右下角按鈕一樣用 fixed 定位：iPhone Safari 的地圖高度（100dvh）會延伸到浮動網址列底下，跟著地圖底部算會被蓋住 */   /* 手機地圖模式：時間線最上面的起點卡片跟著時間線收起來（10/22 原本留在地圖上面） */
+.map-pick{display:none}
+.day-nav{position:absolute;left:50%;bottom:28px;z-index:3;transform:translateX(-50%);display:flex;align-items:center;gap:4px;height:44px;padding:0 4px;border-radius:999px;background:#fff;box-shadow:0 2px 12px rgba(60,30,10,.16),0 0 0 .5px rgba(60,30,10,.06)}
+.day-nav[hidden]{display:none}
+.dn-b{width:36px;height:36px;border:0;border-radius:50%;background:none;color:var(--accent-fg);font-size:20px;display:flex;align-items:center;justify-content:center;cursor:pointer}
+.dn-b:hover:not(:disabled){background:var(--fill)}
+.dn-b:disabled{color:var(--line);cursor:default}
+.dn-l{min-width:96px;padding:0 4px;font-size:14px;font-weight:600;text-align:center;white-space:nowrap}   /* 電腦版「我的旅程」才出現 */
 /* 電腦版：左邊 440px 是原本的手機畫面（頁首、天數、時間線），右邊整塊是地圖，一直開著 */
 @media (min-width:1024px){
   .desk-map .app{max-width:440px;margin:0 0 0 72px;border-right:1px solid var(--line)}
@@ -476,18 +484,50 @@ html.sheet-lock body{position:fixed;left:0;right:0;bottom:0;overflow:hidden}
   .wk-head{display:flex;align-items:center;gap:14px;padding:12px 16px;border-bottom:1px solid var(--line)}
   .wk-head b{font-size:16px}.wk-head span{font-size:12px;color:var(--muted)}
   .wk-back{display:flex;align-items:center;gap:6px;height:36px;padding:0 14px;border:0;border-radius:999px;background:var(--fill);font:inherit;font-size:13px;font-weight:600;color:var(--text);cursor:pointer}
+  .wk-back.at{position:fixed;z-index:47;justify-content:center;padding:0;background:#fff;box-shadow:0 2px 12px rgba(60,30,10,.16)}
+  .wk-back.at i{font-size:17px;color:var(--accent-fg)}
+  .wk-on .wk-head{padding-right:180px}
+  .wk-dh{cursor:pointer}
+  /* 多天並排裡點卡片：資訊浮在左邊（從左邊滑進來，跟單日的側欄同一個方向） */
+  html.wk-on .sheet:not(.dlg){left:24px;right:auto;top:72px;bottom:auto;max-height:calc(100vh - 96px);width:400px;border-radius:16px;box-shadow:0 12px 40px rgba(40,25,10,.22)}
   .wk-scroll{flex:1;overflow:auto}
+  /* 資訊小卡：像 Google 日曆的活動小卡，浮在點的卡片旁邊 */
+  .wk-pop{position:fixed;z-index:48;width:340px;max-height:calc(100vh - 16px);overflow:auto;padding:10px 16px 16px;border-radius:20px;background:#fff;box-shadow:0 12px 40px rgba(40,25,10,.22),0 0 0 .5px rgba(40,25,10,.08);font-size:14px;color:var(--text);animation:wpIn .14s ease}
+  .wk-pop[hidden]{display:none}
+  @keyframes wpIn{from{opacity:0;transform:scale(.97)}to{opacity:1;transform:none}}
+  .wp-acts{display:flex;justify-content:flex-end;gap:2px;margin-right:-8px}
+  .wp-photo{height:150px;margin:-10px -16px 6px;border-radius:20px 20px 0 0;overflow:hidden;background:var(--fill)}
+  .wp-photo img{width:100%;height:100%;object-fit:cover;display:block}
+  .wk-pop.has-photo .wp-acts{position:absolute;top:10px;right:14px;margin:0;gap:6px}   /* 有照片：按鈕浮在照片右上角 */
+  .wk-pop.has-photo .wp-b{background:rgba(255,255,255,.92);box-shadow:0 1px 4px rgba(0,0,0,.15)}
+  .wk-pop.has-photo .wp-b:hover{background:#fff}
+  .wk-pop.has-photo .wp-h{margin-top:12px}
+  .wp-pts{margin:6px 0 2px;padding:8px 12px 8px 30px;border-radius:12px;background:var(--fill);font-size:13px;line-height:1.6;color:var(--text)}
+  .wp-pts li{padding:1px 0}
+  .wp-b{width:34px;height:34px;border:0;border-radius:50%;background:none;color:var(--text2);display:flex;align-items:center;justify-content:center;font-size:18px;cursor:pointer;text-decoration:none}
+  .wp-b:hover{background:var(--fill)}
+  .wp-h{display:flex;gap:12px;align-items:flex-start;margin:2px 0 10px}
+  .wp-dot{flex:none;width:14px;height:14px;margin-top:5px;border-radius:4px;background:var(--c-bd) !important;border:0 !important}
+  .wp-t{font-size:18px;font-weight:600;line-height:1.35}
+  .wp-sub{margin-top:2px;font-size:13px;color:var(--text2)}
+  .wp-row{display:flex;gap:12px;align-items:flex-start;padding:5px 0;line-height:1.5}
+  .wp-row > i{flex:none;width:14px;font-size:16px;margin-top:2px;color:var(--text2);text-align:center}
+  .wp-row small{display:block;font-size:12px;color:var(--text2)}
+  .wk-col .layer .pop-on{box-shadow:0 0 0 2px var(--accent-fg)}
   .wk-grid{display:flex;min-width:max-content}
-  .wk-axis{position:sticky;left:0;z-index:3;flex:none;width:52px;background:var(--page)}
+  .wk-axis{position:sticky;left:0;z-index:5;flex:none;width:52px;background:var(--page)}
   .wk-axis .hr{width:44px}
   .wk-col{flex:none;width:250px;border-left:1px solid var(--line)}
   .wk-col.on{background:#FBF6F1}
-  .wk-dh{position:sticky;top:0;z-index:2;height:52px;padding:8px 10px;box-sizing:border-box;background:inherit;background-color:var(--page);border-bottom:1px solid var(--line)}
+  .wk-dh{position:sticky;top:0;z-index:4;height:52px;padding:8px 10px;box-sizing:border-box;background:inherit;background-color:var(--page);border-bottom:1px solid var(--line)}
   .wk-dh b{display:block;font-size:14px;color:var(--accent-fg)}.wk-dh small{display:block;font-size:11px;color:var(--text2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-  .wk-body{position:relative;height:var(--wk-h);background:repeating-linear-gradient(to bottom,var(--line) 0 1px,transparent 1px var(--wk-hr))}
+  .wk-body{position:relative;isolation:isolate;height:var(--wk-h);background:repeating-linear-gradient(to bottom,var(--line) 0 1px,transparent 1px var(--wk-hr))}
   .wk-axis .wk-body{background:none}
+  /* 卡片裡的東西（航班的「預計 4 小時」、交通泡泡…）各自有 z-index：每一欄的內容自己一層（isolation），捲上去時才不會穿過最上面的「第 N 天」；刻度那欄蓋在最上面（左右捲時日期標題從它底下過） */
   .wk-col .layer .blk,.wk-col .layer .grp{left:4px;right:4px;cursor:grab}
   .wk-col .layer .nav,.wk-col .layer .car,.wk-col .layer .car-line{display:none}
+  .wk-col .layer .blk.has-nav{padding-right:10px}   /* 多天並排不放導航鈕：右邊不用留位置，下面的標籤才不會被切掉 */
+  .wk-col .layer .blk .bcs{flex-wrap:wrap;row-gap:4px}   /* 欄位比較窄：標籤放不下就換行，不要切掉一半 */
   .ctx-menu{position:fixed;z-index:80;min-width:200px;padding:6px;border-radius:12px;background:#fff;box-shadow:0 8px 28px rgba(0,0,0,.16),0 0 0 1px rgba(0,0,0,.05);font-size:14px}
   .ctx-t{padding:6px 10px 8px;font-size:12px;color:var(--text2);border-bottom:1px solid var(--line);margin-bottom:4px;max-width:240px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
   .ctx-menu button,.ctx-menu summary{display:flex;align-items:center;gap:8px;width:100%;padding:8px 10px;border:0;border-radius:8px;background:none;font:inherit;text-align:left;color:var(--text);cursor:pointer;list-style:none}
@@ -870,6 +910,11 @@ a.car.walk-go.late{color:#B4412F}
 .trip-cover{position:relative;height:132px;background:var(--accent-bg);display:flex;align-items:center;justify-content:center}
 .trip-cover img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
 .trip-cover .en{font-family:"Isometra",serif;font-size:34px;color:var(--accent-fg)}
+.trip-whose{position:absolute;top:10px;left:10px;display:inline-flex;align-items:center;gap:3px;padding:3px 9px 3px 7px;border-radius:999px;font-size:12px;font-weight:600;background:rgba(255,255,255,.92);color:var(--text2)}
+.trip-whose i{font-size:13px}
+.trip-whose.own{background:var(--accent-fg);color:#fff}   /* 自己建立的：實心陶土色，一眼分得出來（不能叫 .mine：筆記摘要的 .mine 有上邊距，會把標籤往下推） */
+.trip-card.past .trip-whose{top:8px;left:8px;padding:2px 8px 2px 6px;font-size:11px;background:#fff}
+.trip-card.past .trip-whose.own{background:var(--muted);color:#fff}
 .trip-badge{position:absolute;top:10px;right:10px;padding:3px 9px;border-radius:999px;background:rgba(255,255,255,.92);color:var(--accent-fg);font-size:12px;font-weight:600}
 .trip-body{display:block;padding:12px 16px 14px}
 .trip-name{font-size:16px;font-weight:600;line-height:1.35}
@@ -1815,7 +1860,7 @@ input.sw:focus-visible{outline:2px solid var(--accent-bg);outline-offset:2px}
   <div class="cand-page" id="candPage" hidden></div>
   <div class="trips-page" id="tripsPage" hidden></div>
   <div class="wiz" id="wiz" hidden></div>
-  <div class="map-view" id="mapView" hidden><div class="gmap" id="gmap"></div><div class="map-msg" id="mapMsg"></div><div class="map-pick"><i class="ti ti-layout-grid"></i>選擇你的旅程</div><button type="button" class="map-cand" id="mapCand" aria-pressed="false" hidden><svg aria-hidden="true" class="bm" width="11" height="17" viewBox="0 0 11 17" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M0.973613 16.5425C0.671604 16.5425 0.432514 16.4443 0.256342 16.248C0.0852041 16.0568 -0.000365019 15.7925 -0.000365019 15.4553V2.28768C-0.000365019 1.5377 0.190907 0.968914 0.573452 0.581336C0.955996 0.193758 1.51975 -3.09944e-05 2.2647 -3.09944e-05H8.26712C9.01208 -3.09944e-05 9.57583 0.193758 9.95837 0.581336C10.3409 0.968914 10.5322 1.5377 10.5322 2.28768V15.4553C10.5322 15.7925 10.4441 16.0568 10.2679 16.248C10.0968 16.4443 9.86274 16.5425 9.56576 16.5425C9.35939 16.5425 9.17063 16.4796 8.99949 16.3537C8.82836 16.2329 8.5792 16.014 8.25202 15.6969L5.33009 12.8127C5.28982 12.7674 5.24704 12.7674 5.20173 12.8127L2.28735 15.6969C1.96017 16.014 1.7085 16.2329 1.53233 16.3537C1.36119 16.4796 1.17495 16.5425 0.973613 16.5425Z" fill="currentColor"/></svg><span>顯示備選</span><i class="mc-sw"></i></button><div class="ds-bar" id="dsBar" hidden>
+  <div class="map-view" id="mapView" hidden><div class="gmap" id="gmap"></div><div class="day-nav" id="dayNav" hidden><button type="button" class="dn-b" data-d="-1" aria-label="前一天"><i class="ti ti-chevron-left"></i></button><span class="dn-l" id="dayNavL"></span><button type="button" class="dn-b" data-d="1" aria-label="後一天"><i class="ti ti-chevron-right"></i></button></div><div class="map-msg" id="mapMsg"></div><div class="map-pick"><i class="ti ti-layout-grid"></i>選擇你的旅程</div><button type="button" class="map-cand" id="mapCand" aria-pressed="false" hidden><svg aria-hidden="true" class="bm" width="11" height="17" viewBox="0 0 11 17" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M0.973613 16.5425C0.671604 16.5425 0.432514 16.4443 0.256342 16.248C0.0852041 16.0568 -0.000365019 15.7925 -0.000365019 15.4553V2.28768C-0.000365019 1.5377 0.190907 0.968914 0.573452 0.581336C0.955996 0.193758 1.51975 -3.09944e-05 2.2647 -3.09944e-05H8.26712C9.01208 -3.09944e-05 9.57583 0.193758 9.95837 0.581336C10.3409 0.968914 10.5322 1.5377 10.5322 2.28768V15.4553C10.5322 15.7925 10.4441 16.0568 10.2679 16.248C10.0968 16.4443 9.86274 16.5425 9.56576 16.5425C9.35939 16.5425 9.17063 16.4796 8.99949 16.3537C8.82836 16.2329 8.5792 16.014 8.25202 15.6969L5.33009 12.8127C5.28982 12.7674 5.24704 12.7674 5.20173 12.8127L2.28735 15.6969C1.96017 16.014 1.7085 16.2329 1.53233 16.3537C1.36119 16.4796 1.17495 16.5425 0.973613 16.5425Z" fill="currentColor"/></svg><span>顯示備選</span><i class="mc-sw"></i></button><div class="ds-bar" id="dsBar" hidden>
     <div class="ps-field ds-field"><i class="ti ti-search"></i><input id="dsQ" type="text" placeholder="搜尋店家、景點，或貼上 Google 地圖網址" autocomplete="off" enterkeyhint="search"><button type="button" class="ds-x" id="dsX" aria-label="清掉" hidden><i class="ti ti-x"></i></button></div>
     </div>
   <div class="ds-side ds-chips" id="dsSide" hidden><button type="button" data-ds="home" draggable="true"><i class="ti ti-bed"></i>回飯店</button><button type="button" data-ds="ride" draggable="true"><i class="ti ti-train"></i>交通</button><button type="button" data-ds="manual" draggable="true"><i class="ti ti-pencil"></i>手動輸入</button><button type="button" data-ds="cand"><i class="ti ti-bookmark"></i>從備選</button></div>
@@ -3213,6 +3258,11 @@ function renderPage(page) {
   const onMap = mapOn(page), side = deskMap(page);
   mapView.hidden = !(onMap || side);
   document.documentElement.classList.toggle('desk-map', side);
+  // 電腦版地圖下方正中間：前一天／後一天（10/22）
+  { const nav = document.getElementById('dayNav'), on = side && isDay(page) && DAY_KEYS.length > 1; nav.hidden = !on;
+    if (on) { const i = DAY_KEYS.indexOf(page), d = dayInfo(page);
+      document.getElementById('dayNavL').textContent = `第 ${dayNum(page)} 天${d.date ? '．' + d.date : ''}`;
+      nav.querySelector('[data-d="-1"]').disabled = i <= 0; nav.querySelector('[data-d="1"]').disabled = i >= DAY_KEYS.length - 1; } }
   document.documentElement.classList.toggle('desk-cand', side && page === 'cand');
   document.documentElement.classList.toggle('desk-trips', side && page === 'trips');
   if (side && page === 'trips' && sheet.classList.contains('on')) closeSheet();   // 電腦：換到旅程清單，旁邊的面板跟著收
@@ -5376,10 +5426,12 @@ function renderTrips() {
     if (!cover) { const auto = t.id === TRIP_ID ? Object.values(NOTES).map(n => n.photo).find(Boolean) : ''; if (auto && auto !== autoCovers[t.id]) { autoCovers[t.id] = auto; try { localStorage.setItem(AUTO_COVER_KEY, JSON.stringify(autoCovers)); } catch {} } cover = auto || autoCovers[t.id] || ''; }
     return { ...t, cover, ...tripState(t.start, t.days) };
   });
-  const card = t => `<button type="button" class="trip-card${t.state === 'past' ? ' past' : ''}" data-trip="${esc(t.id)}">
-    <span class="trip-cover">${t.cover && t.state !== 'past' ? photoImg(t.cover) : `<span class="en">${esc(t.en)}</span>`}${t.badge ? `<span class="trip-badge">${t.badge}</span>` : ''}</span>
+  // 左上角標出這趟跟我的關係：自己建立的（有擁有者鑰匙）、別人的可以編輯（有編輯碼）、別人的只能看（10/22）
+  const whose = t => t.owner ? ['own', 'user', '我建立的'] : t.role === 'edit' ? ['edit', 'users', '一起編輯'] : ['view', 'eye', '只能看'];
+  const card = t => { const [wk, wi, wn] = whose(t); return `<button type="button" class="trip-card${t.state === 'past' ? ' past' : ''}" data-trip="${esc(t.id)}">
+    <span class="trip-cover">${t.cover && t.state !== 'past' ? photoImg(t.cover) : `<span class="en">${esc(t.en)}</span>`}${t.badge ? `<span class="trip-badge">${t.badge}</span>` : ''}<span class="trip-whose ${wk}"><i class="ti ti-${wi}"></i>${wn}</span></span>
     <span class="trip-body"><span class="trip-name" style="display:block">${esc(t.name)}</span>
-      <span class="trip-meta" style="display:block">${t.range}．${t.days} 天 ${t.days - 1} 夜${t.members?.length ? `．${t.members.length} 位旅伴` : ''}</span></span></button>`;
+      <span class="trip-meta" style="display:block">${t.range}．${t.days} 天 ${t.days - 1} 夜${t.members?.length ? `．${t.members.length} 位旅伴` : ''}</span></span></button>`; };
   const groups = [['live', '進行中'], ['soon', '即將出發'], ['past', '已結束']].map(([k, label]) => {
     const g = list.filter(t => t.state === k).sort((a, b) => k === 'past' ? b.start.localeCompare(a.start) : a.start.localeCompare(b.start));
     return g.length ? `<div class="ov-sec">${label}</div>${g.map(card).join('')}` : '';
@@ -5669,6 +5721,7 @@ addEventListener('click', () => { if (TRIP_ID && history.state?.base) backGuard(
 // ---------- 地圖 ----------
 // 頁首左下角的按鈕切換「時間軸／清單」和「地圖」；每天的地圖照時間順序編號、用線連起來，備選的地圖只標類型顏色
 const mapBtn = document.getElementById('mapBtn'), mapView = document.getElementById('mapView'), mapMsg = document.getElementById('mapMsg');
+document.getElementById('dayNav').addEventListener('click', e => { const b = e.target.closest('[data-d]'); if (!b || b.disabled) return; const k = DAY_KEYS[DAY_KEYS.indexOf(current) + +b.dataset.d]; if (k) goHash(k); });
 let mapMode = false;
 try { mapMode = sessionStorage.getItem('cm-map') === '1'; } catch {}
 // 電腦（寬 1024 以上）：左邊時間線、右邊一直放大地圖，不用切換（手機照舊按地圖按鈕切換）
@@ -9505,13 +9558,18 @@ tl.addEventListener('contextmenu', e => {
 // 大家用同一個開始時間（最早的那天），刻度在最左邊。點卡片＝回到那一天看資訊；按住拖＝移到別天／別的時間（直接存，提示有復原）
 var weekOpen = false;   // var：renderPage 第一次畫的時候這段還沒跑到
 const wkEl = document.createElement('div'); wkEl.className = 'wk'; wkEl.hidden = true; document.body.appendChild(wkEl);
-document.getElementById('wkOpen').addEventListener('click', () => { weekOpen = true; renderWeek(); });
+// 「回到單日」放在「多天並排」按鈕原本的位置（同一個地方按進去、按出來）
+let wkBtnRect = null;
+document.getElementById('wkOpen').addEventListener('click', e => { wkBtnRect = e.currentTarget.getBoundingClientRect(); weekOpen = true; renderWeek(); });
+// 改了資料（存檔、復原、在資訊裡編輯）都會重畫目前這頁：多天並排開著的話一起重畫
+{ const base = renderPage; renderPage = function () { const r = base.apply(this, arguments); if (weekOpen) renderWeek(); return r; }; }
 function renderWeek() {
-  if (!weekOpen || !TRIP) { wkEl.hidden = true; document.documentElement.classList.remove('wk-on'); return; }
+  if (!weekOpen || !TRIP) { wkEl.hidden = true; document.documentElement.classList.remove('wk-on'); wkPopClose(); return; }
   computeRange(current);
   const st = Math.min(...Object.values(START_OF).filter(v => typeof v === 'number')), H = (END - st) * 60 * PX + 20, sx = wkEl.querySelector('.wk-scroll')?.scrollLeft || 0, sy = wkEl.querySelector('.wk-scroll')?.scrollTop || 0;
   const hours = Array.from({ length: END - st + 1 }, (_, i) => `<div class="hr" style="top:${i * 60 * PX - 7}px">${(st + i) % 24}:00</div>`).join('');
-  wkEl.innerHTML = `<div class="wk-head"><button type="button" class="wk-back" id="wkBack"><i class="ti ti-arrow-left"></i>回到單日</button><b>${esc(TRIP.name || '')}</b><span>按住卡片拖到別天、別的時間</span></div>
+  const r = wkBtnRect, at = r ? ` style="left:${Math.round(r.left)}px;top:${Math.round(r.top)}px;width:${Math.round(r.width)}px;height:${Math.round(r.height)}px"` : '';
+  wkEl.innerHTML = `<div class="wk-head"><button type="button" class="wk-back${r ? ' at' : ''}" id="wkBack"${at}><i class="ti ti-arrow-left"></i>回到單日</button><b>${esc(TRIP.name || '')}</b><span>按住卡片拖到別天、別的時間</span></div>
     <div class="wk-scroll"><div class="wk-grid" style="--wk-h:${H}px;--wk-hr:${60 * PX}px">
       <div class="wk-axis"><div class="wk-dh"></div><div class="wk-body">${hours}</div></div>
       ${DAY_KEYS.map(k => { const d = dayInfo(k); return `<div class="wk-col" data-day="${k}"><div class="wk-dh"><b>第 ${dayNum(k)} 天</b><small>${esc(d.date || '')}${d.zh ? `．${esc(d.zh)}` : ''}</small></div><div class="wk-body"></div></div>`; }).join('')}
@@ -9520,19 +9578,77 @@ function renderWeek() {
   wkEl.hidden = false; document.documentElement.classList.add('wk-on');
   const sc = wkEl.querySelector('.wk-scroll'); sc.scrollLeft = sx; sc.scrollTop = sy;
   wkEl.dataset.st = st;
+  if (wkPopId) openWkPop(wkPopId);   // 資料改了（拖到別天、編輯完）：小卡跟著換內容、換位置
+  sc.addEventListener('scroll', wkPopClose, { passive: true });
 }
 wkEl.addEventListener('click', e => {
   if (wkDragged) { wkDragged = false; return; }
   if (e.target.closest('#wkBack')) { weekOpen = false; renderWeek(); return; }
-  const card = e.target.closest('.wk-col [data-id]'), col = e.target.closest('.wk-col');
-  if (!col) return;
-  weekOpen = false; renderWeek(); goHash(col.dataset.day);
-  if (card) setTimeout(() => openCardInfo(card.dataset.id), 450);
+  // 點卡片：留在多天並排，卡片旁邊浮出精簡的資訊小卡（像 Google 日曆；靠左的卡片浮在右邊、靠右的浮在左邊）；點某天的標題：回到那一天；點空白：收起
+  const card = e.target.closest('.wk-col [data-id]'), head = e.target.closest('.wk-col .wk-dh');
+  if (card) { if (findItem(card.dataset.id)[1]) openWkPop(card.dataset.id); return; }
+  if (head) { wkPopClose(); weekOpen = false; renderWeek(); goHash(head.closest('.wk-col').dataset.day); return; }
+  wkPopClose();
+  if (sheet.classList.contains('on') && !sheet.classList.contains('dlg')) closeSheet();
 });
+// ---------- 多天並排的資訊小卡 ----------
+var wkPop = document.createElement('div'); wkPop.className = 'wk-pop'; wkPop.hidden = true; document.body.appendChild(wkPop);   // var：renderWeek 可能在這段跑到之前就被叫到
+var wkPopId = null;
+function wkPopClose() { if (!wkPop) return; wkPop.hidden = true; wkPopId = null; wkEl.querySelectorAll('.wk-col .pop-on').forEach(x => x.classList.remove('pop-on')); }
+function openWkPop(id) {
+  const [day, it] = findItem(id), el = wkEl.querySelector(`.wk-col [data-id="${id}"]`);
+  if (!it || !el || !isDay(day)) { wkPopClose(); return; }
+  wkPopId = id;
+  const d = dayInfo(day), ride = it.ride?.legs?.length, multi = it.group || it.alts?.length;
+  const row = (ic, html) => `<div class="wp-row"><i class="ti ti-${ic}"></i><div>${html}</div></div>`;
+  const rows = [];
+  if (ride) {
+    const legs = rideLegs(it), sts = legStops(it);
+    rows.push(row('route', legs.map((l, i) => `<b>${T(l.s)}</b> ${esc(l.t || '交通')}${legAB(sts[i]) ? `<small>${esc(legAB(sts[i]))}</small>` : ''}`).join('<br>') + `<br><b>${T(rideArr(it))}</b> 抵達`));
+  } else {
+    if (it.desc && it.desc !== PENDING) rows.push(row('align-left', esc(it.desc)));
+    if (multi) rows.push(row(it.group ? 'route' : 'arrows-split-2', esc((it.group ? it.stops : it.alts).map(x => x.short || x.name).join(it.group ? ' → ' : '／'))));
+    if (it.area) rows.push(row('map-pin', esc(it.area)));
+  }
+  if (it.alert) rows.push(row('alert-triangle', esc(it.alert)));
+  if (it.booked) rows.push(row('circle-check', ride ? '已訂票' : '已訂位'));
+  const go = !ride && !multi && (it.map || it.t) ? navHref(it.map || it.t, it.pid, it.t) : '';
+  // 照片、重點（評分、價位、營業時間…）、筆記摘要：卡片上看不到的，小卡才有東西可以看（10/22 使用者：至少加照片）
+  const hs = !ride && !multi && homeStay(it, day), info = ride ? null : multi ? NOTES[subNoteKey((it.stops || it.alts)[0])] : NOTES[it.note || it.t] || (hs && NOTES[hs.name]);
+  const photo = info?.photo || '', pts = (info?.points || []).filter(x => !(it.alert && /^🕒/.test(x) && it.alert.includes(x.replace(/^🕒\s*/, '')))).slice(0, 4);
+  if (pts.length) rows.push(`<ul class="wp-pts">${pts.map(x => `<li>${esc(x)}</li>`).join('')}</ul>`);
+  if (it.mine) rows.push(row('notes', esc(it.mine)));
+  wkPop.innerHTML = `${photo ? `<div class="wp-photo">${photoImg(photo, ' onerror="this.parentNode.remove()"', 700)}</div>` : ''}<div class="wp-acts">${go ? `<a class="wp-b" target="_blank" rel="noopener" href="${esc(go)}" aria-label="導航" title="導航"><i class="ti ti-navigation"></i></a>` : ''}
+      <button type="button" class="wp-b" data-a="edit" aria-label="編輯" title="編輯"><i class="ti ti-pencil"></i></button>
+      <button type="button" class="wp-b" data-a="full" aria-label="完整資訊" title="完整資訊"><i class="ti ti-arrows-maximize"></i></button>
+      <button type="button" class="wp-b" data-a="x" aria-label="關閉" title="關閉"><i class="ti ti-x"></i></button></div>
+    <div class="wp-h"><span class="wp-dot ${esc(it.cls || 'other')}"></span><div><div class="wp-t">${esc(ride ? `${rideEnds(it).from || '出發'} → ${rideEnds(it).to || '抵達'}` : it.t)}</div>
+      <div class="wp-sub">第 ${dayNum(day)} 天．${esc(d.date || '')}${d.wd ? `（${esc(d.wd)}）` : ''}．${T(it.s)}–${T(it.e)}</div></div></div>
+    ${rows.join('')}`;
+  wkPop.classList.toggle('has-photo', !!photo);
+  wkEl.querySelectorAll('.wk-col .pop-on').forEach(x => x.classList.remove('pop-on')); el.classList.add('pop-on');
+  wkPop.hidden = false;
+  // 位置：卡片在畫面左半邊就放在卡片右邊，右半邊就放左邊；上緣對齊卡片，超出畫面就往內推
+  const r = el.getBoundingClientRect(), W = wkPop.offsetWidth, H = wkPop.offsetHeight, gap = 10;
+  let x = r.left + r.width / 2 < innerWidth / 2 ? r.right + gap : r.left - gap - W;
+  x = Math.max(8, Math.min(x, innerWidth - W - 8));
+  const y = Math.max(8, Math.min(r.top, innerHeight - H - 8));
+  wkPop.style.left = x + 'px'; wkPop.style.top = y + 'px';
+}
+wkPop.addEventListener('click', e => {
+  const b = e.target.closest('[data-a]'); if (!b) return;
+  const id = wkPopId, it = findItem(id)[1]; if (!it) { wkPopClose(); return; }
+  const ride = it.ride?.legs?.length;
+  if (b.dataset.a === 'x') wkPopClose();
+  if (b.dataset.a === 'edit') { wkPopClose(); withAuth(() => ride ? openRideEditor(id) : openEditor(id)); }
+  if (b.dataset.a === 'full') { wkPopClose(); ride ? openRideInfo(id) : openCardInfo(id); }
+});
+document.addEventListener('keydown', e => { if (e.key === 'Escape' && !wkPop.hidden) wkPopClose(); });
 // 拖曳：按住卡片移動 → 半透明的卡片跟著滑鼠，放開的那一欄、那個時間就是新位置（15 分鐘一格）
 let wkDrag = null, wkDragged = false;
 wkEl.addEventListener('mousedown', e => {
   const card = e.target.closest('.wk-col [data-id]'); if (!card || e.button !== 0 || card.classList.contains('flight') || !getAuth()) return;
+  if (wkPopId && wkPopId !== card.dataset.id) wkPopClose();
   const r = card.getBoundingClientRect();
   wkDrag = { card, id: card.dataset.id, dx: e.clientX - r.left, dy: e.clientY - r.top, x0: e.clientX, y0: e.clientY, ghost: null };
   e.preventDefault();
@@ -9570,7 +9686,7 @@ addEventListener('mouseup', e => {
   const snap = JSON.parse(JSON.stringify(it)), sh = sp.mins - m(it.s), dur = m(it.e) - m(it.s);
   it.s = hhmm(sp.mins); it.e = hhmm(Math.min(sp.mins + dur, DAY_END)); it.stops?.forEach(z => z.s = hhmm(m(z.s) + sh));
   moveDay(it.id, from, sp.day); saveData('移動');
-  renderPage(current); renderWeek();
+  renderPage(current); renderWeek(); setTimeout(refreshInfo);
   toast(`已把「${it.t}」移到第 ${dayNum(sp.day)} 天 ${T(it.s)}`, '復原', () => { const [d2, x] = findItem(it.id); if (!x) return; Object.assign(x, snap); moveDay(x.id, d2, from); saveData('復原'); renderPage(current); renderWeek(); }, 5000);
 });
 load();
