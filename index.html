@@ -1143,6 +1143,8 @@ html.tut #mapBtn,html.tut #acctBtn,html.tut #routeFab,html.tut .sync{visibility:
 .fe-leg i{font-size:20px;color:var(--muted)}.fe-leg.on i{color:var(--accent-fg)}
 .fe-leg b{display:block;font-size:15px}.fe-leg small{display:block;font-size:12px;color:var(--text2)}
 .fe-legs-hint{font-size:12px;color:var(--muted)}
+.cand-redo{display:flex;align-items:center;gap:8px;width:100%;margin:-4px 0 12px;padding:10px 14px;border:0;border-radius:12px;background:var(--fill);font:inherit;font-size:14px;color:var(--text2);text-align:left;cursor:pointer}
+.cand-redo span{flex:1}.cand-redo b{color:var(--accent-fg);font-weight:700}
 .dbg-touch{position:fixed;left:6px;bottom:6px;z-index:9999;max-width:calc(100% - 12px);padding:6px 8px;border-radius:8px;background:rgba(0,0,0,.8);color:#7CFC7C;font:10px/1.35 ui-monospace,Menlo,monospace;white-space:pre-wrap;pointer-events:none}   /* 觸控偵錯（debug=touch） */
 .tut-ui{position:fixed;inset:0;z-index:70;pointer-events:none}
 .tut-box{position:fixed;left:12px;right:12px;top:calc(10px + env(safe-area-inset-top));max-width:456px;height:150px;display:flex;flex-direction:column;margin:0 auto;padding:16px 20px 0;border-radius:22px;background:#fff;
@@ -3229,7 +3231,10 @@ function renderCand() {
     body = TYPES.map(([k, n]) => { const g = shown.filter(c => (c.cls || 'eat') === k);
       return g.length ? `<div class="cand-grp ${k}"><span class="cp-dot"></span>${n}<b>${g.length}</b></div>` + g.map(card).join('') : ''; }).join('');
   else body = shown.map(card).join('');
+  // 有地圖連結、卻沒查到 Google 資料的（例如匯入時 Google 剛好掛掉）：可以一次重查
+  const stale = all.filter(c => !c.group && !c.alts?.length && c.map && !c.pid && !c.desc);
   candEl.innerHTML = `<button type="button" class="cand-import" id="candImport"><i class="ti ti-plus"></i>加入新地點<small>加入備選清單，隨時取用</small></button>
+    ${stale.length ? `<button type="button" class="cand-redo" id="candRedo"><i class="ti ti-refresh"></i><span>有 ${stale.length} 個地點沒查到資料</span><b>重新查詢</b></button>` : ''}
     ${all.length > 1 ? `<div class="cand-bar">
       <div class="cand-chips">${typeChips(all, candView.f, 'cand-filter')}</div>
       <span class="cand-sep" aria-hidden="true"></span>
@@ -3241,6 +3246,16 @@ function renderCand() {
   chipFade();
 }
 let candAnim = false;   // 換篩選／排列後重畫時，清單淡入
+candEl.addEventListener('click', e => {
+  if (!e.target.closest('#candRedo')) return;
+  withAuth(() => {
+    const list = (DATA.cand || []).filter(c => !c.group && !c.alts?.length && c.map && !c.pid && !c.desc);
+    if (!list.length) return;
+    list.forEach(c => { c.desc = PENDING; bgTries.delete(c.id); });   // 查詢中：背景照清單匯入的方式一個個查（用地圖連結裡的店名和座標）
+    saveData('重新查詢地點'); renderPage(current); resumeLookups();
+    toast(`重新查詢 ${list.length} 個地點，查好會自動填上`);
+  });
+});
 function chipFade() {
   const c = candEl.querySelector('.cand-chips'); if (!c) return;
   const max = c.scrollWidth - c.clientWidth;
@@ -8293,7 +8308,7 @@ const parseLinks = text => {
 };
 // 背景查詢：描述欄位是 PENDING 的卡片就是還沒查完的（存在雲端，所以關掉網頁、換手機打開都會接著查）
 // 查好只補還沒填的欄位，查詢途中自己改過的不會被蓋掉
-const bgBusy = new Set(), bgQueue = [];
+const bgBusy = new Set(), bgQueue = [], bgTries = new Map();
 let bgRunning = 0;
 function resumeLookups() {
   if (!loaded || !getAuth()) return;
@@ -8305,7 +8320,12 @@ async function bgLookup({ id, link }) {
   let p = null, fail = '';
   let list = null;
   try { const r = await api({ ...getAuth(), action: 'lookupPlace', link, day: findItem(id)[0] }, 90000); p = r.place; list = r.list; }
-  catch (err) { if (err.code === 'network') { setTimeout(() => bgBusy.delete(id), 60000); return; } fail = err.message; }   // 沒網路：一分鐘後再試
+  catch (err) {
+    // 沒網路、Google 暫時查不到（busy）：一分鐘後再查；Google 的最多再試 3 次
+    const n = (bgTries.get(id) || 0) + 1; bgTries.set(id, n);
+    if (err.code === 'network' || (err.code === 'busy' && n <= 3)) { setTimeout(() => { bgBusy.delete(id); resumeLookups(); }, 60000); return; }
+    fail = err.message;
+  }
   let [day, it] = findItem(id);
   if (!it || it.desc !== PENDING) { bgBusy.delete(id); return; }
   if (list) {
