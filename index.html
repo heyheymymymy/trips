@@ -67,13 +67,11 @@ header{position:sticky;top:0;z-index:10;background:var(--page);padding:calc(12px
 .day-sub{font-size:13px;color:var(--text2);margin-top:4px;text-align:center}
 .tl{position:relative;margin:14px 16px 140px 0;transition:height .25s ease;touch-action:pan-y pinch-zoom}   /* 下面留空：右下角的地圖、手不會一直蓋住最後一張卡片 */
 /* 卡片層：時間線固定不動，只有這一層左右滑 */
-.day-home{display:flex;align-items:center;gap:10px;width:calc(100% - 72px);margin:14px 16px 0 56px;padding:8px 10px;border:0;border-radius:10px;background:var(--fill);font:inherit;color:var(--text);text-align:left;cursor:pointer}   /* 每天最上面：從住處出發（跟卡片同一欄） */
+.day-home{display:block;width:calc(100% - 72px);margin:14px 16px 0 56px;padding:6px 10px 5px;border:0;border-radius:8px;font:inherit;text-align:left;cursor:pointer}   /* 每天最上面：從住處出發（跟「回住處休息」卡片一樣的樣子，跟卡片同一欄） */
 .day-home[hidden]{display:none}
-.day-home > i:first-child{flex:none;width:28px;height:28px;border-radius:50%;background:var(--other-bg);color:var(--other-fg);font-size:16px;display:flex;align-items:center;justify-content:center}
-.day-home > span{flex:1;min-width:0}
-.day-home b{display:block;font-size:14px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.day-home small{display:block;margin-top:1px;font-size:12px;color:var(--text2)}
-.day-home > i:last-child{color:var(--muted);font-size:16px}
+.day-home .t{font-size:15px;font-weight:600;line-height:22px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.day-home .bcs{display:flex;flex-wrap:wrap;gap:4px 7px;align-items:center;margin-top:2px}
+.day-home.off{background:none;border:1.5px dashed var(--line);color:var(--muted);font-size:13px;font-weight:600;text-align:center}   /* 拿掉了：編輯模式才出現，點了加回來 */
 .day-home:not([hidden]) + .tl{margin-top:10px}
 .st-times{display:flex;gap:10px;margin-top:10px}
 .st-times label{flex:1;display:flex;flex-direction:column;gap:4px;font-size:12px;color:var(--text2)}
@@ -2256,7 +2254,7 @@ function applyServer(r) {
   DATA = emptyData(); BASE = { items: {}, days: {} };
   for (const k of DAY_KEYS) {
     const d = r.days[k] || {};
-    DATA.days[k] = { ...d }; BASE.days[k] = { en: d.en, zh: d.zh };
+    DATA.days[k] = { ...d }; BASE.days[k] = { en: d.en, zh: d.zh, home: d.home || '' };
   }
   for (const it of r.items) {
     if (!DATA[it.day]) continue;
@@ -2329,18 +2327,55 @@ const tonightStay = day => isDay(day) ? stayOn(dayInfo(day).date) : null;
 const homeFor = day => tonightStay(day) || morningStay(day);
 const morningStay = day => isDay(day) && dayNum(day) > 1 ? stayOn(dayInfo('d' + (dayNum(day) - 1)).date) : null;
 // 每天第一個行程的「上一站」：前一晚的住處（有座標才算），用來算從住處出發的交通時間
-const homePrev = day => { const h = morningStay(day); return h?.loc ? { id: 'home', t: h.name, loc: h.loc, home: true } : null; };
+const homePrev = day => { const h = morningStay(day); return h?.loc && DATA.days?.[day]?.home !== '-' ? { id: 'home', t: h.name, loc: h.loc, home: true } : null; };   // 這天拿掉起點（不從住處出發）：第一段交通也不從住處算
 // 每天最上面一條：從前一晚的住處出發（第 1 天前一晚沒住就不放）；退房那天寫「幾點前退房」，換住處那天接著寫今晚入住哪裡
 var dayHomeEl = document.getElementById('dayHome');   // var：第一次 renderPage 比這行早跑
 function renderDayHome(page) {
   if (!dayHomeEl) return;
-  const h = isDay(page) ? morningStay(page) : null;
-  dayHomeEl.hidden = !h; if (!h) { dayHomeEl.innerHTML = ''; return; }
+  const h = isDay(page) ? morningStay(page) : null, set = DATA.days?.[page]?.home || '';
+  const off = set === '-';
+  dayHomeEl.hidden = !h || (off && !editing); dayHomeEl.className = 'day-home ' + (off ? 'off' : 'other');
+  if (dayHomeEl.hidden) { dayHomeEl.innerHTML = ''; return; }
+  if (off) { dayHomeEl.innerHTML = `<i class="ti ti-plus"></i> 從 ${esc(shortName(h.name))} 出發`; return; }   // 編輯模式：拿掉的起點留一個虛線框，點了加回來
   const out = !(h.nights || []).includes(dayInfo(page).date), night = tonightStay(page), next = night && night !== h ? night : null;   // 今晚不住這間＝今天退房
-  dayHomeEl.dataset.stay = tripStays().indexOf(h);
-  dayHomeEl.innerHTML = `<i class="ti ti-bed"></i><span><b>從 ${esc(shortName(h.name))} 出發</b>${out ? `<small>${h.cout ? `${h.cout} 前退房` : '今天退房'}${next ? `・今晚入住 ${esc(shortName(next.name))}${next.cin ? `（${next.cin} 後）` : ''}` : ''}</small>` : ''}</span><i class="ti ti-chevron-right"></i>`;
+  dayHomeEl.innerHTML = `<div class="t">${homeIc}${esc(set || `從 ${shortName(h.name)} 出發`)}</div><div class="bcs"><span class="bc"><i class="ti ti-bed"></i>${esc(shortName(h.name))}</span>`
+    + (out ? `<span class="bc"><i class="ti ti-clock"></i>${h.cout ? `${h.cout} 前退房` : '今天退房'}</span>` : '')
+    + (next ? `<span class="bc"><i class="ti ti-home"></i>今晚入住 ${esc(shortName(next.name))}${next.cin ? `（${next.cin} 後）` : ''}</span>` : '') + '</div>';
 }
-document.getElementById('dayHome').addEventListener('click', () => openStayInfo(+dayHomeEl.dataset.stay));
+// 點起點：改標題、拿掉（不是從住處出發的日子）、看住處資訊；拿掉的（編輯模式的虛線框）點了直接加回來
+function setDayHome(page, v, msg) {
+  withAuth(() => {
+    const old = DATA.days[page]?.home || '';
+    DATA.days[page] = { ...(DATA.days[page] || {}), home: v };
+    saveData('改起點'); renderPage(current);
+    if (v === '-') toast(msg, '復原', () => setDayHome(page, old, '已復原')); else toast(msg);
+  });
+}
+function openDayHome() {
+  const page = current, h = morningStay(page); if (!h) return;
+  const set = DATA.days[page]?.home || '', def = `從 ${shortName(h.name)} 出發`;
+  if (set === '-') { setDayHome(page, '', '已加回起點'); return; }
+  openSheet(`
+    <div class="sh-head"><div style="flex:1;min-width:0"><div class="sh-title" id="shTitle">第 ${dayNum(page)} 天的起點</div>
+      <div class="sh-sub">前一晚住 ${esc(h.name)}</div></div>
+      <button class="sh-close" aria-label="關閉"><i class="ti ti-x"></i></button></div>
+    <label class="ed-field"><span class="ed-lab">標題 <span class="ed-lab-hint">空白＝${esc(def)}</span></span>
+      <input id="dhT" type="text" value="${esc(set)}" placeholder="${esc(def)}" maxlength="30" autocomplete="off" enterkeyhint="done"></label>
+    <button type="button" class="st-own" id="dhInfo"><i class="ti ti-bed"></i> 看住處資訊</button>
+    <div class="ed-actions">
+      <button type="button" class="btn ghost ds-del" id="dhDel"><i class="ti ti-trash"></i>拿掉</button>
+      <button type="button" class="btn ghost ed-cancel">取消</button>
+      <button type="button" class="btn primary" id="dhGo">儲存</button>
+    </div>`, '.sh-close', true);
+  sheet.classList.add('soft');
+  const $ = id => sheet.querySelector('#' + id);
+  const go = () => { const v = $('dhT').value.replace(/\s+/g, ' ').trim(); closeSheet(); if (v === set || (v === def && !set)) return; setDayHome(page, v === def ? '' : v, '起點已更新'); };
+  $('dhGo').addEventListener('click', go);
+  $('dhT').addEventListener('keydown', e => { if (e.key === 'Enter' && !e.isComposing) go(); });
+  $('dhDel').addEventListener('click', () => { closeSheet(); setDayHome(page, '-', '這天不從住處出發了'); });
+  $('dhInfo').addEventListener('click', () => { closeSheet(); setTimeout(() => openStayInfo(tripStays().indexOf(h)), 250); });
+}
+document.getElementById('dayHome').addEventListener('click', openDayHome);
 // 「回住處休息」卡片對應的住處：用加入行程的「回飯店」建立的（home）；舊的卡片沒有記號，名稱是「回住處休息」而且地點就是某一間住處也算。
 // 照片、地址都從住處拿（住處換了照片、地址，卡片跟著變）
 function homeStay(it, day) {
@@ -2402,7 +2437,7 @@ function diffOps(ref) {
     if (!b || b.day !== k || canon(b) !== canon(it)) changed.push(outItem(it, k));
   }
   const deleted = Object.keys(ref.items).filter(id => !seen.has(id));
-  const days = DAY_KEYS.filter(k => { const a = DATA.days[k] || {}, b = ref.days[k] || {}; return a.en !== b.en || a.zh !== b.zh; });
+  const days = DAY_KEYS.filter(k => { const a = DATA.days[k] || {}, b = ref.days[k] || {}; return a.en !== b.en || a.zh !== b.zh || (a.home || '') !== (b.home || ''); });
   return { changed, deleted, days, count: changed.length + deleted.length + days.length };
 }
 const pendingOps = () => { const o = diffOps(BASE), n = Object.keys(noteQueue).length; o.notes = n; o.count += n; return o; };   // 還沒存到雲端的
@@ -2605,11 +2640,11 @@ async function sync() {
     // 所有修改合成一個請求送出，只要等一次
     const base = {};
     ops.changed.forEach(it => { if (BASE.items[it.id]) base[it.id] = BASE.items[it.id].updated_at; });
-    const days = ops.days.map(k => ({ day: k, en: DATA.days[k].en, zh: DATA.days[k].zh }));
+    const days = ops.days.map(k => ({ day: k, en: DATA.days[k].en, zh: DATA.days[k].zh, home: DATA.days[k].home || '' }));
     const r = await api({ ...auth, action: 'commit', items: ops.changed, base, deleted: ops.deleted, days, label: label || undefined });
     r.items.forEach(x => BASE.items[x.id] = x);
     r.deleted.forEach(id => delete BASE.items[id]);
-    r.days.forEach(d => BASE.days[d.day] = { en: d.en, zh: d.zh });
+    r.days.forEach(d => BASE.days[d.day] = { en: d.en, zh: d.zh, home: d.home || '' });
     }
     syncing = false; cache();
     if (syncAgain || pendingOps().count) { syncAgain = false; sync(); }
