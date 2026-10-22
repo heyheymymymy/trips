@@ -13,7 +13,7 @@
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.19.0/dist/tabler-icons.min.css">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Playwrite+DK+Loopet&family=Instrument+Serif:ital@0;1&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Isometra&family=Instrument+Serif:ital@0;1&display=swap">
 <style>
 :root{
   color-scheme:light;
@@ -64,7 +64,7 @@ header{position:sticky;top:0;z-index:10;background:var(--page);padding:calc(12px
   line-height:1;font-variant-numeric:tabular-nums}
 .tab.on{background:var(--accent-fg);color:#fff;font-weight:600}
 /* 單日大標題：英文書寫體，營造度假感 */
-.day-title{font-family:"Playwrite DK Loopet",cursive;font-size:36px;font-weight:400;line-height:1.4;color:var(--accent-fg);text-align:center}
+.day-title{font-family:"Isometra",serif;font-size:36px;font-weight:400;line-height:1.15;color:var(--accent-fg);text-align:center}
 .day-sub{font-size:13px;color:var(--text2);margin-top:4px;text-align:center}
 .tl{position:relative;margin:14px 16px 140px 0;transition:height .25s ease;touch-action:pan-y pinch-zoom}   /* 下面留空：右下角的地圖、手不會一直蓋住最後一張卡片 */
 /* 卡片層：時間線固定不動，只有這一層左右滑 */
@@ -392,7 +392,15 @@ html.sheet-lock body{position:fixed;left:0;right:0;bottom:0;overflow:hidden}
 .map-btn[hidden]{display:none}
 .map-btn{transition:transform .25s cubic-bezier(.3,.7,.2,1),opacity .2s,background-color .25s,color .25s}
 .editing .map-btn{transform:translateY(58px) scale(.85);opacity:0;pointer-events:none}   /* 編輯中不能開地圖：往下收進打勾後面 */
-@media (prefers-reduced-motion:reduce){.edit-btn,.map-btn{transition:none}}
+.edit-btn i,.map-btn i,.undo-btn i{font-size:21px}
+/* 手機編輯模式：地圖收起來的位置換成「↶ 復原」（一步一步往回，跟電腦的 ⌘Z 同一份紀錄）；沒東西可以退時變淡、按不下去，不整顆消失（免得位置跳來跳去） */
+.undo-btn{position:fixed;right:max(9px,calc(50vw - 231px));bottom:calc(82px + env(safe-area-inset-bottom));z-index:40;width:84px;height:48px;padding:0;border:0;border-radius:999px;background:#fff;
+  color:var(--accent-fg);display:flex;align-items:center;justify-content:center;gap:5px;box-shadow:0 2px 12px rgba(60,30,10,.16),0 0 0 .5px rgba(60,30,10,.06);cursor:pointer;
+  transform:translateY(58px) scale(.85);opacity:0;pointer-events:none;transition:transform .25s cubic-bezier(.3,.7,.2,1),opacity .2s,color .2s}
+.editing .undo-btn{transform:none;opacity:1;pointer-events:auto}
+.editing .undo-btn.off{color:var(--muted);box-shadow:0 0 0 .5px rgba(60,30,10,.08);pointer-events:none}
+@media (min-width:1024px){.undo-btn{display:none}}   /* 電腦版沒有編輯模式，用 ⌘Z */
+@media (prefers-reduced-motion:reduce){.edit-btn,.map-btn,.undo-btn{transition:none}}
 .map-view{position:relative;height:calc(100dvh - var(--hd, 160px));min-height:320px;background:#F3EFE8}
 .map-view .gmap{position:absolute;inset:0}
 .map-pick{display:none}   /* 電腦版「我的旅程」才出現 */
@@ -577,13 +585,13 @@ html.on-map:not(.sheet-lock),html.on-map:not(.sheet-lock) body{background:#f4f0e
 /* 地圖模式：用不到編輯，手往上滑進地圖按鈕後面收起來；地圖按鈕位置不動、變成陶土色實心＋清單圖示（跟編輯中的打勾一樣是「開著」的樣子）。
    地圖按鈕本來就在地點列上面，不用移動 */
 .btn-map .edit-btn{transform:translateY(-58px) scale(.85);opacity:0;pointer-events:none}
-.btn-map .map-btn{z-index:41;background:var(--accent-fg);color:#fff}
+.btn-map .map-btn{z-index:41;background:var(--accent-fg);color:#fff;transform:translateY(-20px)}   /* 地點列往上移了（10/22），按鈕跟著往上一點，不要壓到卡片 */
 .edit-btn,.map-btn{will-change:transform,opacity}   /* 獨立一層：換頁、畫地圖忙的時候動畫也不卡 */
 /* 地圖最底下一條米色，蓋住 Google 標誌和版權字（使用者自己的決定，個人使用） */
 .map-cover{position:absolute;left:0;right:0;bottom:0;height:72px;z-index:2;pointer-events:none;
   background:linear-gradient(to top,#f4f0e9 0,#f4f0e9 26px,rgba(244,240,233,0) 100%)}   /* 底下 26px 實色蓋住字樣，往上淡出 */
 /* 底部的地點卡片列：左右滑、一張一張停；放在 Google 標誌和版權字的上面（那些依條款要看得到） */
-.map-strip{position:absolute;left:0;right:0;bottom:0;z-index:2;display:flex;gap:8px;padding:6px 16px 4px;overflow-x:auto;scroll-snap-type:x mandatory;
+.map-strip{position:absolute;left:0;right:0;bottom:calc(18px + env(safe-area-inset-bottom));z-index:2;display:flex;gap:8px;padding:6px 16px 4px;overflow-x:auto;scroll-snap-type:x mandatory;
   scrollbar-width:none;-webkit-overflow-scrolling:touch;overscroll-behavior-x:contain}
 .map-strip::-webkit-scrollbar{display:none}
 .map-strip:empty{display:none}
@@ -861,7 +869,7 @@ a.car.walk-go.late{color:#B4412F}
   box-shadow:0 0 0 1px var(--line),0 2px 8px rgba(60,40,20,.06);overflow:hidden;cursor:pointer}
 .trip-cover{position:relative;height:132px;background:var(--accent-bg);display:flex;align-items:center;justify-content:center}
 .trip-cover img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
-.trip-cover .en{font-family:"Playwrite DK Loopet",cursive;font-size:34px;color:var(--accent-fg)}
+.trip-cover .en{font-family:"Isometra",serif;font-size:34px;color:var(--accent-fg)}
 .trip-badge{position:absolute;top:10px;right:10px;padding:3px 9px;border-radius:999px;background:rgba(255,255,255,.92);color:var(--accent-fg);font-size:12px;font-weight:600}
 .trip-body{display:block;padding:12px 16px 14px}
 .trip-name{font-size:16px;font-weight:600;line-height:1.35}
@@ -1121,7 +1129,7 @@ a.am-item{text-decoration:none;box-sizing:border-box}
 .g-skip{display:block;margin:10px auto 0;padding:6px 4px;border:0;background:none;font:inherit;font-size:13px;color:var(--text2);text-decoration:underline;text-underline-offset:3px;cursor:pointer}
 .trips-carry button{display:inline-flex;align-items:center;gap:6px;height:38px;padding:0 14px;border:1px solid var(--border);border-radius:999px;background:#fff;font:inherit;font-size:14px;color:var(--text);cursor:pointer}
 .trips-carry small{display:block;margin:8px auto 0;max-width:280px;font-size:12px;line-height:1.5;color:var(--muted)}
-.trips-empty .en{font-family:"Playwrite DK Loopet",cursive;font-size:30px;color:var(--accent-fg);margin-bottom:8px}
+.trips-empty .en{font-family:"Isometra",serif;font-size:30px;color:var(--accent-fg);margin-bottom:8px}
 /* 還沒有旅程：一張虛線大卡片（點了建立旅程），右下角手寫風的箭頭提示 */
 .trips-empty:has(.te-card){padding:0}
 .te-card{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;width:100%;height:201px;padding:0 16px;border:1.5px dashed #9a948d;border-radius:16px;background:var(--fill);box-shadow:0 6px 18px rgba(60,40,20,.08);font:inherit;color:var(--accent-fg);cursor:pointer}
@@ -1586,7 +1594,7 @@ html.tut .sheet:not(.dlg){max-height:calc(100vh - 176px - env(safe-area-inset-to
 .ed-lab-hint .ti-map-pin-check{color:var(--spa-fg)}
 .cover{position:relative;display:flex;align-items:center;justify-content:center;height:150px;border-radius:16px;overflow:hidden;background:var(--accent-bg)}
 .cover img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
-.cover .en{font-family:"Playwrite DK Loopet",cursive;font-size:34px;color:var(--accent-fg);padding:0 16px;text-align:center;line-height:1.1}
+.cover .en{font-family:"Isometra",serif;font-size:34px;color:var(--accent-fg);padding:0 16px;text-align:center;line-height:1.1}
 .wiz-bar{position:fixed;left:0;right:0;bottom:0;z-index:40;max-width:480px;margin:0 auto;display:none;gap:8px;
   padding:12px 16px calc(12px + env(safe-area-inset-bottom));background:var(--page);border-top:1px solid var(--line)}
 .on-new .wiz-bar{display:flex}
@@ -1795,6 +1803,7 @@ input.sw:focus-visible{outline:2px solid var(--accent-bg);outline-offset:2px}
     <div class="editbar"><span class="eb-label"><i class="ti ti-pencil"></i><span id="ebDay"></span>編輯中<span id="ebSt" class="eb-st"></span></span>
       <button type="button" class="eb-btn" id="editCancel">取消</button><button type="button" class="eb-btn done" id="editDone">儲存</button></div></div>
     <button type="button" class="map-btn" id="mapBtn" aria-label="看地圖" hidden></button>
+    <button type="button" class="undo-btn off" id="undoBtn" aria-label="復原上一步"><i class="ti ti-arrow-back-up"></i><span class="btn-lb">復原</span></button>
     <button type="button" class="acct-btn" id="acctBtn" aria-label="選單" aria-expanded="false" hidden></button>
     <div class="acct-menu" id="acctMenu" hidden></div>
     <nav class="rail" id="rail" aria-label="選單"></nav>
@@ -2382,7 +2391,7 @@ function renderDayHome(page) {
   if (!dayHomeEl) return;
   const h = isDay(page) ? morningStay(page) : null, set = DATA.days?.[page]?.home || '';
   const off = set === '-';
-  dayHomeEl.hidden = !h || (off && !editing); dayHomeEl.className = 'day-home ' + (off ? 'off' : 'other');
+  dayHomeEl.hidden = !h || (off && !editing && !deskEdit()); dayHomeEl.className = 'day-home ' + (off ? 'off' : 'other');
   if (dayHomeEl.hidden) { dayHomeEl.innerHTML = ''; return; }
   if (off) { dayHomeEl.innerHTML = `<i class="ti ti-plus"></i> 從 ${esc(shortName(h.name))} 出發`; return; }   // 編輯模式：拿掉的起點留一個虛線框，點了加回來
   const out = !(h.nights || []).includes(dayInfo(page).date), night = tonightStay(page), next = night && night !== h ? night : null;   // 今晚不住這間＝今天退房
@@ -3163,7 +3172,7 @@ function updateHeader(page) {
     dayTitle.textContent = d.en;
     const city = tripCities().length ? citiesOn([page]).map(c => c.name).join('→') : '';   // 好幾個城市：這天在哪（移動日「上高地→東京」）
     const dw = [d.date, d.wd, city].filter(Boolean).join('．');   // 沒有日期（例如操作練習）就不要多出「．」
-    daySub.innerHTML = `${dw}${d.zh || editing ? `${dw ? '．' : ''}<span id="subTheme"${!d.zh ? ' class="empty"' : ''}>${d.zh ? esc(d.zh) : editing ? '＋ 主題' : ''}</span>` : ''}`;
+    daySub.innerHTML = `${dw}${d.zh || editing || deskEdit() ? `${dw ? '．' : ''}<span id="subTheme"${!d.zh ? ' class="empty"' : ''}>${d.zh ? esc(d.zh) : editing || deskEdit() ? '＋ 主題' : ''}</span>` : ''}`;
   } else {
     dayTitle.textContent = PAGES[page].en;
     if (page === 'overview') daySub.textContent = TRIP ? `${dayInfo('d1').date}–${dayInfo(lastDay()).date}．${DAY_KEYS.length} 天 ${DAY_KEYS.length - 1} 夜` : '';
@@ -3180,7 +3189,7 @@ function updateHeader(page) {
   if (!mapBtn.querySelector('.' + mic)) mapBtn.innerHTML = mapIcon(mapMode, !!mapBtn.firstChild);   // 地圖、清單圖示換的時候淡入（同一個就不重畫，換天不會閃）
   mapBtn.setAttribute('aria-label', mapMode ? '回到清單' : '看地圖');
   const eb = document.getElementById('editBtn');
-  eb.hidden = home;
+  eb.hidden = home || DESK.matches;   // 電腦版不用編輯鈕：拖卡片、點標題、卡片資訊的「編輯卡片」都直接能用
   if (!eb.querySelector(editing ? '.ti-check' : '.ti-pencil')) eb.innerHTML = editing ? '<i class="ti ti-check"></i><span class="btn-lb">儲存</span>' : PENCIL_SVG + '<span class="btn-lb">編輯</span>';
   eb.setAttribute('aria-label', editing ? '儲存，離開編輯' : '編輯行程');
   applyHeaderEditable();
@@ -5600,6 +5609,8 @@ function showPage(page, animate = true) {
   if (!TRIP_ID) { if (page !== 'new') page = 'trips'; }
   else if (!['overview', 'cand', 'trips', 'new'].includes(page) && !isDay(page)) page = 'overview';
   if (page === current) return;
+  // 編輯中跑去我的旅程（或建立旅程）：直接結束編輯（跟按「儲存」一樣，改好的照樣存），回來時是一般模式（10/22 電腦版回來還停在編輯中）
+  if (editing && (page === 'trips' || page === 'new')) { document.activeElement?.blur(); editing = false; setEditing(false); if (pendingOps().count) sync(); }
   const prev = current; current = page;
   // 一天換到另一天（點天數、左右滑）：停在同一個時間，不要跳回時間軸最上面；在最上面就還是最上面（開始時間不一樣，例如航班那天，照時間換算）
   const keep = isDay(page) && (isDay(prev) || swipeKeep) ? swipeKeep || { y: scrollY, st: START } : null;
@@ -6552,7 +6563,7 @@ document.addEventListener('keydown', e => {
     e.preventDefault(); goHash(to); return;
   }
   if (e.key === '/' && deskMap(current) && isDay(current)) { e.preventDefault(); dsQ.focus(); return; }
-  if ((e.key === 'e' || e.key === 'E') && (isDay(current) || current === 'cand')) { e.preventDefault(); (editing ? document.getElementById('editDone') : editBtn).click(); }
+  if ((e.key === 'e' || e.key === 'E') && (isDay(current) || current === 'cand') && !DESK.matches) { e.preventDefault(); (editing ? document.getElementById('editDone') : editBtn).click(); }
 });
 
 // ---------- 編輯模式 ----------
@@ -6560,6 +6571,7 @@ let editing = false;
 const fab = document.getElementById('fab');
 function setEditing(on) {
   editing = on;
+  if (!DESK.matches) { undoStack.length = 0; updateUndoBtn(); }   // 手機：進出編輯模式就重新算，復原鈕從淡的開始
   if (on && !editStart) editStart = snapshot();
   if (!on) { editStart = null; noteOld = {}; }
   cache();
@@ -6660,6 +6672,7 @@ function openAuth(then) {
       TRIP_CODE = code; TRIP_ROLE = 'edit'; rememberTrip(TRIP, 'edit', TRIP_KEY, code); cache();
       closeSheet();
       if (then) { then(); toast(`嗨 ${nick}，改完按「儲存」就會存到雲端`); }
+      else if (DESK.matches) { updateHeader(current); renderPage(current); toast(`嗨 ${nick}，直接拖卡片、點卡片就能改`); }   // 電腦版沒有編輯模式
       else { setEditing(true); toast(`嗨 ${nick}，可以開始編輯了`); }
       offerTutorial();
       if (wasView) load(true);   // 拿可以編輯的人才看得到的資料（編輯碼）
@@ -6908,11 +6921,12 @@ function dragEnd() {
     ghost.remove(); el.classList.remove('sub-dragging');
     if (reorder != null) reorderSub(sub, reorder);
     else if (into || slot != null) pullOut(sub, slot, into && target.dataset.id, into?.idx);
-    return;
+    setTimeout(refreshInfo); return;
   }
-  if (target && into && mergeInto(el.dataset.id, target.dataset.id, into.idx)) return;
-  if (target && !into && swapItems(el.dataset.id, target.dataset.id)) return;
-  if (!target && at != null && moveTime(el.dataset.id, at)) return;
+  const ok = r => { if (r) setTimeout(refreshInfo); return r; };
+  if (target && into && ok(mergeInto(el.dataset.id, target.dataset.id, into.idx))) return;
+  if (target && !into && ok(swapItems(el.dataset.id, target.dataset.id))) return;
+  if (!target && at != null && ok(moveTime(el.dataset.id, at))) return;
   // 時間沒變或取消：彈回原位
   el.style.transition = 'transform .2s ease';
   el.style.transform = '';
@@ -7082,7 +7096,10 @@ const dbg = QS.get('debug') !== 'touch' ? () => {} : (() => {
   return log;
 })();
 // 電腦版：不用進編輯模式，滑鼠按住卡片拖一下就能改時間、交換（存檔照一般模式直接送雲端，提示裡有「復原」）
-const deskDrag = () => !editing && deskMap(current) && isDay(current) && !!getAuth() && !sheet.classList.contains('on');
+// 旁邊開著卡片資訊（不是編輯表單）也可以拖：拖完資訊跟著更新（10/22 使用者：打開卡片細節時沒辦法拖）
+const deskDrag = () => !editing && deskMap(current) && isDay(current) && !!getAuth() && (!sheet.classList.contains('on') || (!!sheet._infoId && !sheet.classList.contains('dlg')));
+// 拖完：旁邊開著的卡片資訊重畫（時間、天數變了）；那張卡片不見了（併進別張）就收起來
+function refreshInfo() { const id = sheet._infoId; if (!id || !sheet.classList.contains('on')) return; if (findItem(id)[1]) openCardInfo(id); else closeSheet(); }
 tl.addEventListener('mousedown', e => {
   if (!(editing || deskDrag()) || e.button !== 0 || e.target.closest('.rs-h')) return;
   if (!editing && e.target.closest('.nav, .blk.flight, .blk.ride')) return;
@@ -7139,8 +7156,10 @@ fab.addEventListener('click', () => {
 });
 
 // ---------- 標題／主題：編輯模式下點了打開面板（原本在頁首直接打字，主題字太小很難點、沒主題時根本點不到）----------
+// 電腦版沒有編輯鈕（10/22 拿掉：大家不習慣先按編輯）：有編輯碼的人標題、主題直接點就能改
+const deskEdit = () => DESK.matches && TRIP_ROLE === 'edit' && !TUT;
 function applyHeaderEditable() {
-  const on = editing && isDay(current);
+  const on = (editing || deskEdit()) && isDay(current);
   [[dayTitle, 'en'], [document.getElementById('subTheme'), 'zh']].forEach(([el, key]) => {
     if (!el) return;
     el.dataset.key = key;
@@ -7181,8 +7200,8 @@ const headerEl = document.querySelector('header');
 // 標題列高度給總覽黏住的切換鈕用（標題長短、換頁都會變）
 if (window.ResizeObserver) new ResizeObserver(() => document.documentElement.style.setProperty('--hd-h', headerEl.offsetHeight + 'px')).observe(headerEl);
 headerEl.addEventListener('click', e => {
-  const el = e.target.closest?.('.hd-edit'); if (!el || !editing || !isDay(current)) return;
-  openDayTitleEdit();
+  const el = e.target.closest?.('.hd-edit'); if (!el || !(editing || deskEdit()) || !isDay(current)) return;
+  withAuth(openDayTitleEdit);
 });
 headerEl.addEventListener('keydown', e => { const el = e.target.closest?.('.hd-edit'); if (el && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); openDayTitleEdit(); } });
 
@@ -8922,11 +8941,29 @@ function deleteSub() {
 // ---------- 底部提示 ----------
 const toastEl = document.getElementById('toast');
 let toastTimer = null;
+const undoStack = [];
+addEventListener('keydown', e => {
+  if (!(e.metaKey || e.ctrlKey) || e.shiftKey || e.altKey || e.key.toLowerCase() !== 'z' || e.isComposing) return;
+  const a = document.activeElement; if (a && (a.matches('input, textarea, select') || a.isContentEditable)) return;   // 打字中：交給輸入框自己復原
+  if (TUT || (sheet.classList.contains('on') && !sheet._infoId) || drag) return;   // 開著表單、正在拖：不動
+  e.preventDefault(); doUndo();
+});
+function doUndo() {
+  const u = undoStack.pop(); updateUndoBtn(); if (!u) { toast('沒有可以復原的動作'); return; }
+  toastEl.classList.remove('on'); u.fn();
+  setTimeout(() => { if (sheet._infoId) refreshInfo(); toast('已復原：' + u.msg.replace(/^已/, '')); }, 50);
+}
+const undoBtn = document.getElementById('undoBtn');
+const updateUndoBtn = () => undoBtn.classList.toggle('off', !undoStack.length);
+undoBtn.addEventListener('click', () => { if (!drag) doUndo(); });
 function toast(msg, actionText, action, ms) {
   if (TUT) return;   // 操作練習：提示框已經說明了，不要再跳黑色提示
   toastEl.innerHTML = `<span>${esc(msg)}</span>${actionText ? `<button type="button">${esc(actionText)}</button>` : ''}`;
   toastEl.classList.add('on');
-  if (actionText) toastEl.querySelector('button').onclick = () => { toastEl.classList.remove('on'); action(); };
+  // 有「復原」的動作記進復原清單：電腦按 ⌘Z／Ctrl+Z 一步一步往回（提示框消失了也可以）；按了提示框上的復原就從清單拿掉
+  const undo = actionText === '復原' ? { msg, fn: action } : null;
+  if (undo) { undoStack.push(undo); if (undoStack.length > 30) undoStack.shift(); updateUndoBtn(); }
+  if (actionText) toastEl.querySelector('button').onclick = () => { toastEl.classList.remove('on'); if (undo) { undoStack.splice(undoStack.indexOf(undo) >>> 0, 1); updateUndoBtn(); } action(); };
   clearTimeout(toastTimer);
   if (ms !== 0) toastTimer = setTimeout(() => toastEl.classList.remove('on'), ms || (actionText ? 5000 : 2000));
 }
