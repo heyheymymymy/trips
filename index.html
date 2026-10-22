@@ -5183,7 +5183,10 @@ function openTripMenu(id) {
       try { sessionStorage.setItem('trip-act', id + ':' + act); } catch {}   // 別趟：換網址重新載入，載入後打開設定或刪除確認
       location.href = tripUrl(id, t.key);
     } else {
-      tripRemoved(id); closeSheet(); renderTrips(); toast('已從列表拿掉');
+      tripRemoved(id);
+      // 網址還帶著這趟（從旅程裡回到我的旅程）：換成不帶旅程的網址，不然重新整理、回到畫面重新載入時又會把它加回列表
+      if (id === TRIP_ID) { try { sessionStorage.setItem('trip-hidden', '1'); } catch {} location.replace(tripUrl('', '', 'trips')); return; }
+      closeSheet(); renderTrips(); toast('已從列表拿掉');
     }
   });
 }
@@ -8516,6 +8519,7 @@ if (TRIP_ID && TRIP && TRIP_ROLE) rememberTrip(TRIP, TRIP_ROLE, TRIP_KEY, TRIP_C
 showPage(shownToday || location.hash.slice(1) || (TRIP_ID ? 'overview' : 'trips'), false);
 try { if (sessionStorage.getItem('trip-enter')) { sessionStorage.removeItem('trip-enter'); if (current === 'overview') pageSlide('sl-in-r', ovEl); } } catch {}
 try { justCreated = !!sessionStorage.getItem('trip-created'); sessionStorage.removeItem('trip-created'); } catch {}
+try { if (sessionStorage.getItem('trip-hidden')) { sessionStorage.removeItem('trip-hidden'); setTimeout(() => toast('已從列表拿掉'), 300); } } catch {}
 try { const d = sessionStorage.getItem('trip-deleted'); if (d) { sessionStorage.removeItem('trip-deleted'); setTimeout(() => toast(`已刪除「${d}」`), 300); } } catch {}
 { const n = importCarry(); if (n) { renderTrips(); toast(n > 0 ? `已加入 ${n} 趟旅程` : '這些旅程本來就在列表裡了'); } }
 if (resumeDraft && getAuth()) {
