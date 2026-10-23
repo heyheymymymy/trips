@@ -8,13 +8,21 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="color-scheme" content="light only">
 <title>行程</title>
+<!-- 換頁（我的旅程 → 某一趟，是整頁重新載入）不要閃：等程式把第一頁畫好才顯示（Chrome 的 rel=expect），新舊頁面之間淡入切換（跨頁 View Transition，Chrome、Safari 18.2+） -->
+<link rel="expect" href="#appReady" blocking="render">
+<script>var revealed = !('onpagereveal' in window), revealQ = [];
+function revealGo() { if (revealed) return; revealed = true; revealQ.splice(0).forEach(f => f()); }
+addEventListener('pagereveal', e => { e.viewTransition ? e.viewTransition.finished.finally(revealGo) : revealGo(); }, { once: true });
+setTimeout(revealGo, 1500);   // 保險：分頁在背景沒畫面時不會觸發</script>
 <link rel="icon" type="image/png" href="favicon.png">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.19.0/dist/tabler-icons.min.css">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Isometra&family=Instrument+Serif:ital@0;1&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Isometra&family=Instrument+Serif:ital@0;1&display=block">
 <style>
+@view-transition{navigation:auto}
+::view-transition-old(root),::view-transition-new(root){animation-duration:.18s}
 :root{
   color-scheme:light;
   /* 旅行感配色：暖白底＋大地色系 */
@@ -58,6 +66,7 @@ header{position:sticky;top:0;z-index:10;background:var(--page);padding:calc(12px
           mask-image:linear-gradient(to right,transparent 0,#000 var(--fl),#000 calc(100% - var(--fr)),transparent 100%)}
 .tabs.fade-l{--fl:36px}
 .tabs.fade-r{--fr:36px}
+button:focus,a:focus,.tab:focus-visible{outline:none}   /* 滑鼠點過的按鈕不要黑框（10/23：天數、地圖旁的回飯店／交通／從備選…）；輸入框另外有自己的框 */   /* 天數按鈕：滑鼠點過再按鍵盤（← → 換天）不要出現黑框（10/23） */
 .tab{position:relative;flex:none;padding:5px 8px;border-radius:8px;font-size:13px;color:var(--text2);border:0;background:none}
 /* 天數按鈕：正圓、數字置中 */
 .tab.day{width:34px;height:34px;padding:0;border-radius:50%;display:flex;align-items:center;justify-content:center;background:var(--fill);color:var(--text);font-weight:500;
@@ -118,6 +127,8 @@ header{position:sticky;top:0;z-index:10;background:var(--page);padding:calc(12px
 .ov-stats{display:flex;flex-wrap:wrap;gap:6px}
 /* 總覽「每天」：旅程標題、每類一張照片、一句話、展開行程、地圖 */
 .ov-intro{padding:6px 0 2px}
+.serif-wait .ov-title,.serif-wait .ov-line{opacity:0}
+.ov-title,.ov-line{transition:opacity .15s}
 .ov-title{margin:0;font-family:"Noto Serif TC",serif;font-size:34px;font-weight:600;line-height:1.2;letter-spacing:.5px;color:var(--text);word-break:break-word}
 .ov-pics{display:flex;justify-content:center;margin:22px -4px 18px;padding:0 4px}
 .ov-pic{flex:none;width:21%;max-width:96px;aspect-ratio:1;margin:0 -2.5%;padding:3px;border-radius:12px;background:#fff;box-shadow:0 2px 10px rgba(60,40,20,.18);transform:rotate(var(--r));border:0;cursor:pointer}
@@ -134,7 +145,6 @@ header{position:sticky;top:0;z-index:10;background:var(--page);padding:calc(12px
 .ov-days > div{overflow:hidden;min-height:0}
 .ov-mapwrap{margin-top:22px}
 .ov-maphead{display:flex;align-items:baseline;justify-content:space-between;font-size:12px;font-weight:600;color:var(--muted);margin-bottom:8px}
-.ov-maphead span{color:var(--accent-fg)}
 .ov-map{position:relative;height:260px;border-radius:16px;overflow:hidden;background:#f4f0e9;box-shadow:0 0 0 4px #fff,0 2px 12px rgba(60,40,20,.16);margin:0 4px;cursor:pointer}
 .ov-map .gm{position:absolute;inset:0}
 .ov-map .msg{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:13px;color:var(--text2);pointer-events:none}
@@ -359,12 +369,12 @@ html.sheet-lock body{position:fixed;left:0;right:0;bottom:0;overflow:hidden}
 .sh-links a{display:block;font-size:13px;color:var(--accent-fg);margin:4px 0;word-break:break-all}
 
 [hidden]{display:none!important}
-/* 編輯模式：標題、主題下面虛線，點了打開面板修改；主題那顆加大可以點的範圍（上下各多 8px） */
-.hd-edit{cursor:pointer;border-radius:4px;-webkit-tap-highlight-color:transparent;
-  background-image:linear-gradient(to right,currentColor 50%,transparent 50%);background-size:6px 1.5px;background-repeat:repeat-x;background-position:0 100%}
-.day-title.hd-edit{display:table;margin:0 auto;min-width:2em;background-size:8px 2px;padding-bottom:2px}   /* 虛線只畫在文字底下 */
-#subTheme.hd-edit{display:inline-block;padding:8px 4px;margin:-8px -4px;background-position:4px calc(100% - 8px);background-size:6px 1.5px;background-clip:content-box}
-#subTheme.empty{color:var(--accent-fg);font-weight:600;background-image:none}
+/* 可以改的標題、主題：直接點就打開面板修改（10/23 拿掉底下的虛線）；主題那顆加大可以點的範圍（上下各多 8px） */
+.hd-edit{cursor:pointer;border-radius:4px;-webkit-tap-highlight-color:transparent}
+.day-title.hd-edit{display:table;margin:0 auto;min-width:2em}
+#subTheme.hd-edit{display:inline-block;padding:8px 4px;margin:-8px -4px}
+#subTheme.empty{color:var(--accent-fg);font-weight:600}
+.hd-edit:hover{opacity:.75}   /* 電腦：滑鼠移上去淡一點，看得出可以點 */
 .hd-edit:active{opacity:.6}
 /* ---------- 編輯模式 ---------- */
 .edit-btn{position:fixed;right:max(9px,calc(50vw - 231px));bottom:calc(24px + env(safe-area-inset-bottom));z-index:40;width:84px;height:48px;padding:0;border:0;border-radius:999px;background:#fff;
@@ -419,7 +429,7 @@ html.on-map .map-strip{position:fixed}   /* 地點列改成跟右下角按鈕一
   .desk-map .map-strip,.desk-map #mapBtn{display:none !important}
   /* 漢堡選單在電腦版展開成最左邊一條直排：帳號、我的旅程、旅程設定、時間軸；最底下登出、隱私權 */
   .desk-map .acct-btn,.desk-map .acct-menu{display:none !important}
-  .desk-map .rail{position:fixed;left:0;top:0;bottom:0;z-index:30;width:72px;display:flex;flex-direction:column;align-items:center;gap:2px;padding:14px 0 10px;box-sizing:border-box;background:#3B3835;border-right:0}   /* 深灰：跟右邊的內容分開 */
+  .desk-map .rail{view-transition-name:rail;position:fixed;left:0;top:0;bottom:0;z-index:30;width:72px;display:flex;flex-direction:column;align-items:center;gap:2px;padding:14px 0 10px;box-sizing:border-box;background:#3B3835;border-right:0}   /* 深灰：跟右邊的內容分開 */
   .rail{display:none}
   .rl-it{display:flex;flex-direction:column;align-items:center;gap:3px;width:60px;padding:8px 0 7px;border:0;border-radius:12px;background:none;font:inherit;font-size:11px;font-weight:600;color:rgba(255,255,255,.66);cursor:pointer;text-decoration:none}
   .rl-it:hover{background:rgba(255,255,255,.08);color:#fff}
@@ -428,11 +438,15 @@ html.on-map .map-strip{position:fixed}   /* 地點列改成跟右下角按鈕一
   .rl-it .acct-pic{width:34px;height:34px}
   .rl-who{margin-bottom:6px;padding-bottom:12px;border-bottom:1px solid rgba(255,255,255,.12);border-radius:12px 12px 0 0}
   .rl-who span:last-child{max-width:56px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-  .rl-scale{display:flex;flex-direction:column;align-items:center;gap:3px;margin-top:6px;font-size:11px;font-weight:600;color:rgba(255,255,255,.66)}
-  .rl-scale i{font-size:22px}
-  .rl-scale span{display:flex;flex-direction:column;gap:2px;padding:2px;border-radius:9px;background:rgba(255,255,255,.08)}
-  .rl-scale button{width:48px;height:24px;border:0;border-radius:7px;background:none;font:inherit;font-size:11px;color:rgba(255,255,255,.66);cursor:pointer}
-  .rl-scale button.on{background:#fff;color:var(--text);box-shadow:0 1px 3px rgba(0,0,0,.1)}
+  .rl-scale{position:relative}
+  .rl-it:focus{outline:none}
+  /* 點了右邊浮出原本的切換鈕（深灰底、三段，選中的是白色）（10/23 使用者比較喜歡原本切換的樣子） */
+  .rl-fly{position:absolute;left:66px;top:4px;z-index:31;display:flex;flex-direction:column;gap:2px;padding:3px;border-radius:11px;background:#3B3835;box-shadow:0 8px 24px rgba(0,0,0,.25)}
+  .rl-fly[hidden]{display:none}
+  .rl-fly b{display:none}
+  .rl-fly button{width:56px;height:28px;border:0;border-radius:8px;background:rgba(255,255,255,.08);font:inherit;font-size:12px;font-weight:600;color:rgba(255,255,255,.66);cursor:pointer}
+  .rl-fly button:hover{color:#fff}
+  .rl-fly button.on{background:#fff;color:var(--text);box-shadow:0 1px 3px rgba(0,0,0,.1)}
   .rl-gap{flex:1}
   .rl-priv{margin-top:6px;font-size:10px;color:rgba(255,255,255,.42);text-decoration:none;text-align:center}
   .rl-priv:hover{color:rgba(255,255,255,.75)}
@@ -590,6 +604,8 @@ html.on-map .map-strip{position:fixed}   /* 地點列改成跟右下角按鈕一
   .desk-map .sheet.on:not(.dlg){transform:none;opacity:1}
   .desk-map .sheet:not(.dlg):not(.on){transition:transform .22s ease,opacity .18s ease,visibility 0s .22s}
   .desk-map .sheet:not(.dlg) .grab{display:none}
+  .desk-map .sheet:not(.dlg):not(.soft){padding-top:20px}   /* 電腦：資訊面板上面留一點空（原本照片貼著最上緣，10/23） */
+  .sh-close:focus:not(:focus-visible){outline:none}
   /* 面板開著：地圖左邊那四顆（回飯店、交通…）、上方搜尋列跟著往右推，不被蓋住 */
   .desk-map .ds-side{transition:left .22s ease}
   html.desk-map:has(.sheet.on:not(.dlg)) .ds-side{left:436px}
@@ -1456,7 +1472,15 @@ html.tut .sheet:not(.dlg){max-height:calc(100vh - 176px - env(safe-area-inset-to
 .dr-head .ed-lab{margin:0}
 .dr-val{position:absolute;left:50%;bottom:0;transform:translateX(-50%);white-space:nowrap;font-size:15px;font-weight:600;color:var(--text);font-variant-numeric:tabular-nums}
 .dr-win{position:relative;margin-top:8px;border-radius:12px;background:var(--fill)}
-.dr-scroll{overflow-x:auto;overflow-y:hidden;scrollbar-width:none;scroll-snap-type:x mandatory;scroll-padding-left:50%;-webkit-overflow-scrolling:touch;overscroll-behavior-x:contain;touch-action:pan-x;
+.time-list{position:fixed;z-index:70;max-height:280px;overflow-y:auto;padding:6px 0;border-radius:10px;background:#fff;box-shadow:0 8px 28px rgba(40,25,10,.2),0 0 0 .5px rgba(40,25,10,.1)}
+.time-list[hidden]{display:none}
+.time-list button{display:block;width:100%;height:40px;padding:0 18px;border:0;background:none;font:inherit;font-size:15px;color:var(--text);text-align:left;white-space:nowrap;cursor:pointer}
+.time-list button:hover{background:var(--fill)}
+.time-list button.on{background:var(--accent-bg);color:var(--accent-fg);font-weight:600}
+.time-list small{margin-left:6px;font-size:13px;color:var(--text2);font-weight:400}
+.dr-scroll.dr-drag{cursor:grabbing;scroll-snap-type:none}   /* 拖、滑的時候不吸刻度，停了才吸；不能叫 .grab：面板上方拉桿的 .grab 會把它變成 22px 高 */
+.dr-scroll:focus{outline:none}
+.dr-scroll{cursor:grab;overflow-x:auto;overflow-y:hidden;scrollbar-width:none;scroll-snap-type:x mandatory;scroll-padding-left:50%;-webkit-overflow-scrolling:touch;overscroll-behavior-x:contain;touch-action:pan-x;
   -webkit-mask-image:linear-gradient(to right,transparent,#000 18%,#000 82%,transparent);mask-image:linear-gradient(to right,transparent,#000 18%,#000 82%,transparent)}
 .dr-scroll::-webkit-scrollbar{display:none}
 .dr-ticks{position:relative;display:flex;width:max-content;padding:0 50%;height:50px}
@@ -1722,6 +1746,12 @@ html.tut .sheet:not(.dlg){max-height:calc(100vh - 176px - env(safe-area-inset-to
 .sheet.ed-look .ed-head .ed-lab-row .ed-lab{display:none}
 .sheet.ed-look .ed-head .ed-field:has(.multi) .ed-lab{display:block}   /* 改成多個地點／多選一：名稱變成「第一站」，標籤要看得到 */
 .sheet.ed-look .ed-head .ed-lab-row{margin-bottom:8px}
+.sheet.ed-look .ed-head .ed-field{display:flex;flex-direction:column}
+.sheet.ed-look .ed-head #edTWrap{order:-1}   /* 店名跟右邊的 ✕ 對齊；「從備選替換」放在店名下面（10/23 原本在上面把版面推歪） */
+.sheet.ed-look .ed-head .ed-lab-row{order:1;margin:6px 0 0}
+.sheet.ed-look .ed-head #edSwapWrap{order:2}
+.ed-relook{display:flex;flex-direction:column;align-items:center;gap:2px;width:100%;height:auto;min-height:48px;margin-top:12px;padding:8px 12px}
+.ed-relook small{font-size:12px;font-weight:400;color:var(--text2)}
 .sheet.ed-look .ed-head #edT{font-size:18px;font-weight:600}
 .sheet.ed-look .ed-head .sh-sub{margin-top:6px}
 .sheet.ed-look .ed-head .sh-sub i{font-size:13px;vertical-align:-1px}
@@ -3484,11 +3514,15 @@ function renderOverview() {
 let ovOpen = false, ovLineText = '';
 // 標題用思源宋體：只下載用到的字（Google Fonts 的 text=），很小
 const serifDone = new Set();
+// 字還沒下載好之前，標題先隱藏（淡入），不要先用別的字型出現再跳成宋體（10/23 從我的旅程進來會閃一下）；最多等 0.8 秒
 function loadSerif(text) {
   const t = [...new Set(String(text || '') + '0123456789.／–—・天夜')].join('');
   if (!t || serifDone.has(t)) return; serifDone.add(t);
+  const root = document.documentElement, done = () => root.classList.remove('serif-wait');
+  root.classList.add('serif-wait'); setTimeout(done, 800);
   const l = document.createElement('link'); l.rel = 'stylesheet';
   l.href = 'https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@600&display=swap&text=' + encodeURIComponent(t);
+  l.onload = () => document.fonts.load('600 34px "Noto Serif TC"', t).then(done, done); l.onerror = done;
   document.head.appendChild(l);
 }
 // 每個類型各挑一張照片（照天數順序第一個有照片的，行程裡沒有再看備選），最多 5 張
@@ -3558,7 +3592,7 @@ function ovIntroHtml(days, count, today) {
 // 地圖：旅行中只標今天的地點，其他時候標全部；只能看、不能拖（才不會捲頁面時卡住），點了進到那一天的地圖
 let ovMap = null, ovMapEl = null, ovPins = [], OvPin = null;
 function ovMapHtml(today) {
-  return `<div class="ov-mapwrap"><div class="ov-maphead">${today ? `第 ${dayNum(today)} 天的地點` : '這趟的地點'}<span>打開地圖 ›</span></div><div class="ov-map" id="ovMapSlot" data-mapgo="${today || 'd1'}"></div></div>`;
+  return `<div class="ov-mapwrap"><div class="ov-maphead">${today ? `第 ${dayNum(today)} 天的地點` : '這趟的地點'}</div><div class="ov-map" id="ovMapSlot" data-mapgo="${today || 'd1'}"></div></div>`;
 }
 async function drawOvMap(today) {
   const slot = ovEl.querySelector('#ovMapSlot'); if (!slot) return;
@@ -5374,7 +5408,8 @@ function setTlScale(v) {
   scrollTo(0, Math.max(0, tl.getBoundingClientRect().top + scrollY + (mid - START * 60) * PX - innerHeight / 2));
 }
 function acctClick(e) {
-  const sc = e.target.closest('[data-tls]'); if (sc) { setTlScale(+sc.dataset.tls); return; }
+  if (e.target.closest('#tlsBtn')) { setTlsOpen(!tlsOpen); return; }
+  const sc = e.target.closest('[data-tls]'); if (sc) { setTlScale(+sc.dataset.tls); return; }   // 選了不收起來（10/23），可以連續換著比較；點外面、按 Esc、再按一次時間軸才收
   if (e.target.closest('#acctTrips')) { acctMenuClose(); location.hash = 'trips'; return; }
   if (e.target.closest('#acctSet')) { acctMenuClose(); withAuth(openTripSettings); return; }
   if (e.target.closest('#acctOut')) { acctMenuClose(); logoutAccount(); }
@@ -5386,6 +5421,12 @@ function acctClick(e) {
 acctMenu.addEventListener('click', acctClick);
 // 電腦版：漢堡選單的東西直接排在最左邊一條（不用點開）
 var railEl = document.getElementById('rail');   // var：第一次 renderPage 比這行早跑
+// 時間軸大小的切換鈕開著沒：換大小會重畫側欄，開著的要留著
+var tlsOpen = false;
+function setTlsOpen(on) {
+  tlsOpen = on; const f = document.getElementById('tlsFly'), b = document.getElementById('tlsBtn');
+  if (f) f.hidden = !on; if (b) { b.classList.toggle('on', on); b.setAttribute('aria-expanded', on); }
+}
 function renderRail() {
   if (!railEl) return;
   if (!document.documentElement.classList.contains('desk-map')) { if (railEl.innerHTML) railEl.innerHTML = ''; return; }
@@ -5393,8 +5434,11 @@ function renderRail() {
   railEl.innerHTML = (a ? `<button type="button" class="rl-it rl-who" id="acctNick" title="${esc((a.name || 'Google 帳號') + (a.email ? '\n' + a.email : '') + '\n暱稱：' + (getNick() || '還沒填') + '（點一下改暱稱）')}"><span class="acct-pic">${acctPic(a)}</span><span>${esc(getNick() || a.name || '暱稱')}</span></button>`
       : `<button type="button" class="rl-it rl-who" id="acctLogin" title="用 Google 登入，旅程跟著帳號走"><i class="ti ti-brand-google"></i><span>登入</span></button>`)
     + it('acctTrips', 'layout-grid', '我的旅程').replace('rl-it"', renderedPage === 'trips' ? 'rl-it on"' : 'rl-it"')
-    + (TRIP ? it('acctSet', 'settings', '設定', '旅程設定') : '')
-    + `<div class="rl-scale" title="時間軸大小"><i class="ti ti-arrows-vertical"></i>時間軸<span>${TL_SCALES.map(([v, n]) => `<button type="button" data-tls="${v}"${v === tlScale() ? ' class="on"' : ''}>${n}</button>`).join('')}</span></div>`
+    // 旅程設定只在某一趟裡面才有（10/23：在「我的旅程」也有，按了會改到網址上那一趟；每一趟的設定在旅程卡片上按右鍵／長按）
+    + (TRIP && renderedPage !== 'trips' && renderedPage !== 'new' ? it('acctSet', 'settings', '設定', '旅程設定') : '')
+    // 時間軸大小：收成一顆，點了右邊浮出小、正常、大（10/23）
+    + `<div class="rl-scale"><button type="button" class="rl-it${tlsOpen ? ' on' : ''}" id="tlsBtn" aria-expanded="${tlsOpen}" title="時間軸大小"><i class="ti ti-arrows-vertical"></i><span>時間軸</span></button>
+      <div class="rl-fly" id="tlsFly"${tlsOpen ? '' : ' hidden'}><b>時間軸大小</b>${TL_SCALES.map(([v, n]) => `<button type="button" data-tls="${v}"${v === tlScale() ? ' class="on"' : ''}>${n}</button>`).join('')}</div></div>`
     + '<div class="rl-gap"></div>'
     + (!a && myTrips().length ? it('acctCarry', 'link', '帶到<br>其他裝置', '用連結帶到其他裝置') : '')
     + (a ? it('acctOut', 'logout', '登出') : '')
@@ -5402,7 +5446,8 @@ function renderRail() {
 }
 railEl.addEventListener('click', acctClick);
 renderRail();
-addEventListener('click', e => { if (!acctMenu.hidden && !e.target.closest('#acctMenu')) acctMenuClose(); });
+addEventListener('click', e => { if (!acctMenu.hidden && !e.target.closest('#acctMenu')) acctMenuClose(); if (tlsOpen && !e.target.closest('.rl-scale')) setTlsOpen(false); });
+document.addEventListener('keydown', e => { if (e.key === 'Escape' && tlsOpen) setTlsOpen(false); });
 addEventListener('hashchange', acctMenuClose);
 const AUTO_COVER_KEY = 'trip-autocover' + TEST_SUFFIX;
 let autoCovers = {}; try { autoCovers = JSON.parse(localStorage.getItem(AUTO_COVER_KEY)) || {}; } catch {}
@@ -5469,7 +5514,7 @@ tripsEl.addEventListener('touchcancel', tripPressEnd);
 tripsEl.addEventListener('mousedown', e => { if (e.button === 0) tripPressStart(e, e.clientX, e.clientY); });
 addEventListener('mouseup', tripPressEnd);
 addEventListener('scroll', tripPressEnd, { passive: true });
-tripsEl.addEventListener('contextmenu', e => { if (e.target.closest('[data-trip]')) e.preventDefault(); });
+tripsEl.addEventListener('contextmenu', e => { const el = e.target.closest('[data-trip]'); if (!el) return; e.preventDefault(); tripPressEnd(); openTripMenu(el.dataset.trip); });   // 電腦：右鍵直接打開那一趟的選單（設定、從列表拿掉…）
 function runTripAct(act) {
   if (act === 'del') withAuth(() => canDeleteTrip() ? openDeleteTrip()
     : toast('只有創建旅程的人可以刪除旅程（要在當初建立的瀏覽器，或登入同一個 Google 帳號）', '知道了', () => {}, 8000));
@@ -5644,7 +5689,9 @@ function openCreateAuth() {
 
 function pageSlide(cls, el) {
   if (reduceMotion) return;
-  [document.querySelector('header'), el].forEach(x => {
+  // 頁首整個滑會連左邊的深灰側欄（fixed、放在 header 裡）一起滑走（10/23）：只滑頁首裡不是固定位置的東西
+  const hd = [...document.querySelector('header').children].filter(x => getComputedStyle(x).position !== 'fixed');
+  [...hd, el].forEach(x => {
     x.classList.remove('sl-in-r', 'sl-in-l'); void x.offsetWidth; x.classList.add(cls);
     x.addEventListener('animationend', () => x.classList.remove(cls), { once: true });
   });
@@ -5654,6 +5701,8 @@ function showPage(page, animate = true) {
   if (!TRIP_ID) { if (page !== 'new') page = 'trips'; }
   else if (!['overview', 'cand', 'trips', 'new'].includes(page) && !isDay(page)) page = 'overview';
   if (page === current) return;
+  // 電腦：旁邊開著某張卡片的資訊，換到別天／別頁就收起來（那張卡片已經不在畫面上了；編輯表單不收，免得改到一半不見）（10/23）
+  if (sheet._infoId && sheet.classList.contains('on') && !sheet.classList.contains('dlg')) closeSheet();
   // 編輯中跑去我的旅程（或建立旅程）：直接結束編輯（跟按「儲存」一樣，改好的照樣存），回來時是一般模式（10/22 電腦版回來還停在編輯中）
   if (editing && (page === 'trips' || page === 'new')) { document.activeElement?.blur(); editing = false; setEditing(false); if (pendingOps().count) sync(); }
   const prev = current; current = page;
@@ -5702,7 +5751,9 @@ function closeTop() {
   if (mapOn(current)) { mapBtn.click(); return true; }   // 手機的地圖模式：回到時間線
   return false;
 }
-if (TRIP_ID) { history.replaceState({ base: 1 }, '', location.href); backGuard(); }
+// 跨頁淡入（從我的旅程進來）進行中改瀏覽紀錄，瀏覽器會把淡入跳過：等淡入完才墊（不支援的瀏覽器馬上做）
+const afterReveal = fn => { if (revealed) fn(); else revealQ.push(fn); };
+if (TRIP_ID) afterReveal(() => { history.replaceState({ base: 1 }, '', location.href); backGuard(); });
 addEventListener('popstate', e => {
   if (!e.state?.base) return;   // 不是退到 base（例如從「我的旅程」退回旅程）：照常換頁
   if (current && location.hash !== '#' + current) history.replaceState(e.state, '', '#' + current);   // base 記的還是剛打開時的那一天：改回現在這一頁，不要跳回去
@@ -6549,6 +6600,7 @@ function openRideInfo(id) {
     html: `<div class="ri-sum"><i class="ti ti-clock"></i>${sum}</div><div class="ri-legs">${rows}<div class="ri-leg end"><b>${T(arr)}</b><span><i class="ti ti-map-pin-filled"></i>抵達${to ? ' ' + esc(to) : ''}</span></div></div>
       ${walkBtns}<a class="btn ghost ri-gm" target="_blank" rel="noopener" href="${esc(rideHref(it, day))}"><i class="ti ti-map-2"></i> 在 Google 地圖看路線${dep && isDay(day) ? `<small>${esc(dayInfo(day).date || '')} ${T(dep)} 出發</small>` : ''}</a>`,
     action: { label: '編輯交通', icon: 'ti-pencil', fn: () => withAuth(() => openRideEditor(id)) } });
+  sheet._infoId = id;   // 跟卡片資訊一樣算「開著資訊」：← → 換天、拖卡片、換天自動收（10/23 交通資訊原本沒有）
 }
 // 點展開後的某一站／某個選項
 function openSubInfo(id, kind, i) {
@@ -6598,11 +6650,12 @@ const pullEnd = () => {
 sheet.addEventListener('touchend', pullEnd);
 sheet.addEventListener('touchcancel', pullEnd);
 document.addEventListener('keydown', e => { if (e.key === 'Escape' && sheet.classList.contains('on')) closeSheet(); });
-// 鍵盤快捷鍵（電腦）：← → 換天、/ 跳到地圖上的搜尋列、E 進入／離開編輯。打字中、面板開著時不作用
+// 鍵盤快捷鍵（電腦）：← → 換天、/ 跳到地圖上的搜尋列、E 進入／離開編輯。打字中、面板開著時不作用（電腦開著的是卡片資訊例外）
 document.addEventListener('keydown', e => {
   if (e.metaKey || e.ctrlKey || e.altKey || e.isComposing) return;
   const a = document.activeElement; if (a && (a.matches('input, textarea, select') || a.isContentEditable)) return;
-  if (sheet.classList.contains('on') || TUT || !TRIP) return;
+  const info = sheet.classList.contains('on') && !!sheet._infoId && !sheet.classList.contains('dlg');   // 電腦旁邊開著卡片資訊：← → 照樣換天（換了資訊會收起來）（10/23）
+  if ((sheet.classList.contains('on') && !(info && DESK.matches)) || TUT || !TRIP) return;
   if ((e.key === 'ArrowLeft' || e.key === 'ArrowRight') && !editing) {
     const order = ['overview', ...DAY_KEYS, 'cand'], i = order.indexOf(current); if (i < 0) return;
     const to = order[i + (e.key === 'ArrowRight' ? 1 : -1)]; if (!to) return;
@@ -7145,7 +7198,7 @@ const dbg = QS.get('debug') !== 'touch' ? () => {} : (() => {
 // 旁邊開著卡片資訊（不是編輯表單）也可以拖：拖完資訊跟著更新（10/22 使用者：打開卡片細節時沒辦法拖）
 const deskDrag = () => !editing && deskMap(current) && isDay(current) && !!getAuth() && (!sheet.classList.contains('on') || (!!sheet._infoId && !sheet.classList.contains('dlg')));
 // 拖完：旁邊開著的卡片資訊重畫（時間、天數變了）；那張卡片不見了（併進別張）就收起來
-function refreshInfo() { const id = sheet._infoId; if (!id || !sheet.classList.contains('on')) return; if (findItem(id)[1]) openCardInfo(id); else closeSheet(); }
+function refreshInfo() { const id = sheet._infoId; if (!id || !sheet.classList.contains('on')) return; const it = findItem(id)[1]; if (!it) closeSheet(); else if (it.ride?.legs?.length) openRideInfo(id); else openCardInfo(id); }
 tl.addEventListener('mousedown', e => {
   if (!(editing || deskDrag()) || e.button !== 0 || e.target.closest('.rs-h')) return;
   if (!editing && e.target.closest('.nav, .blk.flight, .blk.ride')) return;
@@ -7344,8 +7397,85 @@ function wireRuler(box, get, set, mark) {
       last = v; show(v); set(v); navigator.vibrate?.(4);
     });
   }, { passive: true });
+  // 電腦（10/23 使用者：電腦版不能操作；接著說卡卡的）：滑鼠按住左右拖（拖的時候不吸刻度、放開有慣性滑一段，跟手機一樣），
+  // 滾輪上下滾（停下來才吸到刻度）、點刻度跳過去、← → 一格一格
+  let md = null, fling = 0, wheelT = 0;
+  const free = on => sc.classList.toggle('dr-drag', on);   // 拖、滑的時候先不吸刻度（吸刻度會一格一格跳，看起來卡）
+  const settle = () => { free(false); sc.scrollTo({ left: toX(DR_MIN + Math.round(sc.scrollLeft / DR_PX) * DR_STEP), behavior: 'smooth' }); };
+  sc.addEventListener('pointerdown', e => {
+    if (e.pointerType !== 'mouse' || e.button !== 0) return;
+    cancelAnimationFrame(fling); clearTimeout(wheelT);
+    md = { x: e.clientX, l: sc.scrollLeft, moved: false, v: 0, t: performance.now(), px: e.clientX }; try { sc.setPointerCapture(e.pointerId); } catch {}
+    free(true); e.preventDefault();
+  });
+  sc.addEventListener('pointermove', e => {
+    if (!md) return; const dx = e.clientX - md.x; if (Math.abs(dx) > 3) md.moved = true;
+    const now = performance.now(), dt = Math.max(1, now - md.t);
+    md.v = .8 * ((md.px - e.clientX) / dt) + .2 * md.v; md.t = now; md.px = e.clientX;   // 速度（px／ms），放開時拿來滑
+    sc.scrollLeft = md.l - dx;
+  });
+  const up = e => {
+    if (!md) return; const d = md; md = null;
+    if (!d.moved && e.type === 'pointerup') {   // 沒拖：點到哪個刻度就跳到那裡（指針在窗的正中間）
+      free(false);
+      const r = sc.getBoundingClientRect(), v = clamp(DR_MIN + Math.round((sc.scrollLeft + e.clientX - r.left - sc.clientWidth / 2) / DR_PX) * DR_STEP);
+      sc.scrollTo({ left: toX(v), behavior: 'smooth' }); return;
+    }
+    let v = performance.now() - d.t > 80 ? 0 : d.v, t0 = performance.now();   // 停住一下才放開：不滑
+    const step = now => { const dt = now - t0; t0 = now; sc.scrollLeft += v * dt; v *= Math.pow(.94, dt / 16);
+      if (Math.abs(v) > .03 && sc.scrollLeft > 0 && sc.scrollLeft < sc.scrollWidth - sc.clientWidth) fling = requestAnimationFrame(step); else settle(); };
+    fling = requestAnimationFrame(step);
+  };
+  sc.addEventListener('pointerup', up); sc.addEventListener('pointercancel', up);
+  sc.addEventListener('wheel', e => {
+    if (Math.abs(e.deltaY) <= Math.abs(e.deltaX)) { clearTimeout(wheelT); wheelT = setTimeout(settle, 140); free(true); return; }   // 觸控板左右滑：照原本捲，停了才吸
+    e.preventDefault(); cancelAnimationFrame(fling); free(true);
+    sc.scrollLeft += e.deltaMode === 1 ? e.deltaY * 16 : e.deltaY * .6;
+    clearTimeout(wheelT); wheelT = setTimeout(settle, 140);
+  }, { passive: false });
+  sc.tabIndex = 0;
+  sc.addEventListener('keydown', e => { const d = e.key === 'ArrowRight' ? 1 : e.key === 'ArrowLeft' ? -1 : 0; if (!d) return; e.preventDefault(); sc.scrollTo({ left: toX(last + d * DR_STEP) }); });
   return v => { v = clamp(v); if (v === last) return; last = v; show(v); sc.scrollTo({ left: toX(v), behavior: 'smooth' }); };
 }
+// 電腦：時間欄位點一下，下面展開 15 分鐘一格的時間清單（像 Google 日曆），選了就填進去；照樣可以直接打字、上下鍵（10/23）
+// 一天從早上 5 點排到隔天凌晨 4:45（跟時間軸一樣）。結束時間那格後面加長度「（1 小時 30 分）」
+const timeList = document.createElement('div'); timeList.className = 'time-list'; timeList.hidden = true; document.body.appendChild(timeList);
+let timeFor = null;
+const tlLabel = n => { const h = Math.floor(n / 60) % 24, mm = String(n % 60).padStart(2, '0'); return `${h < 12 ? '上午' : '下午'}${h % 12 || 12}:${mm}`; };
+function timeListClose() { timeList.hidden = true; timeFor = null; }
+function timeListOpen(t) {
+  timeFor = t;
+  const cur = t.value ? fromInput(t.value) : null, start = t.id === 'edE' && sheet.querySelector('#edS')?.value ? fromInput(sheet.querySelector('#edS').value) : null;
+  let html = '';
+  for (let n = NIGHT; n < NIGHT + 24 * 60; n += 15) {
+    const d = start != null ? n - start : null;
+    if (d != null && d <= 0) continue;   // 結束時間：只列開始之後的
+    html += `<button type="button" data-n="${n}"${n === cur ? ' class="on"' : ''}>${tlLabel(n)}${d != null ? `<small>（${[Math.floor(d / 60) && `${Math.floor(d / 60)} 小時`, d % 60 && `${d % 60} 分`].filter(Boolean).join(' ')}）</small>` : ''}</button>`;
+  }
+  timeList.innerHTML = html; timeList.hidden = false;
+  const r = t.getBoundingClientRect(), w = Math.max(r.width, start != null ? 240 : 180);
+  timeList.style.width = w + 'px'; timeList.style.left = Math.min(r.left, innerWidth - w - 8) + 'px';
+  const below = innerHeight - r.bottom - 8, h = Math.min(280, timeList.scrollHeight);
+  timeList.style.top = (below >= h || below > r.top ? r.bottom + 4 : r.top - 4 - h) + 'px';
+  // 捲到目前的時間（沒有就最接近的那格），放在清單第一行附近
+  const near = [...timeList.children].reduce((a, b) => cur == null ? a : Math.abs(+b.dataset.n - cur) < Math.abs(+a.dataset.n - cur) ? b : a, timeList.firstElementChild);
+  if (near) timeList.scrollTop = near.offsetTop - 8;
+}
+timeList.addEventListener('mousedown', e => e.preventDefault());   // 點清單時時間欄位不要失焦
+timeList.addEventListener('click', e => {
+  const b = e.target.closest('[data-n]'); if (!b || !timeFor) return;
+  const t = timeFor; t.value = hhmm(+b.dataset.n % (24 * 60));
+  t.dispatchEvent(new Event('input', { bubbles: true })); t.dispatchEvent(new Event('change', { bubbles: true }));
+  timeListClose(); t.blur();
+});
+document.addEventListener('click', e => {
+  const t = e.target.closest?.('input[type=time]');
+  if (t && DESK.matches && !t.disabled) { if (timeFor !== t) timeListOpen(t); return; }
+  if (!timeList.hidden && !e.target.closest('.time-list')) timeListClose();
+});
+document.addEventListener('keydown', e => { if (!timeList.hidden && (e.key === 'Escape' || e.key === 'Enter' || e.key === 'Tab')) timeListClose(); }, true);
+document.addEventListener('scroll', e => { if (!timeList.hidden && !timeList.contains(e.target)) timeListClose(); }, true);
+document.addEventListener('input', e => { if (e.target === timeFor) { const c = timeList.querySelector('.on'); c?.classList.remove('on'); } });
 let ed = null;   // 正在編輯的內容
 // replaceId：從備選替換——帶入備選 id 的資料，排在 replaceId 那張卡片的時段，存檔後那張移到備選
 // ---------- 加入行程（兩步）：1. 要去哪裡（搜尋 Google 地點，地圖確認）2. 什麼時候（名稱、類型、日期、時間、已訂位）----------
@@ -7894,7 +8024,7 @@ function openEditor(id, startAt, toDay, replaceId, keep) {
     ${f_cls}
     ${ed.group || ed.pick ? '' : `    <div class="ed-field ed-fold"><button type="button" class="ed-fold-h" aria-expanded="false"><span class="ed-lab">區域</span><span class="ed-fold-v">${esc(ed.area || '未填寫')}</span><i class="ti ti-chevron-down"></i></button>
       <input id="edArea" type="text" value="${esc(ed.area || '')}" placeholder="例如：寧曼、古城、塔佩門" autocomplete="off" maxlength="20" hidden></div>`}
-    ${f_map}${f_travel}
+    ${f_map}${ed.id && !ed.group && !ed.pick && !ed.home && !findItem(ed.id)[1]?.home ? `<button type="button" class="btn ghost ed-relook" id="edRelook"><i class="ti ti-refresh"></i> 用 Google 重新查詢這個地點<small>描述、營業時間、照片、評論重點（沒查到的補上）</small></button>` : ''}${f_travel}
     ${phUrl}
     ${f_kind}
     <button type="button" class="btn ghost danger ed-del-row" id="edDel"><i class="ti ti-trash"></i> 刪除這張卡片</button>
@@ -8051,6 +8181,16 @@ function wireEditor() {
   // 從備選替換：已訂位的先確認；改過欄位的提醒修改不會保留
   const sig = () => [...sheet.querySelectorAll('input,textarea')].map(x => x.type === 'checkbox' ? x.checked : x.value).join('\u0001') + ed.cls + ed.dur;
   const sig0 = sig(), rid = ed.replaceId || ed.id;
+  // 用 Google 重新查詢（10/23）：查失敗、只有店名的卡片可以單張再查；跟清單匯入一樣在背景查（描述、營業時間、照片、評論；已經有的不蓋掉），回到資訊頁看結果
+  $('edRelook')?.addEventListener('click', () => {
+    const it = findItem(ed.id)[1]; if (!it) return;
+    if (sig() !== sig0 && !confirm('還沒存的修改不會保留，要重新查詢嗎？')) return;
+    if ($('edMap')?.value.trim() && $('edMap').value.trim() !== it.map) it.map = $('edMap').value.trim();   // 剛貼的地圖連結照樣用
+    it.desc = PENDING; bgTries.delete(it.id); bgBusy.delete(it.id);
+    saveData('重新查詢地點'); renderPage(current);
+    const id = it.id; openCardInfo(id); resumeLookups();
+    toast('正在用 Google 重新查詢，好了會自動更新');
+  });
   if ($('edSwapBtn')) $('edSwapBtn').addEventListener('click', e => {
     e.preventDefault();   // 按鈕在 label 裡，不要順便把游標放進名稱
     const b = $('edSwapBtn');
@@ -8605,7 +8745,7 @@ async function bgLookup({ id, link }) {
   }
   saveData('查詢地點');
   if (day === current && !drag) renderPage(current);
-  if (sheet.classList.contains('on') && sheet._infoId === id) openCardInfo(id);   // 資訊面板開著：換成查好的內容
+  if (sheet.classList.contains('on') && sheet._infoId === id && !findItem(id)[1]?.ride?.legs?.length) openCardInfo(id);   // 資訊面板開著：換成查好的內容
   toast(p ? `「${it.t}」查好了` : `「${it.t}」查不到資料：${fail}`);
 }
 // 請 AI 照 Google 地圖的資料寫中文描述、提醒、區域；失敗回傳 null（只是少了描述）
@@ -9018,10 +9158,10 @@ function toast(msg, actionText, action, ms) {
 // 例外：網址停在「我的旅程」、建立旅程，或是按重新整理（留在原本那頁）
 const reloaded = performance.getEntriesByType?.('navigation')?.[0]?.type === 'reload';
 let shownToday = /^#(trips|new)$/.test(location.hash) || reloaded ? null : tripNow()?.day || null;
-if (shownToday) history.replaceState(history.state, '', '#' + shownToday);
+if (shownToday) afterReveal(() => history.replaceState(history.state, '', '#' + shownToday));
 if (TRIP_ID && TRIP && TRIP_ROLE) rememberTrip(TRIP, TRIP_ROLE, TRIP_KEY, TRIP_CODE);
 showPage(shownToday || location.hash.slice(1) || (TRIP_ID ? 'overview' : 'trips'), false);
-try { if (sessionStorage.getItem('trip-enter')) { sessionStorage.removeItem('trip-enter'); if (current === 'overview') pageSlide('sl-in-r', ovEl); } } catch {}
+try { if (sessionStorage.getItem('trip-enter')) { sessionStorage.removeItem('trip-enter'); if (current === 'overview' && !('onpagereveal' in window)) pageSlide('sl-in-r', ovEl); } } catch {}   // 支援跨頁淡入的瀏覽器不用再滑一次（淡入完又滑進來會像閃一下）
 try { justCreated = !!sessionStorage.getItem('trip-created'); sessionStorage.removeItem('trip-created'); } catch {}
 try { if (sessionStorage.getItem('trip-hidden')) { sessionStorage.removeItem('trip-hidden'); setTimeout(() => toast('已從列表拿掉'), 300); } } catch {}
 try { const d = sessionStorage.getItem('trip-deleted'); if (d) { sessionStorage.removeItem('trip-deleted'); setTimeout(() => toast(`已刪除「${d}」`), 300); } } catch {}
@@ -9684,5 +9824,6 @@ addEventListener('mouseup', e => {
 });
 load();
 </script>
+<i id="appReady" hidden></i>
 </body>
 </html>
