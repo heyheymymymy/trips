@@ -461,14 +461,7 @@ html.on-map .map-strip{position:fixed}   /* 地點列改成跟右下角按鈕一
   .blk.resizing{z-index:20;box-shadow:0 0 0 2px var(--c-fg,var(--accent-fg));overflow:visible}
   .blk.resizing::before{content:attr(data-rs-tip);position:absolute;right:6px;bottom:-24px;z-index:5;padding:2px 8px;border-radius:6px;background:var(--text);color:#fff;font-size:12px;font-weight:600;white-space:nowrap}
   .tl.rs-on,.tl.rs-on *{cursor:ns-resize !important;user-select:none}
-  /* 備選頁：左欄放寬到 760px、卡片兩欄；地圖、側欄跟著往右 */
-  .desk-cand .app{max-width:760px}
-  .desk-cand .map-view{left:833px}
-  .desk-cand .sheet:not(.dlg){left:833px}
-  .desk-cand .edit-btn{left:736px}
-  .desk-cand .cand-list{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;align-items:start}
-  .desk-cand .cand-list .blk{margin:0}
-  .desk-cand .cand-grp{grid-column:1/-1}
+  /* 備選頁：10/23 起跟其他頁一樣寬（原本左欄放寬到 760px、卡片兩欄；使用者要跟其他頁一致） */
   .desk-map .cand-list .blk[draggable=true]{cursor:grab}
   /* 拖曳加入：時間線上的落點、天數按鈕的落點 */
   .dnd-slot{position:absolute;left:50px;right:4px;z-index:6;border-top:2px dashed var(--accent-fg);pointer-events:none}
