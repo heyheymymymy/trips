@@ -3165,6 +3165,7 @@ const bcBooked = booked => booked ? '<span class="bc"><i class="ti ti-circle-che
 const bcExtra = (booked, al, pending) => (booked ? '<span class="bc"><i class="ti ti-circle-check"></i>已訂位</span>' : '') +
   (al ? `<span class="bc grow"><i class="ti ti-alert-triangle"></i><span>${esc(al)}</span></span>` : '') +
   (pending ? '<span class="bc"><i class="ti ti-loader-2 spin"></i>查詢資訊中</span>' : '');
+const HOME_GAP = 10;   // 住處卡片底部到時間軸最上面的距離（.day-home + .tl 的 margin-top）
 function renderCards(items, day) {
   // 交通卡片：畫的範圍＝實際搭車的時間；跟它連著的起點、終點卡片重疊 30 分鐘以內就讓位（例如 13:05 到站、「松本車站」排 13:00），不算重疊
   const disp = new Map(items.filter(it => it.ride?.legs?.length).map(it => [it.id, rideDisp(it, items)]));
@@ -3211,11 +3212,12 @@ function renderCards(items, day) {
     if (it.travel && prev && !it.ride && !prev.ride) {   // 交通卡片前後不畫泡泡（那段移動就是交通卡片）
       // 交通時間：小泡泡放在上一張結尾和這一張開頭的正中間（太近就壓在兩張中間，重疊的話放在這一張的上緣）；
       // 空隙比泡泡高時，虛線把兩張卡片連起來。前後地點變了（換店、搬動）就變淡加問號
-      const end = prev.home ? y(it.s) - 3 : y(prev.e) - 3, gap = y(it.s) - end, stale = routeStale(prev, it);   // 從住處出發：泡泡壓在這張卡片上緣
+      // 從住處出發：虛線從最上面的住處卡片（在時間軸上面 10px）連下來；太近就把泡泡壓在這張卡片上緣（10/24 之前一律壓在上緣，沒有虛線）
+      const end = prev.home ? -HOME_GAP : y(prev.e) - 3, gap = y(it.s) - end, stale = routeStale(prev, it);
       if (gap > 18) { const ln = div('car-line' + (stale ? ' stale' : '')); ln.style.height = gap + 'px'; place(ln, Math.round(end)); }
       const el = div('car' + (stale ? ' stale' : ''), `<i class="ti ti-${modeIcon(parseRoute(it.troute).mode)}"></i>${esc(it.travel.replace(/\s+/g, ''))}${stale ? '<span class="q">?</span>' : ''}`);
       if (stale) el.title = '前後的地點變了，這個時間可能不準，可以重新計算';
-      place(el, Math.round((gap >= 0 ? end + gap / 2 : y(it.s)) - 9));
+      place(el, Math.round((prev.home && gap <= 24 ? y(it.s) - 3 : gap >= 0 ? end + gap / 2 : y(it.s)) - 9));
     }
     const top = y(it.s), mins = m(it.e) - m(it.s), h = Math.max(mins * PX - 3, 28);
     const extra = clash.has(it.id) ? ' clash' : '';
