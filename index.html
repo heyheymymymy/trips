@@ -20,6 +20,7 @@ setTimeout(revealGo, 1500);   // 保險：分頁在背景沒畫面時不會觸�
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Isometra&family=Instrument+Serif:ital@0;1&display=block">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Playwrite+US+Trad&display=swap">   <!-- 我的旅程卡片封面上的手寫英文地名（10/24 Figma） -->
 <style>
 @view-transition{navigation:auto}
 ::view-transition-old(root),::view-transition-new(root){animation-duration:.18s}
@@ -952,23 +953,27 @@ a.car.walk-go.late{color:#B4412F}
 .trips-page{padding:16px 16px 110px}
 .on-trips .tabs,.on-trips .edit-btn,.on-trips .map-btn{display:none}
 .on-trips.on-new .trip-new{display:none !important}
-.trip-card{display:block;width:100%;margin:0 0 14px;padding:0;border:0;border-radius:16px;background:#fff;text-align:left;font:inherit;color:inherit;
-  box-shadow:0 0 0 1px var(--line),0 2px 8px rgba(60,40,20,.06);overflow:hidden;cursor:pointer}
-.trip-cover{position:relative;height:132px;background:var(--accent-bg);display:flex;align-items:center;justify-content:center}
+/* 旅程卡片（10/24 照 Figma）：白邊圓角照片（沒照片才放手寫英文地名＋當地問候語）；下面建立的人的 Google 大頭照、名稱、日期 */
+.trip-card{display:block;width:100%;margin:0 0 22px;padding:0;border:0;background:none;text-align:left;font:inherit;color:inherit;cursor:pointer}
+.trip-cover{position:relative;aspect-ratio:425/276;border:5px solid #fff;border-radius:18px;background:var(--accent-bg);box-shadow:0 2px 16px rgba(0,0,0,.25);overflow:hidden;display:flex;align-items:center;justify-content:center;container-type:inline-size}
 .trip-cover img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
-.trip-cover .en{font-family:"Isometra",serif;font-size:34px;color:var(--accent-fg)}
-.trip-whose{position:absolute;top:10px;left:10px;display:inline-flex;align-items:center;gap:3px;padding:3px 9px 3px 7px;border-radius:999px;font-size:12px;font-weight:600;background:rgba(255,255,255,.92);color:var(--text2)}
-.trip-whose i{font-size:13px}
-.trip-whose.own{background:var(--accent-fg);color:#fff}   /* 自己建立的：實心陶土色，一眼分得出來（不能叫 .mine：筆記摘要的 .mine 有上邊距，會把標籤往下推） */
-.trip-card.past .trip-whose{top:8px;left:8px;padding:2px 8px 2px 6px;font-size:11px;background:#fff}
-.trip-card.past .trip-whose.own{background:var(--muted);color:#fff}
-.trip-badge{position:absolute;top:10px;right:10px;padding:3px 9px;border-radius:999px;background:rgba(255,255,255,.92);color:var(--accent-fg);font-size:12px;font-weight:600}
-.trip-body{display:block;padding:12px 16px 14px}
-.trip-name{font-size:16px;font-weight:600;line-height:1.35}
-.trip-meta{margin-top:3px;font-size:13px;color:var(--text2);font-variant-numeric:tabular-nums}
-.trip-card.past{box-shadow:0 0 0 1px var(--line)}
-.trip-card.past .trip-cover{height:76px;background:var(--fill)}
-.trip-card.past .trip-cover .en{font-size:26px;color:var(--muted)}
+.trip-hi{position:relative;display:flex;flex-direction:column;align-items:flex-end;margin-top:-6%;color:var(--accent-fg)}   /* 只有沒放封面照片才出現 */
+.trip-hi .en{align-self:center;font-family:"Playwrite US Trad",cursive;font-size:min(11cqw,150cqw / var(--n,6));line-height:1.6;white-space:nowrap}   /* 地名越長字越小，不超出照片 */
+.trip-hi .hi{margin:-1.5cqw 1cqw 0 0;font-size:5.5cqw;font-weight:500;line-height:1.3}
+.trip-badge{position:absolute;top:10px;right:10px;padding:5px 13px;border-radius:999px;background:#fff;color:#0080a7;font-size:13px;font-weight:600}
+.trip-body{display:flex;align-items:center;gap:12px;padding:12px 4px 0}
+.trip-who{flex:none;width:36px;height:36px;border:3px solid #fff;border-radius:50%;box-shadow:0 2px 8px rgba(0,0,0,.18);overflow:hidden;display:flex;align-items:center;justify-content:center;background:var(--fill);color:var(--text2);font-size:16px}
+.trip-who img{width:100%;height:100%;object-fit:cover}
+.trip-txt{display:block;flex:1;min-width:0}
+.trip-name{display:block;font-size:18px;font-weight:500;line-height:1.35;color:#313131;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.trip-meta{display:block;margin-top:1px;font-size:14px;font-weight:500;color:#919191;font-variant-numeric:tabular-nums;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.trip-card.past .trip-cover{aspect-ratio:auto;height:76px;border-width:4px;border-radius:14px;background:var(--fill);box-shadow:0 1px 6px rgba(0,0,0,.12)}
+.trip-card.past .trip-hi{margin:0;color:var(--muted)}
+.trip-card.past .trip-hi .en{font-size:min(24px,120cqw / var(--n,6));line-height:1.4}
+.trip-card.past .trip-hi .hi{display:none}
+.trip-card.past .trip-who{width:30px;height:30px;font-size:14px}
+.trip-card.past .trip-name{font-size:16px}
+.trip-card.past .trip-meta{font-size:13px}
 .trip-demo{margin-left:6px;font-size:11px;font-weight:400;color:var(--muted)}
 .trip-new{position:fixed;right:max(20px,calc(50vw - 220px));bottom:calc(24px + env(safe-area-inset-bottom));z-index:40;height:46px;padding:0 18px 0 14px;border:0;border-radius:999px;
   background:var(--accent-fg);color:#fff;font:inherit;font-size:15px;font-weight:600;display:none;align-items:center;gap:6px;box-shadow:0 4px 14px rgba(60,30,10,.22);cursor:pointer}
@@ -5515,6 +5520,10 @@ function keepImgs(box, html) {
   box.innerHTML = html;
   box.querySelectorAll('img').forEach(i => { const o = old[i.getAttribute('src')]; if (o) { o.style.cssText = i.style.cssText; i.replaceWith(o); delete old[i.getAttribute('src')]; } });
 }
+// 旅程卡片封面上的當地問候語：用目的地的國家代碼（region）挑；沒有的國家就不放
+const HELLO = { JP: 'こんにちは', TH: 'สวัสดี', KR: '안녕하세요', TW: '你好', CN: '你好', HK: '你好', MO: '你好', VN: 'Xin chào', ID: 'Halo', MY: 'Selamat datang', SG: 'Hello', PH: 'Kumusta', KH: 'សួស្តី', LA: 'ສະບາຍດີ', MM: 'မင်္ဂလာပါ', IN: 'नमस्ते', NP: 'नमस्ते', LK: 'Ayubowan',
+  US: 'Hello', CA: 'Hello', GB: 'Hello', IE: 'Hello', AU: "G'day", NZ: 'Kia ora', FR: 'Bonjour', BE: 'Bonjour', CH: 'Grüezi', DE: 'Hallo', AT: 'Servus', NL: 'Hallo', IT: 'Ciao', ES: 'Hola', MX: 'Hola', AR: 'Hola', PE: 'Hola', CL: 'Hola',
+  PT: 'Olá', BR: 'Olá', GR: 'Γεια σας', TR: 'Merhaba', CZ: 'Ahoj', PL: 'Cześć', HU: 'Szia', HR: 'Bok', IS: 'Halló', NO: 'Hei', SE: 'Hej', DK: 'Hej', FI: 'Hei', AE: 'مرحبا', EG: 'مرحبا', MA: 'Salam' };
 function renderTrips() {
   const all = myTrips(), list = all.filter(t => t.start).map(t => {
     // 正在看的這趟：封面沒設定就用筆記裡第一張照片；記在手機裡，下次打開不用等行程載入就有
@@ -5522,12 +5531,13 @@ function renderTrips() {
     if (!cover) { const auto = t.id === TRIP_ID ? Object.values(NOTES).map(n => n.photo).find(Boolean) : ''; if (auto && auto !== autoCovers[t.id]) { autoCovers[t.id] = auto; try { localStorage.setItem(AUTO_COVER_KEY, JSON.stringify(autoCovers)); } catch {} } cover = auto || autoCovers[t.id] || ''; }
     return { ...t, cover, ...tripState(t.start, t.days) };
   });
-  // 左上角標出這趟跟我的關係：自己建立的（有擁有者鑰匙）、別人的可以編輯（有編輯碼）、別人的只能看（10/22）
+  // 這趟跟我的關係：自己建立的（有擁有者鑰匙）、別人的可以編輯（有編輯碼）、別人的只能看（10/22；10/24 起只放在大頭照的提示文字）
   const whose = t => t.owner ? ['own', 'user', '我建立的'] : t.role === 'edit' ? ['edit', 'users', '一起編輯'] : ['view', 'eye', '只能看'];
-  const card = t => { const [wk, wi, wn] = whose(t); return `<button type="button" class="trip-card${t.state === 'past' ? ' past' : ''}" data-trip="${esc(t.id)}">
-    <span class="trip-cover">${t.cover && t.state !== 'past' ? photoImg(t.cover) : `<span class="en">${esc(t.en)}</span>`}${t.badge ? `<span class="trip-badge">${t.badge}</span>` : ''}<span class="trip-whose ${wk}"><i class="ti ti-${wi}"></i>${wn}</span></span>
-    <span class="trip-body"><span class="trip-name" style="display:block">${esc(t.name)}</span>
-      <span class="trip-meta" style="display:block">${t.range}．${t.days} 天 ${t.days - 1} 夜${t.members?.length ? `．${t.members.length} 位旅伴` : ''}</span></span></button>`; };
+  const card = t => { const [wk, , wn] = whose(t), ph = t.cover && t.state !== 'past', hi = HELLO[t.region] || '', pic = t.owner_pic || (t.owner && getAccount()?.pic) || '';
+    return `<button type="button" class="trip-card${t.state === 'past' ? ' past' : ''}" data-trip="${esc(t.id)}">
+    <span class="trip-cover">${ph ? photoImg(t.cover) : `<span class="trip-hi"><span class="en" style="--n:${Math.max(6, [...(t.en || '')].length)}">${esc(t.en)}</span>${hi ? `<span class="hi">${hi}</span>` : ''}</span>`}${t.badge ? `<span class="trip-badge">${t.badge}</span>` : ''}</span>
+    <span class="trip-body"><span class="trip-who ${wk}" title="建立的人${t.created_by ? '：' + esc(t.created_by) : ''}（${wn}）">${pic ? `<img src="${esc(pic)}" alt="" referrerpolicy="no-referrer">` : '<i class="ti ti-user"></i>'}</span><span class="trip-txt"><span class="trip-name">${esc(t.name)}</span>
+      <span class="trip-meta">${t.range}．${t.days} 天 ${t.days - 1} 夜${t.members?.length ? `．${t.members.length} 位旅伴` : ''}</span></span></span></button>`; };
   const groups = [['live', '進行中'], ['soon', '即將出發'], ['past', '已結束']].map(([k, label]) => {
     const g = list.filter(t => t.state === k).sort((a, b) => k === 'past' ? b.start.localeCompare(a.start) : a.start.localeCompare(b.start));
     return g.length ? `<div class="ov-sec">${label}</div>${g.map(card).join('')}` : '';
