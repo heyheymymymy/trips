@@ -2198,7 +2198,7 @@ async function syncMine() {
   const a = getAccount(); if (!a || mineSyncing) return;
   mineSyncing = true;
   try {
-    const r = await api({ action: 'mine', sub: a.sub, akey: a.akey, items: mineItems(), nick: getNick() }, 30000);
+    const r = await api({ action: 'mine', sub: a.sub, akey: a.akey, items: mineItems(), nick: getNick(), pic: a.pic || '' }, 30000);
     applyMine(r.items);
     if (r.nick && r.nick !== getNick()) setNick(r.nick);   // 暱稱以帳號為準（在別的裝置改過）
   }
