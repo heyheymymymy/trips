@@ -274,6 +274,7 @@ button:focus,a:focus,.tab:focus-visible{outline:none}   /* 滑鼠點過的按鈕
 .tab.today::after{content:"";position:absolute;left:50%;bottom:3px;width:4px;height:4px;margin-left:-2px;border-radius:50%;background:var(--accent-fg)}
 .tab.today.on::after{background:#fff}
 .ov-today{margin-left:6px;padding:0 6px;border-radius:999px;background:var(--accent-fg);color:#fff;font-size:10px;font-weight:600;vertical-align:1px}
+.sh-tab{display:none}   /* 電腦版資訊面板的收起把手：手機不用（10/25 修：原本這行放在電腦版區塊裡，手機最下面跑出一顆按鈕） */
 .sheet-bg{position:fixed;inset:0;z-index:50;background:rgba(20,20,18,.35);opacity:0;pointer-events:none;transition:opacity .2s}
 .sheet-bg.on{opacity:1;pointer-events:auto}
 .sheet{position:fixed;left:0;right:0;bottom:0;z-index:51;max-width:480px;margin:0 auto;max-height:82vh;overflow-y:auto;
@@ -665,7 +666,6 @@ html.on-map .map-btn{bottom:calc(var(--strip-b) + 64px)}   /* 「卡片」按鈕
   .desk-map .ds-side{transition:left .22s ease}
   html.desk-map:has(.sheet.on:not(.dlg)) .ds-side{left:452px}   /* 讓出面板右邊的收起把手 */
   /* 電腦版資訊面板：右邊緣外側貼一個收起把手，取代右上角的 X（10/25）；多天並排的浮動面板不變 */
-  .sh-tab{display:none}
   .desk-map .sh-tab{display:flex;position:fixed;left:933px;top:50%;z-index:51;width:24px;height:64px;margin-top:-32px;padding:0;align-items:center;justify-content:center;border:0;border-radius:0 12px 12px 0;background:#fff;color:var(--text2);box-shadow:6px 0 14px rgba(40,25,10,.12);cursor:pointer;
     opacity:0;visibility:hidden;transform:translateX(-16px);transition:transform .22s ease,opacity .18s ease,visibility 0s .22s}
   html.desk-map:not(.wk-on):has(.sheet.on:not(.dlg)) .sh-tab{opacity:1;visibility:visible;transform:none;transition:transform .22s ease,opacity .18s ease}
