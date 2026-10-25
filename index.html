@@ -594,6 +594,11 @@ html.on-map .map-btn{bottom:calc(var(--strip-b) + 64px)}   /* 「卡片」按鈕
   /* 回飯店、交通、手動輸入：直排放在地圖左邊、緊鄰時間線（點了＝加在最後面；拖到時間線＝加在那個時間） */
   .ds-side{position:absolute;left:16px;top:50%;z-index:4;flex-direction:column;flex-wrap:nowrap;margin:0;transform:translateY(-50%)}
   .ds-side[hidden]{display:none}
+  /* 從總覽換到某一天：五顆一起從時間線那張大卡片底下（地圖左邊緣）滑出來（10/25）。
+     clip-path 跟著位移反向收：超出地圖左邊緣的部分都剪掉，看起來像從底下推出來（左邊 16 + 寬 64 = 移 80） */
+  .ds-side.in{animation:dsIn .36s cubic-bezier(.25,.9,.3,1) both}
+  @keyframes dsIn{from{transform:translate(-80px,-50%);clip-path:inset(-24px -24px -24px 64px)}to{transform:translate(0,-50%);clip-path:inset(-24px -24px -24px -16px)}}
+  @media (prefers-reduced-motion:reduce){.ds-side.in{animation:none}}
   /* 新地點面板（10/24）：平常收起來，打開時在地圖正上方中間，跟搜尋出來的地點卡同寬，地點卡接在它下面 */
   .desk-map .ds-bar:not(.open){display:none}
   .desk-map .ds-bar.open{left:50%;top:16px;width:var(--dsw,360px);box-sizing:border-box;padding:8px;border-radius:20px;background:#fff;box-shadow:0 10px 32px rgba(60,40,20,.22);transform:translateX(-50%);animation:dsUp .28s cubic-bezier(.2,.8,.3,1)}   /* 外面一層白框，跟地點卡同樣的內距、圓角、陰影、寬度（10/24） */
@@ -658,7 +663,15 @@ html.on-map .map-btn{bottom:calc(var(--strip-b) + 64px)}   /* 「卡片」按鈕
   .sh-close:focus:not(:focus-visible){outline:none}
   /* 面板開著：地圖左邊那四顆（回飯店、交通…）、上方搜尋列跟著往右推，不被蓋住 */
   .desk-map .ds-side{transition:left .22s ease}
-  html.desk-map:has(.sheet.on:not(.dlg)) .ds-side{left:436px}
+  html.desk-map:has(.sheet.on:not(.dlg)) .ds-side{left:452px}   /* 讓出面板右邊的收起把手 */
+  /* 電腦版資訊面板：右邊緣外側貼一個收起把手，取代右上角的 X（10/25）；多天並排的浮動面板不變 */
+  .sh-tab{display:none}
+  .desk-map .sh-tab{display:flex;position:fixed;left:933px;top:50%;z-index:51;width:24px;height:64px;margin-top:-32px;padding:0;align-items:center;justify-content:center;border:0;border-radius:0 12px 12px 0;background:#fff;color:var(--text2);box-shadow:6px 0 14px rgba(40,25,10,.12);cursor:pointer;
+    opacity:0;visibility:hidden;transform:translateX(-16px);transition:transform .22s ease,opacity .18s ease,visibility 0s .22s}
+  html.desk-map:not(.wk-on):has(.sheet.on:not(.dlg)) .sh-tab{opacity:1;visibility:visible;transform:none;transition:transform .22s ease,opacity .18s ease}
+  .desk-map .sh-tab:hover{color:var(--accent-fg)}
+  .desk-map .sh-tab i{font-size:18px}
+  html.desk-map:not(.wk-on) .sheet:not(.dlg) .sh-close{display:none}
   html.desk-map:has(.sheet.on:not(.dlg)) .ds-bar{left:436px;width:min(480px,calc(100% - 604px));transform:none}   /* 右邊留給多天並排、顯示備選 */
   html.desk-map:not(:has(.sheet.dlg.on)) .sheet-bg{display:none}
   .desk-map .wiz-bar{left:72px;right:auto;width:440px;margin:0}   /* 建立旅程：底下的按鈕列跟著左欄 */
@@ -748,6 +761,11 @@ html.on-map:not(.sheet-lock),html.on-map:not(.sheet-lock) body{background:#f4f0e
 .pin span{max-width:110px;overflow:hidden;text-overflow:ellipsis;padding:1px 6px;border-radius:6px;background:rgba(255,255,255,.92);color:var(--text);
   font-size:11px;font-weight:600;box-shadow:0 1px 3px rgba(0,0,0,.12)}
 .pin.dim{opacity:.45}
+/* 住處：亮橘紅底、白色房子，比編號點大一圈，一眼就看得到（10/25） */
+.pin.home{transform:translate(-15px,-15px);z-index:3}
+.pin.home b{width:30px;height:30px;background:#E4572E;border-width:2.5px;box-shadow:0 2px 8px rgba(160,50,20,.45)}
+.pin.home b svg{width:16px;height:16px;display:block}
+.ms-card.home b{background:#E4572E}.ms-card.home b svg{width:13px;height:13px;display:block}.ms-card.nonum.home b svg{display:none}
 .map-view.far .pin span{display:none}   /* 拉遠時只留編號圓點，店名才不會疊在一起 */
 /* 編輯列：天數列原地變成一條灰色膠囊（跟總覽按鈕一樣 40px 高），從總覽按鈕往右拉長蓋過去；天數、備選淡出。離開時縮回總覽按鈕 */
 .tabs-row{position:relative}
@@ -1964,6 +1982,7 @@ input.sw:focus-visible{outline:2px solid var(--accent-bg);outline-offset:2px}
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
 <div class="sheet-bg" id="sheetBg"></div>
 <div class="sheet" id="sheet" role="dialog" aria-modal="true" aria-labelledby="shTitle"></div>
+<button type="button" class="sh-tab" id="shTab" aria-label="收起資訊面板" title="收起"><i class="ti ti-chevron-left"></i></button>
 <script>
 // 1 分鐘幾 px：1 小時 75px × 時間軸大小（帳號選單裡選：小 100%／正常 120%＝90px，預設／大 140%）。只存在這支手機，不跟旅伴同步
 const TL_SCALES = [[1, '小'], [1.2, '正常'], [1.4, '大']], TL_SCALE_KEY = 'trip-tlscale';
@@ -3381,7 +3400,9 @@ function renderPage(page) {
   if (side && page !== 'new' && page !== 'trips') drawMap(page);   // 電腦：右邊的地圖跟著這一頁
   document.getElementById('wkOpen').hidden = !(side && (isDay(page) || page === 'overview'));
   if (weekOpen) setTimeout(renderWeek);   // 週視圖開著：資料變了跟著重畫
-  document.getElementById('dsBar').hidden = document.getElementById('dsSide').hidden = !(side && isDay(page));   // 電腦：地圖上方的搜尋列、靠時間線那邊的三顆（加入行程）
+  const dsSide = document.getElementById('dsSide'), dsWas = dsSide.hidden;
+  document.getElementById('dsBar').hidden = dsSide.hidden = !(side && isDay(page));   // 電腦：地圖上方的搜尋列、靠時間線那邊的三顆（加入行程）
+  if (dsWas && !dsSide.hidden) { dsSide.classList.remove('in'); void dsSide.offsetWidth; dsSide.classList.add('in'); }   // 從總覽、備選換到某一天：五顆一起從左邊滑出來（換天不重播）
   if (page !== dsDay) { dsClose(); deskClear(); dsStart = null; }
   renderDayHome(page);
   ovEl.hidden = page !== 'overview';
@@ -6239,7 +6260,7 @@ const MAP_STYLE = [
 function mapPoints(page) {
   if (page === 'new') return (wiz?.legs || []).map(l => ({ l, ll: /^\s*(-?\d+(?:\.\d+)?),\s*(-?\d+(?:\.\d+)?)/.exec(l.geo?.center || '') })).filter(o => o.ll)
     .map((o, i) => ({ p: { lat: +o.ll[1], lng: +o.ll[2] }, n: i + 1, cls: 'see', name: o.l.geo.name || o.l.name, id: '', when: '', desc: '' }));
-  if (page === 'overview') return DAY_KEYS.flatMap(k => mapPoints(k).map(p => ({ ...p, day: k })));
+  if (page === 'overview') { const seen = new Set(); return DAY_KEYS.flatMap(k => mapPoints(k).map(p => ({ ...p, day: k }))).filter(p => p.stay == null || (!seen.has(p.stay) && seen.add(p.stay))); }   // 同一間住處只標一次
   const pts = [], ll = s => { const [a, b] = String(s || '').split(',').map(Number); return isFinite(a) && isFinite(b) && (a || b) ? { lat: a, lng: b } : null; };
   const items = [...(DATA[page] || [])].sort((a, b) => m(a.s) - m(b.s));
   let n = 0;
@@ -6248,14 +6269,19 @@ function mapPoints(page) {
     const sub = page === 'cand' ? '' : T(it.s);
     if (it.group) for (const [i, x] of (it.stops || []).entries()) { const p = ll(x.loc); if (p) pts.push({ p, n: ++n, cls, name: x.name, id: it.id, kind: 'stop', idx: i, when: page === 'cand' ? '' : T(x.s), desc: x.desc || it.t }); }
     else if (it.alts?.length) { const ps = it.alts.map((x, i) => ({ p: ll(x.loc), x, i })).filter(o => o.p); if (ps.length) { n++; ps.forEach(o => pts.push({ p: o.p, n, cls, name: o.x.name, id: it.id, kind: 'alt', idx: o.i, alt: true, when: sub, desc: it.t })); } }
-    else { const p = ll(it.loc); if (p) pts.push({ p, n: ++n, cls, name: it.t, id: it.id, when: sub, desc: it.desc === PENDING ? '' : it.desc || '' }); }
+    else { const p = ll(it.loc), home = page !== 'cand' && !!homeStay(it, page); if (p) pts.push({ p, n: home ? 0 : ++n, home, cls, name: it.t, id: it.id, when: sub, desc: it.desc === PENDING ? '' : it.desc || '' }); }   // 住處：地圖上是房子，不佔編號（10/25）
+  }
+  // 每天都標出住處：前一晚住的（早上出發的地方）、今晚住的；行程裡已經有那間的房子就不重複（10/25）
+  if (isDay(page)) for (const h of new Set([morningStay(page), tonightStay(page)])) {
+    const p = h && ll(h.loc); if (!p || pts.some(x => x.home && x.p.lat === p.lat && x.p.lng === p.lng)) continue;
+    pts.push({ p, n: 0, home: true, stay: tripStays().indexOf(h), cls: 'hotel', name: h.name, id: '', when: '', desc: h === tonightStay(page) ? '今晚住這裡' : '前一晚住這裡' });
   }
   return pts;
 }
 // 電腦：卡片標題前面標跟地圖一樣的編號（合併區塊標第一站～最後一站，例如 3–5）
 function pinNumbers(root, page) {
   const by = {};
-  for (const p of mapPoints(page)) (by[p.id] = by[p.id] || []).push(p.n);
+  for (const p of mapPoints(page)) if (!p.home) (by[p.id] = by[p.id] || []).push(p.n);
   for (const [id, ns] of Object.entries(by)) {
     const t = root.querySelector(`[data-id="${CSS.escape(id)}"] .t, [data-id="${CSS.escape(id)}"] .head .t`); if (!t || t.querySelector('.pin-no')) continue;
     const a = Math.min(...ns), b = Math.max(...ns);
@@ -6310,7 +6336,9 @@ for (const box of [document.getElementById('tl'), document.getElementById('candP
 }
 const mapStrip = document.getElementById('mapStrip');
 let mapPts = [], mapActive = -1, stripAuto = 0;   // 備選地圖顯示哪一類＝清單上選的那一類（candView.f，兩邊連動）
-const openPt = pt => pt.kind ? openSubInfo(pt.id, pt.kind, pt.idx) : openCardInfo(pt.id);
+// 住處的房子：用 SVG（tabler 的 ti-home-filled 字碼落在組合字元區，寬度算 0、會歪一邊）
+const HOUSE_SVG = '<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M11.3 3.3a1 1 0 0 1 1.4 0l8 7.6c.6.6.2 1.6-.7 1.6H19v7a1.5 1.5 0 0 1-1.5 1.5H15v-5a1 1 0 0 0-1-1h-4a1 1 0 0 0-1 1v5H6.5A1.5 1.5 0 0 1 5 19.5v-7H4c-.9 0-1.3-1-.7-1.6z"/></svg>';
+const openPt = pt => pt.stay != null ? openStayInfo(pt.stay) : pt.kind ? openSubInfo(pt.id, pt.kind, pt.idx) : openCardInfo(pt.id);
 // 選中第 i 個點：圖釘放大、卡片加框；pan＝地圖移過去，scroll＝卡片列捲到那張
 function mapFocus(i, { pan = true, scroll = true } = {}) {
   if (!mapPts[i]) return;
@@ -6392,8 +6420,8 @@ async function drawMap(page) {
   if (!pts.length) { mapMsg.textContent = day ? '這一天還沒有標上位置的地點' : page === 'overview' ? '還沒有標上位置的地點' : '備選還沒有標上位置的地點'; gmap.setCenter(tripCenter()); gmap.setZoom(13); return; }
   for (const pt of pts) {
     const el = document.createElement('button');
-    el.type = 'button'; el.className = `pin ${pt.cls}${pt.alt ? ' alt' : ''}`;
-    el.innerHTML = `<b>${day || page === 'new' ? pt.n : ''}</b><span>${esc(shortName(pt.name))}</span>`;
+    el.type = 'button'; el.className = `pin ${pt.cls}${pt.alt ? ' alt' : ''}${pt.home ? ' home' : ''}`;
+    el.innerHTML = `<b>${pt.home ? HOUSE_SVG : day || page === 'new' ? pt.n : ''}</b><span>${esc(shortName(pt.name))}</span>`;
     el.setAttribute('aria-label', pt.name);
     const i = mapPins.length;
     el.addEventListener('click', e => { e.stopPropagation(); mapFocus(i, { pan: false, scroll: true }); if (deskMap(current) && deskCard(pt.id)) { if (isDay(current)) deskShowItem(pt); return; } openPt(pt); });   // 電腦：左邊捲到那張卡片、閃一下，地圖上跳出店家卡（刪除、編輯…）
@@ -6420,15 +6448,15 @@ async function drawMap(page) {
     return;
   }
   // 底部卡片列：一個點一張；點一下移到那裡，再點一次（或點已經選中的）看資訊
-  mapStrip.innerHTML = pts.map((pt, i) => `<button type="button" class="ms-card ${pt.cls}${pt.alt ? ' alt' : ''}${day ? '' : ' nonum'}" data-i="${i}">
-    <b>${day ? pt.n : ''}</b><span class="ms-txt"><div>${esc(pt.name)}</div><span>${esc([pt.when, pt.desc].filter(Boolean).join(' · ') || ' ')}</span></span></button>`).join('');
+  mapStrip.innerHTML = pts.map((pt, i) => `<button type="button" class="ms-card ${pt.cls}${pt.alt ? ' alt' : ''}${pt.home ? ' home' : ''}${day ? '' : ' nonum'}" data-i="${i}">
+    <b>${pt.home ? HOUSE_SVG : day ? pt.n : ''}</b><span class="ms-txt"><div>${esc(pt.name)}</div><span>${esc([pt.when, pt.desc].filter(Boolean).join(' · ') || ' ')}</span></span></button>`).join('');
   mapView.classList.add('has-strip'); stripAuto = Date.now(); mapStrip.scrollLeft = 0;
   // 每天：照順序用線連起來（多選一的幾家不連，到時候才決定去哪一家）
   if (day) {
-    const path = pts.filter(p => !p.alt).map(p => p.p);
+    const path = pts.filter(p => !p.alt && p.stay == null).map(p => p.p);   // 住處的房子不連線
     if (path.length > 1) mapLine = new google.maps.Polyline({ path, map: gmap, strokeColor: '#9A4A25', strokeOpacity: 0.45, strokeWeight: 2.5, clickable: false });
     // 兩站中間標交通時間（卡片上填的「怎麼過去」）：每張卡片第一個點和上一個點的中間
-    const line = pts.filter(p => !p.alt);
+    const line = pts.filter(p => !p.alt && p.stay == null);
     line.forEach((p, i) => {
       const prev = line[i - 1]; if (!prev || prev.id === p.id || (p.kind === 'stop' && p.idx > 0)) return;
       const it = findItem(p.id)[1]; if (!it?.travel) return;
@@ -6563,6 +6591,7 @@ tl.addEventListener('touchcancel', () => endSwipe(true));
 
 // ---------- 下方滑出的面板（筆記和編輯共用） ----------
 const sheet = document.getElementById('sheet'), sheetBg = document.getElementById('sheetBg');
+document.getElementById('shTab').addEventListener('click', () => closeSheet());   // 電腦版面板右邊的收起把手
 wireTypeForms();
 let lastFocus = null;
 function openSheet(html, focusSel, dialog) {
