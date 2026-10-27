@@ -1846,7 +1846,7 @@ html:not(.desk-map) .tl-add:not(.tl-route) small{color:rgba(255,255,255,.8)}   /
 .cand-pick{display:flex;flex-direction:column;gap:6px}
 .sh-head + .day-pick{margin-top:16px}
 /* 編輯既有卡片（照資訊頁排）：照片、店名、描述跟資訊頁同樣的位置和大小，下面的內容淡入 */
-.sheet.ed-look .ed-photo-top{margin:0 0 14px}
+.sheet.ed-look .ed-photo-top{margin:0 0 16px}   /* 跟欄位之間一樣 16px（10/27） */
 .sheet.ed-look .ed-photo-top .ph-frame{border-radius:0}   /* 資訊頁的照片是直角 */
 .sheet.ed-look .ed-photo-top .ph-st:empty{display:none}
 .sheet.ed-look .ed-head{align-items:flex-start}
@@ -1859,6 +1859,8 @@ html:not(.desk-map) .tl-add:not(.tl-route) small{color:rgba(255,255,255,.8)}   /
 .sheet.ed-look .ed-head #edTWrap{order:-1}   /* 店名跟右邊的 ✕ 對齊；「從備選替換」放在店名下面（10/23 原本在上面把版面推歪） */
 .sheet.ed-look .ed-head .ed-lab-row{order:1;margin:6px 0 0}
 .sheet.ed-look .ed-head #edSwapWrap{order:2}
+.sheet.ed-look .ed-head .ed-field > .ed-t-lab{display:block;order:-3}   /* 名稱框上面的小字「名稱」（10/27），多站、多選一時改顯示「第一站」那排 */
+.sheet.ed-look .ed-head .ed-field:has(.multi) > .ed-t-lab{display:none}
 .sheet.ed-look .ed-head .ed-field:has(.multi) > .ed-lab,.sheet.ed-look .ed-head .ed-field:has(.multi) .ed-lab-row{order:-2;margin:0 0 8px}   /* 多個地點／多選一：「第一站」「選項 1」標題在名稱框上面（10/27） */
 .ed-map-acts{display:flex;flex-wrap:wrap;gap:8px;margin-top:8px}
 .ed-map-acts:not(:has(.ed-act:not([hidden]))){display:none}
@@ -1871,7 +1873,7 @@ html:not(.desk-map) .tl-add:not(.tl-route) small{color:rgba(255,255,255,.8)}   /
 .sheet.ed-look .ed-head .sh-sub i{font-size:13px;vertical-align:-1px}
 .sheet.ed-look .ed-head > button{margin-top:7px}
 .sheet.ed-look .ed-desc{margin-top:12px}
-.sheet.ed-look > .ed-lock,.sheet.ed-look > .ed-hint{margin:0 0 10px}   /* 已訂位、替換的提醒放在名稱上面（10/27） */
+.sheet.ed-look > .ed-lock,.sheet.ed-look > .ed-hint{margin:0 0 16px}   /* 已訂位、替換的提醒放在名稱上面（10/27） */
 .sheet.ed-look .ed-del-row{width:100%;margin-top:24px}
 .ed-more{margin:28px 0 0;padding-top:16px;border-top:1px solid var(--line);font-size:13px;font-weight:600;color:var(--muted)}
 @keyframes edIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
@@ -3209,6 +3211,14 @@ function alertParts(x, day, s, e) {
   const parts = String(x.alert || '').split(/\s*[・·]\s*/).filter(Boolean);
   return { warn: hoursWarn(x, day, s, e, parts.filter(p => HR_PART.test(p)).join(' ')), rest: parts.filter(p => !HR_PART.test(p)).join('・') };
 }
+// 排的時間跟營業時間只有一部分重疊（10/27 使用者分四種）：提早到＝「10:00 營業」、待太晚＝「營業到 18:00」、整段都關門＝「不在營業時間」（公休另外判斷）
+// 括號裡是完整營業時間：名稱後面的小標籤會切掉，滑鼠停留看得到
+function hoursGap(periods, s, e, fmt, span) {
+  const hit = periods.find(h => s < h[2] && e > h[1]);
+  if (hit && s < hit[1] && e <= hit[2]) return `${fmt(hit[1])} 營業（${span}）`;
+  if (hit && s >= hit[1] && e > hit[2]) return `營業到 ${fmt(hit[2])}（${span}）`;
+  return `不在營業時間（${span}）`;
+}
 function hoursWarn(x, day, s, e, text) {
   const ymd = isDay(day) && tripDates()[dayNum(day) - 1]?.ymd; if (!ymd || isNaN(s) || isNaN(e)) return '';
   const wd = new Date(ymd + 'T00:00').getDay(), fmt = v => hhmm(v % (24 * 60));
@@ -3218,20 +3228,20 @@ function hoursWarn(x, day, s, e, text) {
     const today = hrs.filter(h => h[0] === wd);
     if (!today.length) return '當天公休';
     if (today.some(h => s >= h[1] && e <= h[2])) return '';
-    return `不在營業時間（${today.map(h => `${fmt(h[1])}–${fmt(h[2])}`).join('、')}）`;
+    return hoursGap(today, s, e, fmt, today.map(h => `${fmt(h[1])}–${fmt(h[2])}`).join('、'));
   }
   // 沒有詳細營業時間：從提醒文字抓「週三公休」「08:30–16:30」
   const off = /週([日一二三四五六、]+)(公休|休息)/.exec(text || '');
   if (off && off[1].includes('日一二三四五六'[wd])) return '當天公休';
   const mm = /(\d{1,2}):(\d{2})\s*[–\-~～]\s*(\d{1,2}):(\d{2})/.exec(text || ''); if (!mm) return '';
   const o = +mm[1] * 60 + +mm[2]; let c = +mm[3] * 60 + +mm[4]; if (c <= o) c += 24 * 60;
-  return s >= o && e <= c ? '' : `不在營業時間（${mm[1]}:${mm[2]}–${mm[3]}:${mm[4]}）`;
+  return s >= o && e <= c ? '' : hoursGap([[wd, o, c]], s, e, v => hhmm(v % (24 * 60)), `${mm[1]}:${mm[2]}–${mm[3]}:${mm[4]}`);
 }
 // 卡片下面的白色小標籤：時間、長度，加上已訂位、提醒（太長縮成「…」）、查詢中
 const bcTime = (s, e) => `<span class="bc"><i class="ti ti-clock"></i>${T(s)}–${T(e)}</span>`;
 // 已訂位：放在卡片名稱後面（10/21 從下面那排標籤移上來）
 // 不在營業時間、當天公休：放在名稱後面（10/22 起；已訂位搬回下面那排標籤）
-// 名稱後面只寫「不在營業時間」「當天公休」（括號裡的營業時間太長會擠到下一行，點開卡片看得到）
+// 名稱後面只寫「10:00 營業」「營業到 18:00」「不在營業時間」「當天公休」（括號裡的營業時間太長會擠到下一行，點開卡片看得到）
 const warnTag = w => w ? `<span class="bc bk-ok bk-warn" title="${esc(w)}"><i class="ti ti-alert-triangle"></i>${esc(w.replace(/（.*）$/, ''))}</span>` : '';
 const bcBooked = booked => booked ? '<span class="bc"><i class="ti ti-circle-check"></i>已訂位</span>' : '';   // 已訂位：放在時間後面，標籤太多被切掉也看得到
 const bcExtra = (booked, al, pending) => (booked ? '<span class="bc"><i class="ti ti-circle-check"></i>已訂位</span>' : '') +
@@ -8175,7 +8185,7 @@ function openEditor(id, startAt, toDay, replaceId, keep) {
   const swapBtn = !swaps.length ? '' : lookEd ? '<button type="button" class="ed-t-swap" id="edSwapBtn" aria-expanded="false"><small>從備選替換</small><i class="ti ti-bookmark-filled"></i></button>'   // 跟加入行程搜尋框右邊的書籤同一種：大顆實心書籤＋左邊灰色小字
     : '<button type="button" class="swap-btn" id="edSwapBtn" aria-expanded="false"><i class="ti ti-bookmark"></i> 從備選替換</button>';
   const tActs = (swaps.length && !lookEd) || relook;
-  const f_name = `    <${tActs || swaps.length ? 'div' : 'label'} class="ed-field">${tActs ? `<span class="ed-lab-row"><span class="ed-lab" id="edTLab">名稱</span><span class="ed-t-acts">
+  const f_name = `    <${tActs || swaps.length ? 'div' : 'label'} class="ed-field">${lookEd ? '<span class="ed-lab ed-t-lab">名稱</span>' : ''}${tActs ? `<span class="ed-lab-row"><span class="ed-lab" id="edTLab">名稱</span><span class="ed-t-acts">
       ${lookEd ? '' : swapBtn}${relook ? '<button type="button" class="swap-btn" id="edRelook" title="重新查描述、營業時間、照片、評論重點（沒查到的補上）"><i class="ti ti-refresh"></i> 重新查詢資訊</button>' : ''}</span></span>` : '<span class="ed-lab" id="edTLab">名稱</span>'}
       ${swaps.length ? `<div id="edSwapWrap">${candListHtml(swaps)}</div>` : ''}
       <span class="ed-t-wrap" id="edTWrap"><span class="num" aria-hidden="true">1</span><input id="edT" type="text" aria-label="名稱" value="${esc(ed.t)}" placeholder="例如：Ristr8to 拉花咖啡" autocomplete="off">${lookEd ? swapBtn : ''}<button type="button" class="ed-stop-x" id="edTX" aria-label="拿掉第一站" hidden><i class="ti ti-x"></i></button></span></${tActs || swaps.length ? 'div' : 'label'}>
