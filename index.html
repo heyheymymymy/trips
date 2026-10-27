@@ -308,10 +308,12 @@ html.sheet-lock body{position:fixed;left:0;right:0;bottom:0;overflow:hidden}
 .ph-hand{position:absolute;left:50%;top:50%;width:44px;height:44px;margin:-22px 0 0 -22px;border-radius:50%;background:rgba(0,0,0,.35);color:#fff;font-size:22px;display:flex;align-items:center;justify-content:center;pointer-events:none;transition:opacity .2s}
 .ph-drag.moving .ph-hand{opacity:0}
 .ph-badge{position:absolute;left:8px;bottom:8px;padding:2px 10px;border-radius:999px;background:rgba(0,0,0,.55);color:#fff;font-size:12px}
+.ph-can-del .ph-badge{bottom:auto;top:8px}   /* 左下角是刪除照片：「已上傳」放左上角（10/27） */
 
 .ph-prev.empty{display:flex;align-items:center;justify-content:center;height:96px;border:1px dashed var(--border);border-radius:10px;font-size:13px;color:var(--muted);cursor:pointer}
 .ph-pick{display:flex;flex-direction:column;align-items:center;gap:4px;color:var(--text2);font-size:13px}
 .ph-pick i{font-size:24px;color:var(--accent-fg)}
+.ph-cam.ph-del{right:auto;left:8px}
 .ph-cam{position:absolute;right:8px;bottom:8px;z-index:2;width:34px;height:34px;padding:0;border:0;border-radius:50%;background:rgba(255,255,255,.92);color:var(--text);font-size:18px;display:flex;align-items:center;justify-content:center;box-shadow:0 1px 4px rgba(0,0,0,.25);cursor:pointer}
 .ph-row{display:flex;gap:8px;margin-top:8px}
 .ph-row input{flex:1;min-width:0}
@@ -932,6 +934,13 @@ a.car.walk-go.late{color:#B4412F}
 .ed-lab-row .ed-lab{flex:1;min-width:0}
 .swap-btn{flex:none;display:inline-flex;align-items:center;gap:4px;margin:-6px -6px 0 0;padding:4px 8px;border:0;border-radius:999px;background:none;color:var(--accent-fg);font:inherit;font-size:12px;font-weight:600;cursor:pointer}
 .swap-btn.open,.swap-btn:active{background:var(--accent-bg)}
+.ed-t-acts{display:flex;flex-wrap:wrap;gap:4px 10px;margin-left:auto}   /* 名稱下面靠右（10/27） */
+.ed-t-wrap > .ed-t-swap{position:absolute;right:4px;top:50%;transform:translateY(-50%);z-index:1;display:flex;align-items:center;gap:4px;height:36px;padding:0 0 0 8px;border:0;background:none;font:inherit;cursor:pointer}
+.ed-t-swap small{font-size:12px;color:var(--muted)}
+.ed-t-swap i{width:34px;height:34px;border-radius:10px;font-size:20px;color:var(--accent-fg);display:flex;align-items:center;justify-content:center}
+.ed-t-swap.open i{background:var(--accent-fg);color:#fff}
+.ed-t-wrap:has(.ed-t-swap) > input{padding-right:118px}
+.ed-t-wrap.multi > .ed-t-swap{display:none}   /* 名稱框最右邊：從備選替換（10/27）；改成多個地點時第一站右邊是 ✕ 拿掉 */
 #edSwapWrap .cand-drop{margin:0 0 8px}
 .map-status{margin-top:6px;font-size:13px;line-height:1.5;color:var(--text2)}
 .map-status i{vertical-align:-1px}
@@ -1178,6 +1187,14 @@ button.ov-stay{width:100%;font:inherit;text-align:left;cursor:pointer}
 /* 淺色表單（旅程設定、編輯卡片，面板加 .soft）：圓角統一 12px（圓形、膠囊除外）；輸入框、日期條、月曆、選項都是淺灰底、沒有框線，正在打字的輸入框變白底加咖啡色框 */
 .sheet.soft input[type=text],.sheet.soft input[type=time],.sheet.soft textarea,.sheet.soft .ts-strip,.sheet.soft .cal,.sheet.soft .wiz-opt,.sheet.soft .ts-cover,.sheet.soft .btn,.sheet.soft .ed-endbox,.sheet.soft .seg,.sheet.soft .ph-frame,.sheet.soft .cand-drop{border-radius:12px}
 .sheet.soft .seg button,.sheet.soft .seg-thumb{border-radius:9px}
+/* 編輯卡片最上面的卡片樣式：全圓角膠囊（10/27 使用者給的參考圖），不寫標題 */
+.sheet.ed-look .ed-kind-top{margin:0 0 14px}
+.sheet.ed-look .ed-kind-top .ed-field{margin:0}
+.sheet.ed-look .ed-kind-top .ed-lab{display:none}
+.sheet.ed-look .ed-kind-top .seg{height:44px;padding:4px;border-radius:999px;background:var(--fill2)}
+.sheet.ed-look .ed-kind-top .seg-thumb{top:4px;bottom:4px;left:4px;width:calc((100% - 8px) / 3);border-radius:999px;box-shadow:0 1px 4px rgba(60,40,20,.18)}
+.sheet.ed-look .ed-kind-top .seg button{border-radius:999px;font-size:15px}
+.sheet.ed-look .ed-kind-top .seg button.on{color:var(--accent-fg)}
 .sheet.soft input[type=text],.sheet.soft input[type=time]{height:44px;background:var(--fill);border-color:transparent}
 .sheet.soft textarea,.sheet.soft .ed-endbox{background:var(--fill);border-color:transparent}
 .sheet.soft input:focus,.sheet.soft textarea:focus{background:#fff;border-color:var(--accent-fg)}
@@ -1604,6 +1621,8 @@ html.tut .sheet:not(.dlg){max-height:calc(100vh - 214px - env(safe-area-inset-to
 .ps-field{position:relative}
 .tl-add{position:absolute;left:4px;right:0;z-index:3;height:40px;border:1px dashed transparent;border-radius:12px;background:#FAF7F3;color:var(--accent-fg);font:inherit;font-size:14px;font-weight:600;display:flex;align-items:center;justify-content:center;gap:4px;cursor:pointer}
 .tl-route{background:var(--page);border-color:var(--border)}   /* 自動排交通：比「加入行程」淡一階 */
+html:not(.desk-map) .tl-add:not(.tl-route){background:var(--accent-fg);color:#fff}
+html:not(.desk-map) .tl-add:not(.tl-route) small{color:rgba(255,255,255,.8)}   /* 手機：加入行程改咖啡色底白字（10/27；試過咖啡色外框、淺橘底） */
 .tl-add.empty{height:auto;padding:22px 12px;flex-direction:column;gap:2px;font-size:15px}
 .tl-add.empty i{font-size:22px}
 .tl-add small{font-size:12px;font-weight:400;color:var(--text2)}
@@ -1840,13 +1859,19 @@ html.tut .sheet:not(.dlg){max-height:calc(100vh - 214px - env(safe-area-inset-to
 .sheet.ed-look .ed-head #edTWrap{order:-1}   /* 店名跟右邊的 ✕ 對齊；「從備選替換」放在店名下面（10/23 原本在上面把版面推歪） */
 .sheet.ed-look .ed-head .ed-lab-row{order:1;margin:6px 0 0}
 .sheet.ed-look .ed-head #edSwapWrap{order:2}
-.ed-relook{display:flex;flex-direction:column;align-items:center;gap:2px;width:100%;height:auto;min-height:48px;margin-top:12px;padding:8px 12px}
-.ed-relook small{font-size:12px;font-weight:400;color:var(--text2)}
+.sheet.ed-look .ed-head .ed-field:has(.multi) > .ed-lab,.sheet.ed-look .ed-head .ed-field:has(.multi) .ed-lab-row{order:-2;margin:0 0 8px}   /* 多個地點／多選一：「第一站」「選項 1」標題在名稱框上面（10/27） */
+.ed-map-acts{display:flex;flex-wrap:wrap;gap:8px;margin-top:8px}
+.ed-map-acts:not(:has(.ed-act:not([hidden]))){display:none}
+.ed-act{display:inline-flex;align-items:center;gap:5px;height:32px;padding:0 12px;border:0;border-radius:16px;background:var(--fill);color:var(--text);font:inherit;font-size:13px;font-weight:600;text-decoration:none;cursor:pointer}
+.ed-act[hidden]{display:none}
+.ed-act i{font-size:15px;color:var(--text2)}
+.ed-act:hover{background:var(--fill2)}   /* 地圖欄位下面一排：在 Google 地圖找、重新查詢（10/27） */
 .sheet.ed-look .ed-head #edT{font-size:18px;font-weight:600}
 .sheet.ed-look .ed-head .sh-sub{margin-top:6px}
 .sheet.ed-look .ed-head .sh-sub i{font-size:13px;vertical-align:-1px}
 .sheet.ed-look .ed-head > button{margin-top:7px}
 .sheet.ed-look .ed-desc{margin-top:12px}
+.sheet.ed-look > .ed-lock,.sheet.ed-look > .ed-hint{margin:0 0 10px}   /* 已訂位、替換的提醒放在名稱上面（10/27） */
 .sheet.ed-look .ed-del-row{width:100%;margin-top:24px}
 .ed-more{margin:28px 0 0;padding-top:16px;border-top:1px solid var(--line);font-size:13px;font-weight:600;color:var(--muted)}
 @keyframes edIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
@@ -2701,13 +2726,13 @@ function warmPhotos(page) {
 // 上傳照片的樣子（所有放照片的地方都一樣）：還沒有照片＝虛線框，點了上傳；有照片＝右下角一個小圓圈，點了換一張
 const PH_PICK = '<span class="ph-pick"><i class="ti ti-photo-plus"></i>點這裡上傳照片</span>';
 const PH_CAM = '<button type="button" class="ph-cam" aria-label="換一張照片"><i class="ti ti-camera"></i></button>';
+const PH_DEL = '<button type="button" class="ph-cam ph-del" aria-label="拿掉照片"><i class="ti ti-trash"></i></button>';   // 沒有網址欄位的地方（編輯卡片最上面）：左下角拿掉照片
 // 編輯視窗裡的「照片」：放在筆記最上方。可以貼圖片網址，也可以從手機上傳（存到雲端硬碟）
 function photoField(id, key, hint, split) {
   const url = splitPhoto(NOTES[key]?.photo).src, n = noteUsers(key);
   // split：編輯卡片照資訊頁排時，照片放最上面（跟資訊頁同一個位置），網址欄位另外放到「其他設定」
-  if (split) return [`<div class="ed-field ed-photo ed-photo-top"><div class="ph-prev" id="${id}Prev"></div><input type="file" accept="image/*" id="${id}File" hidden><div class="ph-st" id="${id}St"></div></div>`,
-    `<div class="ed-field"><span class="ed-lab">照片網址 <span class="ed-lab-hint">清掉就拿掉照片${n > 1 ? `，${n} 個地方共用` : ''}</span></span>
-      <div class="ph-row"><span class="clr-wrap"><input id="${id}" type="text" value="${esc(url)}" placeholder="貼上圖片網址" autocomplete="off" inputmode="url"><button type="button" class="clr-btn" aria-label="清除" tabindex="-1"><i class="ti ti-x"></i></button></span></div></div>`];
+  // 10/27 使用者：貼照片網址很少用，編輯卡片拿掉網址欄位（網址還是存在隱藏欄位裡）；要拿掉照片按照片左下角的垃圾桶
+  if (split) return [`<div class="ed-field ed-photo ed-photo-top"><div class="ph-prev ph-can-del" id="${id}Prev"></div><input type="hidden" id="${id}" value="${esc(url)}"><input type="file" accept="image/*" id="${id}File" hidden><div class="ph-st" id="${id}St"></div></div>`, ''];
   return `
     <div class="ed-field ed-photo"><span class="ed-lab">照片 <span class="ed-lab-hint">${hint || `放在筆記最上方${n > 1 ? `，${n} 個地方共用` : ''}`}</span></span>
       <div class="ph-prev" id="${id}Prev"></div>
@@ -2742,7 +2767,7 @@ function wirePhoto(id, key) {
   input.dataset.px = p0.x; input.dataset.py = p0.y;
   const show = (src, badge) => {
     box.innerHTML = src ? `<div class="ph-frame ph-drag"><img src="${esc(src)}" alt="" draggable="false" style="object-position:${input.dataset.px}% ${input.dataset.py}%">
-      <span class="ph-hand" aria-hidden="true"><i class="ti ti-hand-move"></i></span>${badge === '上傳中…' ? '' : PH_CAM}</div>${badge ? `<span class="ph-badge">${badge}</span>` : ''}` : PH_PICK;
+      <span class="ph-hand" aria-hidden="true"><i class="ti ti-hand-move"></i></span>${badge === '上傳中…' ? '' : PH_CAM + (box.classList.contains('ph-can-del') ? PH_DEL : '')}</div>${badge ? `<span class="ph-badge">${badge}</span>` : ''}` : PH_PICK;
     box.classList.toggle('empty', !src);
     const img = box.querySelector('img');
     if (img) img.onerror = () => { if (!img.isConnected) return; box.innerHTML = '<span>這個網址打不開，請換一個</span>'; box.classList.add('empty'); };   // 已經換掉的舊圖晚一步報錯，不理它
@@ -2750,7 +2775,9 @@ function wirePhoto(id, key) {
   // 在預覽上拖曳：照片超出框的那個方向可以移動，選要顯示哪一段
   let drag0 = null;
   // 還沒有照片：點框框上傳；有照片：點右下角的小圓圈換一張
-  box.addEventListener('click', e => { if (e.target.closest('.ph-cam') || box.classList.contains('empty')) $(id + 'File').click(); });
+  box.addEventListener('click', e => {
+    if (e.target.closest('.ph-del')) { if (confirm('刪除照片？')) { input.value = ''; input.dispatchEvent(new Event('input')); } return; }   // 拿掉照片：先問一次（10/27），跟清掉網址一樣、按儲存才生效
+    if (e.target.closest('.ph-cam') || box.classList.contains('empty')) $(id + 'File').click(); });
   box.addEventListener('pointerdown', e => {
     if (e.target.closest('.ph-cam')) return;
     const frame = e.target.closest('.ph-drag'), img = frame?.querySelector('img');
@@ -6746,7 +6773,7 @@ function openNote(title, info, mine, q, ex = {}) {
   if (info.points && ex.alert) { const pts = info.points.filter(p => !(/^🕒/.test(p) && ex.alert.includes(p.replace(/^🕒\s*/, '')))); info = { ...info, points: pts.length ? pts : undefined }; }
   openSheet(`
     ${info.photo ? `<div class="ph-frame sh-photo">${photoImg(info.photo, ' onerror="this.parentNode.remove()"')}</div>` : ''}
-    <div class="sh-head"><div style="flex:1;min-width:0"><div class="sh-title" id="shTitle">${esc(title)}</div><div class="sh-sub">${esc(info.orig || '')}</div></div>
+    <div class="sh-head"><div style="flex:1;min-width:0"><div class="sh-title" id="shTitle">${esc(title)}</div><div class="sh-sub">${esc((info.orig || '').trim() === (ex.desc || '').trim() ? '' : info.orig || '')}</div></div>
       ${q ? navBtn(q, title, ex.pid) : ''}<button class="sh-close" aria-label="關閉"><i class="ti ti-x"></i></button></div>
     ${ex.desc ? `<div class="sh-desc">${esc(ex.desc)}</div>` : ''}
     ${ex.html || ''}
@@ -7601,7 +7628,7 @@ function wireRuler(box, get, set, mark) {
     });
   }, { passive: true });
   // 電腦（10/23 使用者：電腦版不能操作；接著說卡卡的）：滑鼠按住左右拖（拖的時候不吸刻度、放開有慣性滑一段，跟手機一樣），
-  // 滾輪上下滾（停下來才吸到刻度）、點刻度跳過去、← → 一格一格
+  // 點刻度跳過去、← → 一格一格（滾輪上下滾 10/27 拿掉）
   let md = null, fling = 0, wheelT = 0;
   const free = on => sc.classList.toggle('dr-drag', on);   // 拖、滑的時候先不吸刻度（吸刻度會一格一格跳，看起來卡）
   const settle = () => { free(false); sc.scrollTo({ left: toX(DR_MIN + Math.round(sc.scrollLeft / DR_PX) * DR_STEP), behavior: 'smooth' }); };
@@ -7630,12 +7657,11 @@ function wireRuler(box, get, set, mark) {
     fling = requestAnimationFrame(step);
   };
   sc.addEventListener('pointerup', up); sc.addEventListener('pointercancel', up);
+  // 滾輪上下滾不調時間，照常捲面板（10/27 使用者：關掉滾輪觸發；捲面板時經過刻度尺會誤改）。觸控板左右滑照原本捲，停了才吸
   sc.addEventListener('wheel', e => {
-    if (Math.abs(e.deltaY) <= Math.abs(e.deltaX)) { clearTimeout(wheelT); wheelT = setTimeout(settle, 140); free(true); return; }   // 觸控板左右滑：照原本捲，停了才吸
-    e.preventDefault(); cancelAnimationFrame(fling); free(true);
-    sc.scrollLeft += e.deltaMode === 1 ? e.deltaY * DR_PX / 3 : e.deltaY * DR_PX / 100;   // 滑鼠滾輪一格（約 100px、3 行）＝一格刻度 5 分鐘（10/27 使用者：原本一格跳 30 分鐘太快）
-    clearTimeout(wheelT); wheelT = setTimeout(settle, 140);
-  }, { passive: false });
+    if (Math.abs(e.deltaY) > Math.abs(e.deltaX)) return;
+    clearTimeout(wheelT); wheelT = setTimeout(settle, 140); free(true);
+  }, { passive: true });
   sc.tabIndex = 0;
   sc.addEventListener('keydown', e => { const d = e.key === 'ArrowRight' ? 1 : e.key === 'ArrowLeft' ? -1 : 0; if (!d) return; e.preventDefault(); sc.scrollTo({ left: toX(last + d * DR_STEP) }); });
   return v => { v = clamp(v); if (v === last) return; last = v; show(v); sc.scrollTo({ left: toX(v), behavior: 'smooth' }); };
@@ -8143,10 +8169,16 @@ function openEditor(id, startAt, toDay, replaceId, keep) {
     ${cands.length ? `<div id="edCandWrap">${candDropHtml(cands)}</div>` : ''}
 `}
 `;
-  const f_name = `    <${swaps.length ? 'div' : 'label'} class="ed-field">${swaps.length ? `<span class="ed-lab-row"><span class="ed-lab" id="edTLab">名稱</span>
-      <button type="button" class="swap-btn" id="edSwapBtn" aria-expanded="false"><i class="ti ti-arrows-exchange"></i> 從備選替換</button></span>` : '<span class="ed-lab" id="edTLab">名稱</span>'}
+  // 店名下面一排：從備選替換（書籤圖示，跟備選一樣）、用 Google 重新查詢（10/27 從地圖欄位下面搬上來：查的是這家店的資料，放在店名旁邊比較好找）
+  // 資訊頁樣式（編輯已經排好的卡片）：「從備選替換」放進名稱框最右邊（10/27 使用者：拿掉旁邊的 ✕，名稱框撐滿）
+  const relook = ed.id && !ed.group && !ed.pick && !ed.home && !findItem(ed.id)[1]?.home, lookEd = !ed.isNew && !old && !ed.fromCand;
+  const swapBtn = !swaps.length ? '' : lookEd ? '<button type="button" class="ed-t-swap" id="edSwapBtn" aria-expanded="false"><small>從備選替換</small><i class="ti ti-bookmark-filled"></i></button>'   // 跟加入行程搜尋框右邊的書籤同一種：大顆實心書籤＋左邊灰色小字
+    : '<button type="button" class="swap-btn" id="edSwapBtn" aria-expanded="false"><i class="ti ti-bookmark"></i> 從備選替換</button>';
+  const tActs = (swaps.length && !lookEd) || relook;
+  const f_name = `    <${tActs || swaps.length ? 'div' : 'label'} class="ed-field">${tActs ? `<span class="ed-lab-row"><span class="ed-lab" id="edTLab">名稱</span><span class="ed-t-acts">
+      ${lookEd ? '' : swapBtn}${relook ? '<button type="button" class="swap-btn" id="edRelook" title="重新查描述、營業時間、照片、評論重點（沒查到的補上）"><i class="ti ti-refresh"></i> 重新查詢資訊</button>' : ''}</span></span>` : '<span class="ed-lab" id="edTLab">名稱</span>'}
       ${swaps.length ? `<div id="edSwapWrap">${candListHtml(swaps)}</div>` : ''}
-      <span class="ed-t-wrap" id="edTWrap"><span class="num" aria-hidden="true">1</span><input id="edT" type="text" aria-label="名稱" value="${esc(ed.t)}" placeholder="例如：Ristr8to 拉花咖啡" autocomplete="off"><button type="button" class="ed-stop-x" id="edTX" aria-label="拿掉第一站" hidden><i class="ti ti-x"></i></button></span></${swaps.length ? 'div' : 'label'}>
+      <span class="ed-t-wrap" id="edTWrap"><span class="num" aria-hidden="true">1</span><input id="edT" type="text" aria-label="名稱" value="${esc(ed.t)}" placeholder="例如：Ristr8to 拉花咖啡" autocomplete="off">${lookEd ? swapBtn : ''}<button type="button" class="ed-stop-x" id="edTX" aria-label="拿掉第一站" hidden><i class="ti ti-x"></i></button></span></${tActs || swaps.length ? 'div' : 'label'}>
     <div class="err" id="edTErr" hidden>請輸入名稱</div>
 `;
   const f_subs = `    ${ed.group || ed.pick ? `<div class="ed-field"><span class="ed-lab">${ed.group ? '每一站' : '選項'} <span class="ed-lab-hint">點名字改那一${ed.group ? '站' : '家'}的時間、地圖</span></span>
@@ -8184,9 +8216,10 @@ function openEditor(id, startAt, toDay, replaceId, keep) {
     ${ed.group ? '' : `<label class="ed-switch"><input type="checkbox" class="sw" id="edBooked"${ed.booked ? ' checked' : ''}><span>已訂位</span></label>`}
 `;
   const f_map = `    ${ed.group || ed.pick ? '' : `
-    <label class="ed-field"><span class="ed-lab">地圖 <span class="ed-lab-hint">貼上 Google 地圖的分享連結最準確</span></span>
+    <label class="ed-field"><span class="ed-lab">地圖</span>
       ${pinIn(`<span class="clr-wrap"><input id="edMap" type="text" value="${esc(ed.map)}" placeholder="貼上分享連結，或輸入店名" autocomplete="off" inputmode="url"><button type="button" class="clr-btn" aria-label="清除" tabindex="-1"><i class="ti ti-x"></i></button></span>`, isGMap(ed.map))}</label>
     <div class="map-status" id="edMapStatus"></div>
+    <div class="ed-map-acts"><a class="ed-act" id="edMapFind" target="_blank" rel="noopener" hidden><i class="ti ti-external-link"></i>在 Google 地圖找</a></div>
     <div class="map-status" id="edMates"${placeMates(ed.id && !ed.group && !ed.pick ? findItem(ed.id)[1] : null, ed.id ? findItem(ed.id)[1] : null).length ? '' : ' hidden'}>${mateHint(placeMates(ed.id && !ed.group && !ed.pick ? findItem(ed.id)[1] : null, ed.id ? findItem(ed.id)[1] : null).length)}</div>`}
 `;
   const f_travel = `    <div class="ed-field"><span class="ed-lab-row"><span class="ed-lab">交通時間（從上一站過來）</span>
@@ -8215,15 +8248,18 @@ function openEditor(id, startAt, toDay, replaceId, keep) {
   // 編輯既有的卡片：照卡片資訊的順序（照片、店名、描述、時間、提醒、筆記），資訊頁沒有的設定放到最後「其他設定」，從資訊頁按「編輯卡片」過來時畫面不會整個換掉
   const look = !ed.isNew && !old && !ed.fromCand;
   // 照片：資訊頁有照片才放最上面（同一個位置）；沒有照片、多選一（資訊頁不顯示照片）就整個放到「其他設定」
-  const [phTop, phUrl] = !look || ed.group ? ['', ''] : !ed.pick && NOTES[ed.noteKey]?.photo ? photoField('edPhoto', ed.noteKey, '', true) : ['', photoField('edPhoto', ed.noteKey)];
+  const [phTop, phUrl] = !look || ed.group ? ['', ''] : !ed.pick ? photoField('edPhoto', ed.noteKey, '', true) : ['', photoField('edPhoto', ed.noteKey)];   // 沒有照片也放最上面（虛線框點了上傳），跟加入行程一樣（10/27）
+  // 10/27：卡片樣式放最上面（最根本的切換，膠囊樣式）；日期移到其他設定（使用率低）
+  const tCut = f_time.indexOf('<div class="ed-field"><span class="ed-lab">時間</span>'), f_date = f_time.slice(0, tCut), f_clock = f_time.slice(tCut);
   const lookHtml = () => `
+    <div class="ed-kind-top">${f_kind}</div>
     ${phTop}
+    ${f_hints}
     <div class="sh-head ed-head"><div style="flex:1;min-width:0">${f_name}
-      <div class="sh-sub"><i class="ti ti-pencil"></i> 編輯中．${current === 'cand' ? '備選景點' : `${dayInfo(current).date}．${esc(dayInfo(current).zh)}`}</div></div>
-      <button class="${ed.fromInfo ? 'ed-back' : 'sh-close'}" aria-label="${ed.fromInfo ? '回到卡片資訊' : '關閉'}"><i class="ti ti-x"></i></button></div>
-    ${f_hints}${f_subs}
-    ${ed.group || ed.pick ? '' : `<label class="ed-field ed-desc"><input id="edDesc" type="text" value="${esc(ed.desc)}" placeholder="例如：當地最大的傳統市場，可吃可買" autocomplete="off" maxlength="80"></label>`}
-    ${f_time}
+</div></div>
+    ${f_subs}
+    ${ed.group || ed.pick ? '' : `<label class="ed-field ed-desc"><span class="ed-lab">描述</span><input id="edDesc" type="text" value="${esc(ed.desc)}" placeholder="例如：當地最大的傳統市場，可吃可買" autocomplete="off" maxlength="80"></label>`}
+    ${f_clock}
     ${ed.group ? '' : `
     <label class="ed-field"><span class="ed-lab">重點提醒</span>
       <input id="edAlert" type="text" value="${esc(ed.alert)}" placeholder="例如：只收現金、16:30 關門" autocomplete="off"></label>
@@ -8231,12 +8267,12 @@ function openEditor(id, startAt, toDay, replaceId, keep) {
       <textarea id="edMine" rows="3" placeholder="想提醒大家的事">${esc(ed.mine)}</textarea></label>
     ${fullNoteField('edFull', ed.noteKey)}`}
     <div class="ed-more">其他設定</div>
+    ${f_date}
     ${f_cls}
     ${ed.group || ed.pick ? '' : `    <div class="ed-field ed-fold"><button type="button" class="ed-fold-h" aria-expanded="false"><span class="ed-lab">區域</span><span class="ed-fold-v">${esc(ed.area || '未填寫')}</span><i class="ti ti-chevron-down"></i></button>
       <input id="edArea" type="text" value="${esc(ed.area || '')}" placeholder="例如：寧曼、古城、塔佩門" autocomplete="off" maxlength="20" hidden></div>`}
-    ${f_map}${ed.id && !ed.group && !ed.pick && !ed.home && !findItem(ed.id)[1]?.home ? `<button type="button" class="btn ghost ed-relook" id="edRelook"><i class="ti ti-refresh"></i> 用 Google 重新查詢這個地點<small>描述、營業時間、照片、評論重點（沒查到的補上）</small></button>` : ''}${f_travel}
+    ${f_map}${f_travel}
     ${phUrl}
-    ${f_kind}
     <button type="button" class="btn ghost danger ed-del-row" id="edDel"><i class="ti ti-trash"></i> 刪除這張卡片</button>
     <div class="ed-actions">
       <button type="button" class="btn ghost ${ed.fromInfo ? 'ed-back' : 'ed-cancel'}" style="flex:1">取消</button>
@@ -8246,16 +8282,17 @@ function openEditor(id, startAt, toDay, replaceId, keep) {
       <div class="sh-sub">${current === 'cand' ? '備選景點' : `${dayInfo(current).date}．${esc(dayInfo(current).zh)}`}</div></div>
       <button class="sh-close" aria-label="關閉"><i class="ti ti-x"></i></button></div>
 ${f_hints}${f_kind}${f_name}${f_subs}${f_desc}${f_cls}${f_time}    <hr class="ed-sep">
-${f_map}${f_travel}${f_notes}${f_acts}`, ed.isNew ? '#edT' : look ? '.ed-head button' : '.sh-close');
+${f_map}${f_travel}${f_notes}${f_acts}`, ed.isNew ? '#edT' : look ? '.ed-head .no-focus' : '.sh-close');
   sheet.classList.add('soft');   // 淺色底、沒有框線的輸入框，圓角統一 12px
   sheet.classList.toggle('ed-look', look);
   sheet.querySelectorAll('.ed-back').forEach(b => b.addEventListener('click', () => { const id = ed.id; openCardInfo(id); sheet.classList.add('info-in'); }));   // ✕ 和取消：沒存的修改不保留（跟按 ✕ 關掉一樣）
-  // 區域、類型預設收起來（大多是自動填的）：點標題列才展開（區域不自動跳鍵盤，要改再點輸入框）；類型展開時把選中的那顆捲到看得見
+  // 區域、類型：點標題列收起／展開（區域不自動跳鍵盤，要改再點輸入框）；類型展開時把選中的那顆捲到看得見
   sheet.querySelectorAll('.ed-fold-h').forEach(h => h.addEventListener('click', () => {
     const box = h.nextElementSibling, open = box.hidden; box.hidden = !open;
     h.setAttribute('aria-expanded', open); h.classList.toggle('open', open);
     if (open && box.classList.contains('chips') && !box.dataset.sc) { box.dataset.sc = 1; chipScroller(box); }
   }));
+  sheet.querySelectorAll('.ed-fold-h').forEach(h => h.click());   // 10/27 使用者：類型、區域預設展開（標題列照樣可以點收起來）
   wireEditor();
 }
 
@@ -8439,12 +8476,13 @@ function wireEditor() {
     const box = $('edMapStatus'); if (!box) return;
     const v = $('edMap').value.trim(), name = $('edT').value.trim();
     setPin($('edMap'), isGMap(v));
-    const find = name ? `<br><a href="${esc(mapHref(withCity(name)))}" target="_blank" rel="noopener">去 Google 地圖找「${esc(name)}」</a>` : '';
-    if (!v) box.innerHTML = `<i class="ti ti-map-pin-off"></i> 還沒設定地點，卡片上不會出現導航按鈕${find}`;
-    else if (isGMap(v))
-      box.innerHTML = '<span class="ok">已連結地點</span>，導航會直接打開這個地點';
-    else if (/^https?:\/\//i.test(v)) box.innerHTML = '<i class="ti ti-link"></i> 已連結網址（不是 Google 地圖連結，可能無法導航）';
-    else box.innerHTML = `<i class="ti ti-search"></i> 貼上 Google Map 的店名或是 Google Map 連結${find}`;
+    // 說明只留一行；「在 Google 地圖找」「重新查詢」放在下面一排小按鈕（10/27 使用者：原本連結、大按鈕、說明疊在一起很亂）
+    // 「在 Google 地圖找」只在還沒找到地點時出現（沒填、或 Google 用店名查不到）；已經找到的，右上角導航就會打開那裡，不重複（10/27）
+    const fb = $('edMapFind'), me = ed.id ? findItem(ed.id)[1] : null; if (fb) { fb.hidden = !name || isGMap(v) || !!(me?.pid && v === (me.map || '')); fb.href = name ? mapHref(withCity(name)) : '#'; }
+    if (!v) box.innerHTML = '<i class="ti ti-map-pin-off"></i> 還沒設定地點，卡片上不會有導航';
+    else if (isGMap(v)) box.innerHTML = '<span class="ok"><i class="ti ti-circle-check"></i> 已連結 Google 地圖的地點</span>';
+    else if (/^https?:\/\//i.test(v)) box.innerHTML = '<i class="ti ti-link"></i> 不是 Google 地圖連結，可能無法導航';
+    else box.innerHTML = '<i class="ti ti-search"></i> 用店名查詢；貼上 Google 地圖的分享連結更準確';
   };
   $('edMap')?.addEventListener('input', updateMapStatus);
   updateMapStatus();
