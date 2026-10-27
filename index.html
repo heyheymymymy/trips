@@ -3186,6 +3186,7 @@ function hoursWarn(x, day, s, e, text) {
   const ymd = isDay(day) && tripDates()[dayNum(day) - 1]?.ymd; if (!ymd || isNaN(s) || isNaN(e)) return '';
   const wd = new Date(ymd + 'T00:00').getDay(), fmt = v => hhmm(v % (24 * 60));
   let hrs = []; try { hrs = JSON.parse(x.hours || '[]'); } catch {}
+  if (Array.isArray(hrs) && hrs.length === 1 && hrs[0][1] === 0 && hrs[0][2] >= 24 * 60) return '';   // 全年 24 小時（10/27 之前存的只有週日一段）：不是公休
   if (Array.isArray(hrs) && hrs.length) {
     const today = hrs.filter(h => h[0] === wd);
     if (!today.length) return '當天公休';
@@ -5957,7 +5958,30 @@ mapBtn.addEventListener('click', () => {
     [tl, candEl].forEach(el => { el.classList.remove('fade-in'); void el.offsetWidth; el.classList.add('fade-in'); });
   }, calmMotion() ? 0 : 140);
 });
-let mapsReady = null, gmap = null, mapPins = [], mapLine = null, PinView = null, mapTT = [];
+let mapsReady = null, gmap = null, mapPins = [], mapLine = null, PinView = null, mapTT = [], mapArcs = [];
+// 飛行示意：起飛、降落機場之間畫一條往上拱的虛線，中間一架飛機（10/27）。只有目的地那頭的機場會查座標存在機票上，另一頭（多半是台灣）用這張表
+const AIRPORT_LL = { TPE: [25.0777, 121.2328], TSA: [25.0694, 121.5525], KHH: [22.5771, 120.35], RMQ: [24.2647, 120.6208], NGO: [34.8584, 136.8054], NRT: [35.772, 140.3929], HND: [35.5494, 139.7798],
+  KIX: [34.432, 135.2304], ITM: [34.7855, 135.4382], FUK: [33.5859, 130.451], CTS: [42.7752, 141.6923], OKA: [26.1958, 127.6459], SDJ: [38.1397, 140.917], HIJ: [34.4361, 132.9194], KMJ: [32.8373, 130.855],
+  ICN: [37.4602, 126.4407], GMP: [37.5583, 126.7906], PUS: [35.1795, 128.9382], CJU: [33.5113, 126.493], CNX: [18.7668, 98.9626], BKK: [13.69, 100.7501], DMK: [13.9126, 100.6068], HKT: [8.1132, 98.3169],
+  USM: [9.5478, 100.0623], HKG: [22.308, 113.9185], MFM: [22.1496, 113.5915], SIN: [1.3644, 103.9915], KUL: [2.7456, 101.7072], SGN: [10.8188, 106.652], HAN: [21.2212, 105.8072], DAD: [16.0439, 108.1994],
+  MNL: [14.5086, 121.0198], CEB: [10.3075, 123.9794], DPS: [-8.7482, 115.167], PVG: [31.1443, 121.8083], SHA: [31.1979, 121.3363], PEK: [40.0799, 116.6031], PKX: [39.5098, 116.4105] };
+const airLL = e => { const p = llOf(e?.loc), t = AIRPORT_LL[e?.iata]; return p || (t ? { lat: t[0], lng: t[1] } : null); };
+// 二次貝茲曲線：控制點在中點往旁邊推（距離的 k 倍，推往北邊），看起來像拋物線
+function arcPath(a, b, k = .22) {
+  const dx = b.lng - a.lng, dy = b.lat - a.lat, d = Math.hypot(dx, dy) || 1;
+  let nx = -dy / d, ny = dx / d; if (ny < 0) { nx = -nx; ny = -ny; }
+  const c = { lat: (a.lat + b.lat) / 2 + ny * d * k, lng: (a.lng + b.lng) / 2 + nx * d * k };
+  return Array.from({ length: 65 }, (_, i) => { const t = i / 64, u = 1 - t; return { lat: u * u * a.lat + 2 * u * t * c.lat + t * t * b.lat, lng: u * u * a.lng + 2 * u * t * c.lng + t * t * b.lng }; });
+}
+function drawFlightArcs(pts) {
+  for (const id of new Set(pts.filter(p => p.air).map(p => p.flid))) {
+    const f = tripFlights().find(x => x.id === id), a = airLL(f?.dep), b = airLL(f?.arr); if (!a || !b) continue;
+    mapArcs.push(new google.maps.Polyline({ path: arcPath(a, b, legsOf('back').some(x => x.id === id) ? .1 : .22),   // 回程拱低一點，總覽上去回兩條才不會疊在一起
+      map: gmap, clickable: false, strokeOpacity: 0, zIndex: 1,
+      icons: [{ icon: { path: 'M 0,-1 0,1', strokeColor: '#3E6E9E', strokeOpacity: .75, strokeWeight: 2, scale: 2.5 }, offset: '0', repeat: '11px' },
+        { icon: { path: PLANE_SVG.match(/ d="([^"]+)"/)[1], fillColor: '#3E6E9E', fillOpacity: 1, strokeColor: '#fff', strokeWeight: 1, scale: .95, anchor: new google.maps.Point(12, 12) }, offset: '50%' }] }));
+  }
+}
 // 地圖上的「顯示備選」：每天、總覽的地圖可以順便標出備選地點（書籤標誌），記在這台裝置上
 const MAP_CAND_KEY = 'trip-mapcand', mapCandBtn = document.getElementById('mapCand'), CAND_BM = '<svg aria-hidden="true" width="11" height="17" viewBox="0 0 11 17" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M0.973613 16.5425C0.671604 16.5425 0.432514 16.4443 0.256342 16.248C0.0852041 16.0568 -0.000365019 15.7925 -0.000365019 15.4553V2.28768C-0.000365019 1.5377 0.190907 0.968914 0.573452 0.581336C0.955996 0.193758 1.51975 -3.09944e-05 2.2647 -3.09944e-05H8.26712C9.01208 -3.09944e-05 9.57583 0.193758 9.95837 0.581336C10.3409 0.968914 10.5322 1.5377 10.5322 2.28768V15.4553C10.5322 15.7925 10.4441 16.0568 10.2679 16.248C10.0968 16.4443 9.86274 16.5425 9.56576 16.5425C9.35939 16.5425 9.17063 16.4796 8.99949 16.3537C8.82836 16.2329 8.5792 16.014 8.25202 15.6969L5.33009 12.8127C5.28982 12.7674 5.24704 12.7674 5.20173 12.8127L2.28735 15.6969C1.96017 16.014 1.7085 16.2329 1.53233 16.3537C1.36119 16.4796 1.17495 16.5425 0.973613 16.5425Z" fill="currentColor"/></svg>';
 let mapCandOn = false, mapCandPins = [];
@@ -6462,6 +6486,7 @@ async function drawMap(page) {
   mapTT.forEach(p => p.setMap(null)); mapTT = [];
   drawCandPins(page);
   if (mapLine) { mapLine.setMap(null); mapLine = null; }
+  mapArcs.forEach(a => a.setMap(null)); mapArcs = [];
   mapStrip.innerHTML = ''; mapStrip.classList.remove('types'); mapView.classList.remove('has-strip'); mapPts = pts; mapActive = -1;
   gmap.setOptions({ clickableIcons: deskMap(page) && isDay(page) });
   if (!pts.length && page === 'new') { gmap.setCenter({ lat: 25, lng: 118 }); gmap.setZoom(4); return; }   // 還沒選目的地：亞洲
@@ -6482,6 +6507,7 @@ async function drawMap(page) {
     return;
   }
   if (page === 'overview') {   // 電腦版總覽：整趟的地點都標上去，不連線
+    drawFlightArcs(pts);   // 飛行示意線只畫在總覽（10/27 使用者：每天的地圖畫了有點複雜）
     const b = new google.maps.LatLngBounds(); pts.forEach(p => b.extend(p.p)); gmap.fitBounds(b, { top: 40, bottom: 40, left: 40, right: 40 }); return;
   }
   // 備選：底下是類型標籤，點了地圖只留那一類的圖釘
