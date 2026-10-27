@@ -801,7 +801,6 @@ a.car.walk-go.late{color:#B4412F}
 .sheet.soft .rd-in .rd-ab input{flex:1;min-width:0;padding:0 8px 0 14px;font-size:15px}
 .rd-ab > i{flex:none;font-size:14px;color:var(--muted)}
 .car .q{margin-left:2px;font-weight:600}
-.rt-list{display:flex;flex-direction:column;gap:2px;margin-top:4px}
 .rt-pick{margin-top:4px}
 .rt-modes{display:flex;flex-wrap:wrap;gap:8px}
 .rt-modes button{display:inline-flex;align-items:center;gap:5px;height:36px;padding:0 14px;border:0;border-radius:999px;background:var(--fill);color:var(--text2);font:inherit;font-size:14px;cursor:pointer}
@@ -810,16 +809,39 @@ a.car.walk-go.late{color:#B4412F}
 .rt-rule{margin-top:8px;font-size:12.5px;line-height:1.5;color:var(--text2)}
 .rt-rule .ti{vertical-align:-2px}
 .rt-calc{width:100%;margin-top:12px}   /* 自動排交通：先選交通方式再算（10/27） */
-.rt-row{display:flex;align-items:center;gap:10px;padding:9px 2px;border-bottom:1px solid var(--line);font-size:13px;line-height:1.45}
-.rt-row:last-child{border-bottom:0}
-.rt-row input{flex:none;width:18px;height:18px;accent-color:var(--accent-fg)}
-.rt-row .rt-main{flex:1;min-width:0}
-.rt-main>span{display:block}
-.rt-row .rt-names{color:var(--text2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.rt-row .rt-val{font-weight:600}
-.rt-row .rt-val s{color:var(--muted);font-weight:400;margin-right:4px}
-.rt-row .rt-sub{font-size:12px;color:var(--muted)}
-.rt-row.off{opacity:.55}
+/* 自動排交通：一站一站往下排，中間是交通（10/27 改成時間線樣式，點交通可以換方式） */
+.rt-line{margin-top:10px;padding-bottom:4px}
+.rt-stop{display:flex;align-items:center;gap:12px;min-height:28px;font-size:16px;font-weight:600;line-height:1.35}
+.rt-stop .rt-nm{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.rt-dot{flex:none;width:16px;height:16px;border:3px solid var(--cafe-fg);border-radius:50%;background:var(--page)}
+.rt-gap{margin-left:7px;border-left:2px dotted var(--cafe-fg);padding:12px 0 12px 19px;min-height:22px}
+.rt-seg{display:flex;flex-wrap:wrap;align-items:center;gap:8px}
+.rt-ride{margin-left:6px;border-left:4px solid var(--border);padding:6px 0 6px 18px}   /* 交通卡片：灰色、沒有下拉，只是給你看時間，不能在這裡改 */
+.rt-ride-card{background:var(--fill);color:var(--text2);border-radius:12px;padding:10px 14px 12px}
+.rt-ride-top{display:flex;align-items:center;gap:6px;font-size:12.5px;color:var(--muted);margin-bottom:6px}
+.rt-ride-top .ti{font-size:16px}
+.rt-ride-top span{flex:1}
+.rt-ride-top b{color:var(--text2);font-size:13.5px}
+.rt-ride-st{display:flex;align-items:baseline;gap:8px;font-size:15px;font-weight:600;color:var(--text2);line-height:1.4}
+.rt-ride-st span:first-child{flex:1;min-width:0}
+.rt-ride-tm{flex:none;font-size:13px;font-weight:500;color:var(--muted)}
+.rt-ride-legs{padding:2px 0}
+.rt-ride-leg{position:relative;padding:3px 0 3px 16px;font-size:12.5px;color:var(--muted);line-height:1.4}
+.rt-ride-leg::before{content:'';position:absolute;left:3px;top:calc(.7em + 3px - 3.5px);width:5px;height:5px;border-radius:50%;background:var(--muted)}
+.rt-ride-leg:not(:last-child)::after{content:'';position:absolute;left:5px;top:calc(.7em + 3px + 3px);bottom:calc(-.7em - 3px + 5px);border-left:1.5px dotted var(--muted)}
+.rt-chip{display:inline-flex;align-items:center;gap:6px;height:34px;padding:0 12px;border:0;border-radius:8px;background:var(--fill);color:var(--text2);font:inherit;font-size:14px;white-space:nowrap}
+.rt-chip .ti{font-size:16px}
+button.rt-chip{cursor:pointer}
+.rt-chip.new{color:var(--accent-fg);font-weight:600}
+.rt-chip.off{color:var(--muted)}
+.rt-chip .ti-chevron-down{color:var(--text);font-size:15px;margin-left:-2px}
+.rt-tag{font-size:12px;color:var(--muted)}
+.rt-err{width:100%;font-size:12px;color:var(--muted)}
+.rt-menu{display:flex;flex-wrap:wrap;gap:6px;width:100%}
+.rt-menu button{display:inline-flex;align-items:center;gap:5px;height:32px;padding:0 12px;border:0;border-radius:999px;background:var(--fill);color:var(--text2);font:inherit;font-size:13px;cursor:pointer}
+.rt-menu button.on{background:var(--accent-bg);color:var(--accent-fg);font-weight:600}
+.rt-menu button:disabled{opacity:.5;cursor:default}
+.rt-menu button span{color:var(--muted);font-weight:400}
 .ed-travel{display:flex;gap:8px;align-items:center}
 .ed-travel .seg{flex:1;min-width:0}
 .ed-tmin{flex:none;display:flex;align-items:center;gap:4px;font-size:13px;color:var(--text2)}
@@ -2551,15 +2573,16 @@ const cardOf = (p, extra) => { const { name, ...rest } = p;
 const firstLoc = it => it.group ? it.stops?.[0]?.loc : it.alts?.length ? it.alts[0].loc : it.loc;
 const lastLoc = it => it.group ? it.stops?.[it.stops.length - 1]?.loc : it.alts?.length ? it.alts[0].loc : it.loc;
 const routeKey = (prev, it) => { const a = prev && lastLoc(prev), b = it && firstLoc(it); return a && b ? `${a}>${b}` : ''; };
-// troute：「auto 或 manual｜drive 或 walk｜算的時候的起點>終點」，座標變了（換店、搬動）就看得出這個時間可能不準
-const parseRoute = r => { const [src = '', mode = 'drive', key = ''] = String(r || '').split('|'); return { src, mode, key }; };
+// troute：「auto 或 manual｜drive 或 walk｜算的時候的起點>終點｜距離（公尺，10/27 起自動算的才有）」，座標變了（換店、搬動）就看得出這個時間可能不準
+const parseRoute = r => { const [src = '', mode = 'drive', key = '', m = ''] = String(r || '').split('|'); return { src, mode, key, m: +m || 0 }; };
+const autoRoute = (r, key) => `auto|${r.mode}|${key}${r.m ? `|${r.m}` : ''}`;
 const routeStale = (prev, it) => { const r = parseRoute(it.troute); return !!r.key && r.key !== routeKey(prev, it); };
 // 同一天排在它前面的那張（開始時間比它早；editing 的卡片用面板上的開始時間）
 const prevOf = (day, id, start) => withFlights(DATA[day] || [], day).filter(x => x.id !== id && m(x.s) < start).sort((a, b) => m(a.s) - m(b.s) || m(a.e) - m(b.e)).pop() || homePrev(day);
 // 交通方式：名稱、圖示（要加新的方式，在這裡和 places.ts 的 PICK_MODES 各加一項）
 // 大眾運輸 10/27 起不再自動推算（要搭車用交通卡片），留著是為了顯示以前算好的時間
 const ROUTE_MODES = { drive: ['開車', 'car'], walk: ['步行', 'walk'], transit: ['大眾運輸', 'bus'], moto: ['機車', 'motorbike'] };
-const PICK_MODES = [['drive', 'car', '開車／叫車'], ['moto', 'motorbike', '機車'], ['walk', 'walk', '走路']];   // 自動排交通可以選的
+const PICK_MODES = [['drive', 'car', '開車／叫車'], ['walk', 'walk', '走路'], ['moto', 'motorbike', '機車']];   // 順序：開車、走路、機車（10/27）   // 自動排交通可以選的
 // 這趟旅程會用到的交通方式（建立旅程時選的主要方式＋步行，不是開車的再加開車當備案）；跟 Code.gs 的 modesFor 一樣
 // 交通方式可以複選（存成 "transit,drive"）：tripModeList＝勾的全部，tripMode＝第一個（舊的地方用）
 const tripModeList = () => { const out = String(TRIP?.mode || '').split(',').map(x => x.trim()).filter((x, i, a) => PICK_MODES.some(p => p[0] === x) && a.indexOf(x) === i); return out.length ? out : ['drive']; };   // 舊旅程存了 transit：當成開車
@@ -4963,7 +4986,7 @@ function rideGrab() {
   rd.alert = $('rdAlert').value.trim(); rd.booked = $('rdBooked').checked;
   // 車站改了名字：座標和截圖上的走路分鐘都不算了，存的時候重查
   const st = (k, w, v) => { if (v !== (rd[k]?.name || '')) { rd[k] = v ? { name: v, loc: '' } : null; rd[w] = 0; } };
-  st('fromSt', 'walkA', rd.legs[0]?.a || ''); st('toSt', 'walkB', rd.legs[rd.legs.length - 1]?.b || '');   // 整趟的上下車站＝第一段上車、最後一段下車
+  st('fromSt', 'walkA', rd.legs[0]?.a || (rd.fromId ? '' : rd.from)); st('toSt', 'walkB', rd.legs[rd.legs.length - 1]?.b || (rd.toId ? '' : rd.to));   // 整趟的上下車站＝第一段上車、最後一段下車；沒填車站、起點終點又沒連到卡片（自己打的「松本車站」）就用起點、終點的名字查（10/27）
 }
 // 儲存前：上下車站還沒有座標就先查（找離前後卡片近的那個站），查不到也照樣存
 async function saveRide() {
@@ -5081,7 +5104,7 @@ async function fillAirportRoute(day) {
   try {
     const r = (await api({ ...getAuth(), action: 'routeTimes', pairs: [{ a, b: it.loc }] }, 60000)).routes[0];
     if (!r || r.error) return;
-    const list = tripFlights().map(f => f.id === it.flight.id ? { ...f, toAirport: { text: routeText(r) || '0 分', troute: `auto|${r.mode}|${key}` } } : f);
+    const list = tripFlights().map(f => f.id === it.flight.id ? { ...f, toAirport: { text: routeText(r) || '0 分', troute: autoRoute(r, key) } } : f);
     saveFlights(list, '', 0, true);
   } catch {}
 }
@@ -5097,7 +5120,7 @@ async function fillArrivalRoute(day) {
     try {
       const r = (await api({ ...getAuth(), action: 'routeTimes', pairs: [{ a: lastLoc(fl), b: firstLoc(it) }] }, 60000)).routes[0];
       const x = findItem(it.id)[1]; if (!r || r.error || !x || editing) continue;
-      x.travel = routeText(r) || '0 分'; x.troute = `auto|${r.mode}|${key}`;
+      x.travel = routeText(r) || '0 分'; x.troute = autoRoute(r, key);
       saveData('從機場出發的交通時間'); if (current === day) renderPage(day);
     } catch {}
   }
@@ -8658,7 +8681,7 @@ function saveEditor() {
   const fields = { t, s: hhmm(sMin), e: hhmm(eMin), travel: ed.tval };
   // 交通時間怎麼來的：按「計算」選的＝auto；自己填的、只換了方式的＝manual（記下當時的起點終點，地點變了一樣會提醒）
   const nowKey = () => routeKey(prevOf(ed.day, ed.replaceId || ed.id, sMin), ed.id ? findItem(ed.id)[1] : null);
-  if (ed.tsel === 'calc') fields.troute = `auto|${ed.tmode}|${ed.tkey}`;
+  if (ed.tsel === 'calc') fields.troute = autoRoute({ mode: ed.tmode, m: ed.topts?.[ed.tmode]?.m }, ed.tkey);
   else if (ed.tsel === 'manual' || ed.tchanged) fields.troute = ed.tval ? `manual|${ed.tmode}|${ed.tsel === 'manual' ? nowKey() : parseRoute(ed.troute).key || nowKey()}` : '';
   else if (ed.fromCand) fields.troute = '';
   if (!ed.group) Object.assign(fields, {
@@ -9144,6 +9167,39 @@ function openDayPicker(id) {
 }
 // 編輯模式上方的「交通」：把這天每一段都算一遍，列出「原本 → 新的」，勾選要套用的
 document.getElementById('routeFab').addEventListener('click', () => { if (isDay(current)) openRoutePlanner(current); });
+// 計算交通時間的時間線：交通卡片不是一站，畫成一條實線＋一張小卡（搭什麼、幾點到幾點、總共多久）；前後走到上車站、下車後走到下一站另外標（10/27）
+function rideBlock(it) {
+  const legs = rideLegs(it), { from, to } = rideEnds(it), s = legs[0]?.s || it.s, e = rideArr(it);
+  const ic = legs.some(l => legIcon(l.t) === 'train') ? 'train' : legIcon(legs[0]?.t || '');
+  // 一行一站，中間是往下的箭頭＋幾點搭什麼；站名用截圖帶入的上下車站（a、b），沒有就略過，頭尾用起點、終點
+  const st = (nm, tm) => nm ? `<div class="rt-ride-st"><span>${esc(nm)}</span>${tm ? `<span class="rt-ride-tm">${T(tm)}</span>` : ''}</div>` : '';
+  // 一段一行，前面一個小點；連續好幾段（中間沒有站名）的點用小虛線串起來
+  const rows = [st(legs[0]?.a || from || '出發')];
+  let run = [];
+  const flush = () => { if (run.length) rows.push(`<div class="rt-ride-legs">${run.join('')}</div>`); run = []; };
+  legs.forEach((l, i) => {
+    run.push(`<div class="rt-ride-leg">${l.s ? `${T(l.s)} ` : ''}${esc(l.t || '交通')}</div>`);
+    const nm = i < legs.length - 1 ? l.b || legs[i + 1].a : '';
+    if (nm) { flush(); rows.push(st(nm)); }
+  });
+  flush(); rows.push(st(legs[legs.length - 1]?.b || to || '抵達', e));
+  return `<div class="rt-ride"><div class="rt-ride-card" title="交通卡片的時間要在卡片裡改">
+    <div class="rt-ride-top"><i class="ti ti-${ic}"></i><span>交通卡片</span><b>${fmtDur(m(e) - m(s)) || ''}</b></div>
+    ${rows.join('')}</div></div>`;
+}
+// 上車前、下車後的走路：連著前後卡片的用 rideWalks（截圖寫的優先，其次用上下車站座標估）；沒連著但有車站座標也照直線估，不查 Google
+function rideGap(prev, it) {
+  const chip = (ic, txt, cls = '') => `<span class="rt-chip${cls}"><i class="ti ti-${ic}"></i>${txt}</span>`;
+  if (it.ride) {
+    const w = it.ride.fromId === prev.id ? rideWalks(it).wa : it.ride.walkA || (it.ride.fromSt?.loc && !prev.flight && lastLoc(prev) ? walkEst(lastLoc(prev), it.ride.fromSt.loc) : 0);
+    return w ? chip('walk', `步行約 ${w} 分到上車站`) : '';
+  }
+  if (prev.ride) {
+    const r = prev.ride, w = r.toId === it.id ? rideWalks(prev).wb : r.walkB || (r.toSt?.loc && !it.flight && firstLoc(it) ? walkEst(r.toSt.loc, firstLoc(it)) : 0);
+    return w ? chip('walk', `下車後步行約 ${w} 分`) : chip('walk', '下車後：沒有下車站位置', ' off');
+  }
+  return '';
+}
 async function openRoutePlanner(day) {
   const items = withFlights(DATA[day], day);   // 航班卡片也算一站：抵達後的下一站從機場算、回程算到機場
   const home = homePrev(day), list = home && items.length ? [home, ...items] : items;   // 有住處：第一段是從住處出發
@@ -9158,12 +9214,11 @@ async function openRoutePlanner(day) {
       <div class="rt-modes" id="rtModes">${PICK_MODES.map(([k, ic, nm]) => `<button type="button" data-m="${k}"><i class="ti ti-${ic}"></i>${nm}</button>`).join('')}</div>
       <div class="rt-rule" id="rtRule"></div>
       <div class="rt-rule"><i class="ti ti-train"></i> 要搭電車、公車的段落，請用交通卡片（可以從截圖帶入）</div>
-      ${segs.length ? '<button type="button" class="btn primary rt-calc" id="rtCalc"><i class="ti ti-route"></i> 開始計算</button>' : ''}</div>
-    ${segs.length ? `<div class="rt-list" id="rtList">${segs.map((g, i) => `
-      <label class="rt-row" data-i="${i}"><input type="checkbox" disabled>
-        <span class="rt-main"><span class="rt-names">${g.prev.home ? '🏠 ' : ''}${esc(shortName(g.prev.t))} → ${esc(shortName(g.it.t))}</span>
-          <span class="rt-val">${g.it.travel ? esc(g.it.travel) : '<span class="rt-sub">沒有填</span>'}</span>
-          <span class="rt-sub rt-st">${g.a && g.b ? '' : '缺座標，略過'}</span></span></label>`).join('')}</div>` : '<div class="ov-empty">這天只有一個行程，沒有交通要算</div>'}
+      ${segs.length ? '<button type="button" class="btn primary rt-calc" id="rtCalc"><i class="ti ti-route"></i> 自動計算</button>' : ''}</div>
+    ${segs.length ? `<div class="rt-line" id="rtList">${list.map((it, i) => {
+      const g = i ? segs.find(x => x.prev === list[i - 1] && x.it === it) : null;
+      return `${i ? `<div class="rt-gap">${g ? `<div class="rt-seg" data-i="${segs.indexOf(g)}"></div>` : rideGap(list[i - 1], it)}</div>` : ''}
+      ${it.ride ? rideBlock(it) : `<div class="rt-stop"><span class="rt-dot"></span><span class="rt-nm">${it === home ? '🏠 ' : ''}${esc(shortName(it.t))}</span></div>`}`; }).join('')}</div>` : '<div class="ov-empty">這天只有一個行程，沒有交通要算</div>'}
     <div class="ed-actions">
       <button type="button" class="btn ghost ed-cancel">取消</button>
       <button type="button" class="btn primary" id="rtGo" disabled>套用</button>
@@ -9173,52 +9228,107 @@ async function openRoutePlanner(day) {
   const drawPick = () => {
     pick.querySelectorAll('button').forEach(b => { const on = sel.includes(b.dataset.m); b.classList.toggle('on', on); b.setAttribute('aria-pressed', on); });
     sheet.querySelector('#rtRule').textContent = sel.length ? routeRule(sel) : '至少選一種';
-    if (calc) calc.disabled = !sel.length;
+    calcLabel();
   };
   pick.addEventListener('click', e => { const b = e.target.closest('[data-m]'); if (!b) return; const k = b.dataset.m;
     sel = sel.includes(k) ? sel.filter(x => x !== k) : PICK_MODES.map(x => x[0]).filter(x => x === k || sel.includes(x)); drawPick(); });   // 照固定順序存
   drawPick();
   if (!segs.length) return;
-  const rows = [...sheet.querySelectorAll('.rt-row')], go = sheet.querySelector('#rtGo');
-  const count = () => { const n = rows.filter(r => r.querySelector('input:checked')).length; go.disabled = !n; go.textContent = n ? `套用 ${n} 段` : '套用'; };
-  sheet.querySelector('#rtList').addEventListener('change', count);
-  const todo = segs.map((g, i) => ({ g, i })).filter(x => x.g.a && x.g.b);
-  segs.forEach((g, i) => { if (!(g.a && g.b)) rows[i].classList.add('off'); });
+  // 每一段：opts＝算過的各種方式（mode → 結果），pick＝要套用哪一種（null＝維持原本）；點交通可以換方式，沒算過的那種當場只算這一段
+  const go = sheet.querySelector('#rtGo'), boxes = [...sheet.querySelectorAll('.rt-seg')];
+  segs.forEach(g => { g.opts = {}; g.pick = null; });
+  const dist = n => n >= 1000 ? `${(n / 1000).toFixed(1)} 公里` : `${n} 公尺`;
+  const changed = g => { const r = g.pick && g.opts[g.pick], cur = parseRoute(g.it.troute);
+    return !!r && !r.error && (routeText(r) !== (g.it.travel || '') || cur.mode !== r.mode || cur.src !== 'auto' || cur.key !== `${g.a}>${g.b}`); };
+  const count = () => { const n = segs.filter(changed).length; go.disabled = !n; go.textContent = n ? `套用 ${n} 段` : '套用'; };
+  const drawSeg = i => {
+    const g = segs[i], box = boxes[i], it = g.it, cur = parseRoute(it.troute), r = g.pick && g.opts[g.pick], chg = changed(g);
+    if (!(g.a && g.b)) { box.innerHTML = '<span class="rt-chip off">沒有位置資訊</span>'; return; }
+    const chip = (ic, txt, cls) => `<button type="button" class="rt-chip${cls}" data-act="open" aria-expanded="${!!g.open}">${ic ? `<i class="ti ti-${ic}"></i>` : ''}${txt}<i class="ti ti-chevron-down"></i></button>`;
+    box.innerHTML = (g.busy ? '<span class="rt-chip"><i class="ti ti-loader-2 spin"></i>計算中…</span>'
+      : r ? chip(modeIcon(r.mode), `${modeName(r.mode)} ${routeText(r) || '不用移動'}`, chg ? ' new' : '') + `<span class="rt-chip${chg ? ' new' : ''}">${dist(r.m)}</span>`
+      : it.travel || cur.src === 'auto' ? chip(modeIcon(cur.mode), it.travel ? `${modeName(cur.mode)} ${esc(it.travel)}` : '不用移動', '') + (cur.m && cur.key === `${g.a}>${g.b}` ? `<span class="rt-chip">${dist(cur.m)}</span>` : '') + (cur.src === 'manual' ? '<span class="rt-tag">手動填的</span>' : '')
+      : chip('', '還沒有交通時間', ' off'))
+      + (g.err ? `<span class="rt-err">${esc(g.err)}</span>` : '')
+      + (g.open && !g.busy ? `<div class="rt-menu">${PICK_MODES.map(([k, ic]) => { const o = g.opts[k];
+          return `<button type="button" data-m="${k}" class="${g.pick === k ? 'on' : ''}"${o?.error ? ' disabled' : ''}><i class="ti ti-${ic}"></i>${modeName(k)}${o ? `<span>${o.error ? '查不到' : routeText(o) || '不用移動'}</span>` : ''}</button>`; }).join('')}
+        ${it.travel ? `<button type="button" data-m="" class="${g.pick ? '' : 'on'}">維持原本<span>${esc(it.travel)}</span></button>` : ''}</div>` : '');
+  };
+  const drawAll = () => { segs.forEach((_g, i) => drawSeg(i)); count(); };
+  drawAll();
+  sheet.querySelector('#rtList').addEventListener('click', async e => {
+    const seg = e.target.closest('.rt-seg'); if (!seg) return;
+    const i = +seg.dataset.i, g = segs[i];
+    if (e.target.closest('[data-act="open"]')) { segs.forEach((x, n) => { if (n !== i && x.open) { x.open = false; drawSeg(n); } }); g.open = !g.open; drawSeg(i); return; }
+    const b = e.target.closest('[data-m]'); if (!b || b.disabled) return;
+    const k = b.dataset.m;
+    g.open = false; g.err = '';
+    if (!k || g.opts[k]) { g.pick = k || null; drawSeg(i); count(); calcLabel(); return; }
+    // 這一段還沒算過這種方式：只算這一段（走路、這種、開車一起回來，之後再換不用重算）
+    g.busy = true; drawSeg(i);
+    try {
+      const r = (await api({ ...getAuth(), action: 'routeTimes', modes: [k], pairs: [{ a: g.a, b: g.b }], all: true }, 60000)).routes[0];
+      if (r.error) g.err = '算不出來：' + r.error;
+      else { (r.options || [r]).forEach(o => { g.opts[o.mode] = o; }); if (!g.opts[k]) g.opts[k] = { mode: k, error: '太近了，不用移動' }; }
+      if (g.opts[k] && !g.opts[k].error) g.pick = k; else if (!g.err) g.err = `${modeName(k)}查不到路線`;
+    } catch (err) { g.err = '計算失敗：' + (err.message || '網路不穩'); }
+    g.busy = false;
+    if (sheet.contains(go)) { drawSeg(i); count(); calcLabel(); }
+  });
   calc.addEventListener('click', () => run());
   async function run() {
-  const modes = sel.slice();
+  const modes = sel.slice(), todo = needCalc();
+  if (!todo.length) return;
   calc.disabled = true; calc.innerHTML = '<i class="ti ti-loader-2 spin"></i> 計算中…'; go.disabled = true;
-  todo.forEach(x => { const row = rows[x.i], box = row.querySelector('input'); box.checked = false; box.disabled = true; row.classList.remove('off'); row.querySelector('.rt-st').textContent = '計算中…'; });
+  todo.forEach(g => { g.busy = true; g.open = false; g.err = ''; });
+  drawAll();
   let res = [];
-  try { res = todo.length ? (await api({ ...getAuth(), action: 'routeTimes', modes, pairs: todo.map(x => ({ a: x.g.a, b: x.g.b })) }, 90000)).routes : []; }
-  catch (e) { if (sheet.contains(go)) { todo.forEach(x => { rows[x.i].querySelector('.rt-st').textContent = '計算失敗：' + (e.message || '網路不穩'); }); calc.disabled = false; calc.innerHTML = '<i class="ti ti-route"></i> 重新計算'; } return; }
+  try { res = todo.length ? (await api({ ...getAuth(), action: 'routeTimes', modes, pairs: todo.map(g => ({ a: g.a, b: g.b })) }, 90000)).routes : []; }
+  catch (e) { if (sheet.contains(go)) { todo.forEach(g => { g.busy = false; g.err = '計算失敗：' + (e.message || '網路不穩'); }); drawAll(); calcLabel(); } return; }
   if (!sheet.contains(go)) return;
-  calc.disabled = false; calc.innerHTML = '<i class="ti ti-route"></i> 重新計算';
   // 記住這次選的交通方式（下次打開、編輯卡片的方式按鈕都照這個）
   if (modes.join(',') !== tripModeList().join(',') || String(TRIP.mode || '') !== modes.join(','))
     api({ ...getAuth(), action: 'saveTrip', mode: modes.join(',') }, 30000).then(r => { if (r?.trip) setTrip({ ...TRIP, ...r.trip }); else TRIP.mode = modes.join(','); cache(); }).catch(() => {});
-  todo.forEach((x, n) => {
-    const r = res[n] || { error: '沒有結果' }, row = rows[x.i], box = row.querySelector('input'), it = x.g.it;
-    x.g.r = r;
-    row.querySelector('.rt-st').textContent = routeDesc(r);
-    if (r.error) { row.classList.add('off'); return; }
-    const next = routeText(r), src = parseRoute(it.troute).src;
-    row.querySelector('.rt-val').innerHTML = (it.travel || '') === next ? `${esc(next || '不用移動')}<span class="rt-sub">　一樣</span>`
-      : `${it.travel ? `<s>${esc(it.travel)}</s>→ ` : ''}${esc(next || '不用移動')}`;
-    box.disabled = false;
-    box.checked = src !== 'manual' && ((it.travel || '') !== next || !it.troute);   // 自己手動填的預設不勾
-    if (src === 'manual') row.querySelector('.rt-st').textContent += '・手動填的';
+  todo.forEach((g, n) => {
+    const r = res[n] || { error: '沒有結果' };
+    g.busy = false;
+    if (r.error) { g.err = r.error; return; }
+    (r.options || []).forEach(o => { g.opts[o.mode] = o; });   // 查過的每種方式都留著，之後換方式不用再算
+    g.opts[r.mode] = r;
+    g.pick = parseRoute(g.it.troute).src === 'manual' && g.it.travel ? null : r.mode;   // 自己手動填的預設維持原本，點交通可以改
   });
-  count();
+  drawAll(); calcLabel();
+  }
+  // 「全部自動計算」只算有變的段落（10/27）：不含塞車，起終點沒變算出來也一樣，重算只是浪費次數。
+  // 跳過：之前自動算的、起終點座標沒變、方式在這次勾的範圍內（走路＋勾的開車、機車），或這次已經算過的；自己手動填的也不動。要重算某一段就點那段的交通換方式
+  function needCalc() {
+    const ok = [...new Set(['walk', ...sel.filter(x => x !== 'walk')])], far = sel.filter(x => x !== 'walk');
+    if (!far.length) ok.push('drive');   // 只勾走路：太遠的算開車
+    return segs.filter(g => {
+      if (!(g.a && g.b) || g.busy) return false;
+      if (g.pick && g.opts?.[g.pick] && ok.includes(g.pick)) return false;
+      const cur = parseRoute(g.it.troute);
+      if (g.it.travel && cur.src === 'manual') return false;
+      return !(cur.src === 'auto' && cur.key === `${g.a}>${g.b}` && (ok.includes(cur.mode) || !g.it.travel));   // 自動算過、不用移動（同一個地方）的分鐘數是空的，也算算過
+    });
+  }
+  function calcLabel() {
+    if (!calc) return;
+    if (!sel.length) { calc.disabled = true; calc.innerHTML = '<i class="ti ti-route"></i> 先選交通方式'; return; }
+    const n = needCalc().length;
+    calc.disabled = !n;
+    calc.innerHTML = n ? '<i class="ti ti-route"></i> 自動計算' : '<i class="ti ti-circle-check"></i> 都是最新的';
   }
   go.addEventListener('click', () => {
     const snap = takeSnap();
     let n = 0;
     let fl = null;
-    segs.forEach((g, i) => {
-      if (!rows[i].querySelector('input:checked') || !g.r || g.r.error) return;
-      if (g.it.flight) { fl = tripFlights().map(f => f.id === g.it.flight.id ? { ...f, toAirport: { text: routeText(g.r) || '0 分', troute: `auto|${g.r.mode}|${g.a}>${g.b}` } } : f); n++; return; }   // 到機場：存在機票上
-      g.it.travel = routeText(g.r); g.it.troute = `auto|${g.r.mode}|${g.a}>${g.b}`; n++;
+    segs.forEach(g => {
+      const r = g.pick && g.opts[g.pick];
+      // 時間一樣、只是以前沒存距離的：順便補上距離，不算在「更新幾段」裡
+      if (!changed(g)) { if (r && !r.error && r.m && !g.it.flight && !parseRoute(g.it.troute).m) g.it.troute = autoRoute(r, `${g.a}>${g.b}`); return; }
+      if (g.it.flight) { fl = tripFlights().map(f => f.id === g.it.flight.id ? { ...f, toAirport: { text: routeText(r) || '0 分', troute: autoRoute(r, `${g.a}>${g.b}`) } } : f); n++; return; }   // 到機場：存在機票上
+      g.it.travel = routeText(r); g.it.troute = autoRoute(r, `${g.a}>${g.b}`); n++;
     });
     if (fl) saveFlights(fl, '', 0, true);
     saveData('計算交通'); closeSheet(); renderPage(current);
