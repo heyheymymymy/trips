@@ -836,6 +836,8 @@ button.rt-chip{cursor:pointer}
 .rt-chip.off{color:var(--muted)}
 .rt-chip .ti-chevron-down{color:var(--text);font-size:15px;margin-left:-2px}
 .rt-tag{font-size:12px;color:var(--muted)}
+.rt-done{display:inline-flex;align-items:center;gap:3px;height:24px;padding:0 9px 0 7px;border-radius:999px;background:var(--spa-bg);color:var(--spa-fg);font-size:12px;font-weight:600;white-space:nowrap}
+.rt-done .ti{font-size:14px}
 .rt-err{width:100%;font-size:12px;color:var(--muted)}
 .rt-menu{display:flex;flex-wrap:wrap;gap:6px;width:100%}
 .rt-menu button{display:inline-flex;align-items:center;gap:5px;height:32px;padding:0 12px;border:0;border-radius:999px;background:var(--fill);color:var(--text2);font:inherit;font-size:13px;cursor:pointer}
@@ -9228,10 +9230,11 @@ async function openRoutePlanner(day) {
   const drawPick = () => {
     pick.querySelectorAll('button').forEach(b => { const on = sel.includes(b.dataset.m); b.classList.toggle('on', on); b.setAttribute('aria-pressed', on); });
     sheet.querySelector('#rtRule').textContent = sel.length ? routeRule(sel) : '至少選一種';
-    calcLabel();
+    calcLabel(); if (ready) drawAll();
   };
   pick.addEventListener('click', e => { const b = e.target.closest('[data-m]'); if (!b) return; const k = b.dataset.m;
     sel = sel.includes(k) ? sel.filter(x => x !== k) : PICK_MODES.map(x => x[0]).filter(x => x === k || sel.includes(x)); drawPick(); });   // 照固定順序存
+  let ready = false;
   drawPick();
   if (!segs.length) return;
   // 每一段：opts＝算過的各種方式（mode → 結果），pick＝要套用哪一種（null＝維持原本）；點交通可以換方式，沒算過的那種當場只算這一段
@@ -9249,13 +9252,14 @@ async function openRoutePlanner(day) {
       : r ? chip(modeIcon(r.mode), `${modeName(r.mode)} ${routeText(r) || '不用移動'}`, chg ? ' new' : '') + `<span class="rt-chip${chg ? ' new' : ''}">${dist(r.m)}</span>`
       : it.travel || cur.src === 'auto' ? chip(modeIcon(cur.mode), it.travel ? `${modeName(cur.mode)} ${esc(it.travel)}` : '不用移動', '') + (cur.m && cur.key === `${g.a}>${g.b}` ? `<span class="rt-chip">${dist(cur.m)}</span>` : '') + (cur.src === 'manual' ? '<span class="rt-tag">手動填的</span>' : '')
       : chip('', '還沒有交通時間', ' off'))
+      + (!g.busy && !g.err && !chg && parseRoute(it.troute).src !== 'manual' && !needs(g) ? '<span class="rt-done"><i class="ti ti-check"></i>已推算完畢</span>' : '')   // 沒變、不用重算的段落（10/28）
       + (g.err ? `<span class="rt-err">${esc(g.err)}</span>` : '')
       + (g.open && !g.busy ? `<div class="rt-menu">${PICK_MODES.map(([k, ic]) => { const o = g.opts[k];
           return `<button type="button" data-m="${k}" class="${g.pick === k ? 'on' : ''}"${o?.error ? ' disabled' : ''}><i class="ti ti-${ic}"></i>${modeName(k)}${o ? `<span>${o.error ? '查不到' : routeText(o) || '不用移動'}</span>` : ''}</button>`; }).join('')}
         ${it.travel ? `<button type="button" data-m="" class="${g.pick ? '' : 'on'}">維持原本<span>${esc(it.travel)}</span></button>` : ''}</div>` : '');
   };
   const drawAll = () => { segs.forEach((_g, i) => drawSeg(i)); count(); };
-  drawAll();
+  drawAll(); ready = true;
   sheet.querySelector('#rtList').addEventListener('click', async e => {
     const seg = e.target.closest('.rt-seg'); if (!seg) return;
     const i = +seg.dataset.i, g = segs[i];
@@ -9301,16 +9305,15 @@ async function openRoutePlanner(day) {
   }
   // 「全部自動計算」只算有變的段落（10/27）：不含塞車，起終點沒變算出來也一樣，重算只是浪費次數。
   // 跳過：之前自動算的、起終點座標沒變、方式在這次勾的範圍內（走路＋勾的開車、機車），或這次已經算過的；自己手動填的也不動。要重算某一段就點那段的交通換方式
-  function needCalc() {
+  function needCalc() { return segs.filter(needs); }
+  function needs(g) {
     const ok = [...new Set(['walk', ...sel.filter(x => x !== 'walk')])], far = sel.filter(x => x !== 'walk');
     if (!far.length) ok.push('drive');   // 只勾走路：太遠的算開車
-    return segs.filter(g => {
-      if (!(g.a && g.b) || g.busy) return false;
-      if (g.pick && g.opts?.[g.pick] && ok.includes(g.pick)) return false;
-      const cur = parseRoute(g.it.troute);
-      if (g.it.travel && cur.src === 'manual') return false;
-      return !(cur.src === 'auto' && cur.key === `${g.a}>${g.b}` && (ok.includes(cur.mode) || !g.it.travel));   // 自動算過、不用移動（同一個地方）的分鐘數是空的，也算算過
-    });
+    if (!(g.a && g.b) || g.busy) return false;
+    if (g.pick && g.opts?.[g.pick] && ok.includes(g.pick)) return false;
+    const cur = parseRoute(g.it.troute);
+    if (g.it.travel && cur.src === 'manual') return false;
+    return !(cur.src === 'auto' && cur.key === `${g.a}>${g.b}` && (ok.includes(cur.mode) || !g.it.travel));   // 自動算過、不用移動（同一個地方）的分鐘數是空的，也算算過
   }
   function calcLabel() {
     if (!calc) return;
