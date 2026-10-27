@@ -802,6 +802,14 @@ a.car.walk-go.late{color:#B4412F}
 .rd-ab > i{flex:none;font-size:14px;color:var(--muted)}
 .car .q{margin-left:2px;font-weight:600}
 .rt-list{display:flex;flex-direction:column;gap:2px;margin-top:4px}
+.rt-pick{margin-top:4px}
+.rt-modes{display:flex;flex-wrap:wrap;gap:8px}
+.rt-modes button{display:inline-flex;align-items:center;gap:5px;height:36px;padding:0 14px;border:0;border-radius:999px;background:var(--fill);color:var(--text2);font:inherit;font-size:14px;cursor:pointer}
+.rt-modes button .ti{font-size:17px}
+.rt-modes button.on{background:var(--accent-bg);color:var(--accent-fg);font-weight:600}
+.rt-rule{margin-top:8px;font-size:12.5px;line-height:1.5;color:var(--text2)}
+.rt-rule .ti{vertical-align:-2px}
+.rt-calc{width:100%;margin-top:12px}   /* 自動排交通：先選交通方式再算（10/27） */
 .rt-row{display:flex;align-items:center;gap:10px;padding:9px 2px;border-bottom:1px solid var(--line);font-size:13px;line-height:1.45}
 .rt-row:last-child{border-bottom:0}
 .rt-row input{flex:none;width:18px;height:18px;accent-color:var(--accent-fg)}
@@ -2548,22 +2556,26 @@ const parseRoute = r => { const [src = '', mode = 'drive', key = ''] = String(r 
 const routeStale = (prev, it) => { const r = parseRoute(it.troute); return !!r.key && r.key !== routeKey(prev, it); };
 // 同一天排在它前面的那張（開始時間比它早；editing 的卡片用面板上的開始時間）
 const prevOf = (day, id, start) => withFlights(DATA[day] || [], day).filter(x => x.id !== id && m(x.s) < start).sort((a, b) => m(a.s) - m(b.s) || m(a.e) - m(b.e)).pop() || homePrev(day);
-// 交通方式：名稱、圖示（要加新的方式，在這裡和 Code.gs 的 ROUTE_MODES 各加一項）
+// 交通方式：名稱、圖示（要加新的方式，在這裡和 places.ts 的 PICK_MODES 各加一項）
+// 大眾運輸 10/27 起不再自動推算（要搭車用交通卡片），留著是為了顯示以前算好的時間
 const ROUTE_MODES = { drive: ['開車', 'car'], walk: ['步行', 'walk'], transit: ['大眾運輸', 'bus'], moto: ['機車', 'motorbike'] };
+const PICK_MODES = [['drive', 'car', '開車／叫車'], ['moto', 'motorbike', '機車'], ['walk', 'walk', '走路']];   // 自動排交通可以選的
 // 這趟旅程會用到的交通方式（建立旅程時選的主要方式＋步行，不是開車的再加開車當備案）；跟 Code.gs 的 modesFor 一樣
 // 交通方式可以複選（存成 "transit,drive"）：tripModeList＝勾的全部，tripMode＝第一個（舊的地方用）
-const tripModeList = () => { const out = String(TRIP?.mode || '').split(',').map(x => x.trim()).filter((x, i, a) => x in ROUTE_MODES && a.indexOf(x) === i); return out.length ? out : ['drive']; };
+const tripModeList = () => { const out = String(TRIP?.mode || '').split(',').map(x => x.trim()).filter((x, i, a) => PICK_MODES.some(p => p[0] === x) && a.indexOf(x) === i); return out.length ? out : ['drive']; };   // 舊旅程存了 transit：當成開車
 const tripMode = () => tripModeList()[0];
-// 編輯卡片可以切換的方式：勾的（步行以外）＋步行＋開車（查不到時的備案）；只勾步行＝步行、大眾運輸、開車
+// 編輯卡片可以切換的方式：自動排交通選的（步行以外）＋步行＋開車（查不到時的備案）
 function tripModes() {
-  const list = tripModeList(), far = list.filter(x => x !== 'walk');
-  return [...new Set([...(far.length ? far : ['walk', 'transit']), 'walk', 'drive'])];
+  const far = tripModeList().filter(x => x !== 'walk');
+  return [...new Set([...far, 'walk', 'drive'])];
 }
-const routeRule = () => {
-  const list = tripModeList(), far = list.filter(x => x !== 'walk');
-  if (!far.length) return '走 25 分鐘內算步行，其他算大眾運輸，查不到就算開車';
-  if (far.length === 1) return far[0] === 'drive' ? '800 公尺內算步行，其他算開車（不含塞車）' : `800 公尺內算步行，其他算${modeName(far[0])}，查不到就算開車`;
-  return `800 公尺內算步行，其他在${far.map(modeName).join('、')}裡挑：差不多快（10 分鐘內）就選便宜的`;
+// 自動排交通的規則說明（跟 places.ts 的 walkRule 一樣）
+const routeRule = (list = tripModeList()) => {
+  if (list.length === 1 && list[0] === 'walk') return '3 公里、走 40 分鐘內都算走路，再遠的算開車';
+  const far = list.filter(x => x !== 'walk'), walk = list.includes('walk') || list.includes('moto') ? '1.2 公里、走 15 分鐘內算走路' : '500 公尺內算走路';
+  if (!far.length || (far.length === 1 && far[0] === 'drive')) return `${walk}，其他算開車（不含塞車）`;
+  if (far.length === 1) return `${walk}，其他算${modeName(far[0])}，查不到就算開車`;
+  return `${walk}，其他機車、開車差不多快（10 分鐘內）就選機車`;
 };
 // ---------- 住處 ----------
 // 建立旅程時填的住處：{ name, nights: ['11/7', …], map, loc, pid, addr }。早上從前一晚的住處出發，晚上回當晚的住處
@@ -3646,10 +3658,9 @@ function renderOverview() {
   html += `<div class="ov-sec">注意事項</div>
     <div class="ck-list">${tips.map(c => `<div class="ck" data-ck="${c.id}"><span class="ck-bullet"></span><button type="button" class="ck-txt">${esc(c.text)}</button></div>`).join('')}${addRow('tip', '新增注意事項')}</div>`;
   }
-  // 整個總覽的最下面（三頁都有）：同行的人、旅程設定、編輯碼和邀請（可以編輯的人才看得到編輯碼）
+  // 整個總覽的最下面（三頁都有）：編輯碼和邀請（可以編輯的人才看得到編輯碼）；旅程設定 10/27 拿掉，從選單（電腦版左側欄）進去
   if (TRIP) {
     html += '<div class="ov-foot">';
-    html += `<button type="button" class="inv-btn trip-set" id="tripSet"><i class="ti ti-settings"></i><span><b>旅程設定</b><small>名稱、目的地、日期、交通、封面、同行的人</small></span><i class="ti ti-chevron-right"></i></button>`;
     if (TRIP_ROLE === 'edit' && TRIP.code) html += `<div class="inv">
       ${codeCardHtml('分享編輯碼', TRIP.code, '拿到連結的人都能看，輸入編輯碼才能編輯')}
       <div class="inv-pair"><button type="button" class="inv-tile" data-invite="edit"><i class="ti ti-users"></i>邀請一起規劃</button><button type="button" class="inv-tile" data-invite="view"><i class="ti ti-send"></i>分享行程</button></div></div>`;
@@ -3785,7 +3796,7 @@ function heroHtml() {
   return `<button type="button" class="ov-hero${TRIP.cover ? ' has' : ''}" id="ovHero" aria-label="封面照片">${coverHtml(TRIP.cover, TRIP.en || (tripCity() + '.'))}
     <span class="ov-hero-t"><b>${esc(TRIP.name)}</b><span>${range}</span></span>${TRIP_ROLE === 'edit' ? '<span class="ov-hero-cam"><i class="ti ti-camera"></i></span>' : ''}</button>`;
 }
-// 開始規劃：新旅程要做的幾件事，做完打勾（看資料判斷；交通方式、邀請記在這支手機），全部做完或按「先不用」就收起來
+// 開始規劃：新旅程要做的幾件事，做完打勾（看資料判斷；邀請記在這支手機；選交通方式 10/27 拿掉，改在自動排交通裡選），全部做完或按「先不用」就收起來
 const SETUP_KEY = () => 'trip-setup-' + TRIP_ID + TEST_SUFFIX;
 const getSetup = () => { try { return JSON.parse(localStorage.getItem(SETUP_KEY())) || {}; } catch { return {}; } };
 const markSetup = k => { const o = getSetup(); o[k] = true; try { localStorage.setItem(SETUP_KEY(), JSON.stringify(o)); } catch {} };
@@ -3795,7 +3806,6 @@ function setupSteps() {
     ['first', 'ti-calendar-plus', '加入第一個行程', '搜尋想去的店或景點，排進第 1 天', DAY_KEYS.some(k => (DATA[k] || []).length)],
     ['import', 'ti-map-pin-plus', '匯入想去的地方', '貼 Google 地圖清單，放進備選', (DATA.cand || []).length > 0 || !!f.import],
     ['stay', 'ti-bed', '加入住處', '加入後，快速建立回家卡片', tripStays().length > 0],
-    ['mode', 'ti-route', '選交通方式', '自動推估交通時間', !!f.mode || tripMode() !== 'drive'],
     // 沒登入：旅程只記在這支手機，提醒登入 Google 保存（登入後打勾；一開始就登入的人不會出現）
     ...(!getAccount() || f.save ? [['save', 'ti-cloud-upload', '登入 Google 保存旅程', '現在只存在這支手機，登入後換手機也找得回來', !!getAccount()]] : []),
   ];
@@ -3961,13 +3971,13 @@ async function copyText(text) {
   ta.remove();
   return ok;
 }
-// 旅程設定：名稱、目的地、主要交通方式、住處（日期和天數之後再做：要搬動每天的卡片）
+// 旅程設定：名稱、目的地、住處（交通方式 10/27 搬到自動排交通）（日期和天數之後再做：要搬動每天的卡片）
 // keep：從「修改紀錄」「換編輯碼」滑回來時，剛剛改到一半的設定還在
 function openTripSettings(keep) {
   const n0 = DAY_KEYS.length, end0 = (() => { const d = new Date(TRIP.start + 'T00:00'); d.setDate(d.getDate() + n0 - 1); return ymd(d); })();
   // 交通方式：還沒自己選過（開始規劃的「選交通方式」還沒完成）就先不選，選開車才算完成那一步
   const cv0 = splitPhoto(TRIP.cover);
-  const st = keep || { dayStart: TRIP.day_start || '10:00', cover: { src: cv0.src, x: cv0.x, y: cv0.y, busy: false }, name: TRIP.name, dest: TRIP.dest, modes: getSetup().mode || tripMode() !== 'drive' || tripModeList().length > 1 ? tripModeList() : [], start: TRIP.start, end: end0, cal: TRIP.start.slice(0, 7), members: [...(TRIP.members || [])], memDraft: '', types: JSON.parse(JSON.stringify(tripTypes())), tyEdit: null };
+  const st = keep || { dayStart: TRIP.day_start || '10:00', cover: { src: cv0.src, x: cv0.x, y: cv0.y, busy: false }, name: TRIP.name, dest: TRIP.dest, start: TRIP.start, end: end0, cal: TRIP.start.slice(0, 7), members: [...(TRIP.members || [])], memDraft: '', types: JSON.parse(JSON.stringify(tripTypes())), tyEdit: null };
   if (!keep) { st.legs = placeLegs(TRIP, end0); st.legOpen = -1; legsFix(st); }   // 目的地和日期：每個地點自己的日期（一個目的地就是出發到回程）
   const canMem = canDeleteTrip();   // 建立的人才能新增、移除同行的人   // 住處另外在總覽的「住宿」管理
   const nDays = () => { const a = parseD(st.start), b = parseD(st.end); return a && b && b >= a ? Math.round((b - a) / 864e5) + 1 : 0; };
@@ -3988,8 +3998,6 @@ function openTripSettings(keep) {
       ${legsHtml(st, '查地點、地圖會以這裡為中心；點日期修改')}
       ${nDays() && dateNote() && (nDays() !== n0 || st.start !== TRIP.start) ? `<div class="ed-hint"><i class="ti ti-info-circle"></i> ${esc(dateNote())}</div>` : ''}
       ${legsOverviewHtml(st)}
-      <div class="ed-field"><span class="ed-lab">主要交通方式 <span class="ed-lab-hint">系統會優先以你選擇的交通方式進行交通時間預估</span></span>
-        <div class="wiz-opts grid">${WIZ_MODES.map(([k, ic, nm]) => `<button type="button" class="wiz-opt${st.modes.includes(k) ? ' on' : ''}" data-mode="${k}" aria-pressed="${st.modes.includes(k)}"><i class="ti ti-${ic}"></i><span><b>${nm}</b></span></button>`).join('')}</div></div>
       <div class="ed-field"><span class="ed-lab">封面照片 <span class="ed-lab-hint">顯示在「我的旅程」</span></span>
         <div class="ts-cover${st.cover.src ? '' : ' empty'}" id="tsCoverBox">${st.cover.src
           ? `<img src="${esc(st.cover.src)}" alt="" draggable="false" style="object-position:${st.cover.x}% ${st.cover.y}%"><span class="ph-hand" aria-hidden="true"><i class="ti ti-hand-move"></i></span>${st.cover.busy ? '<span class="ph-badge">上傳中…</span>' : PH_CAM}`
@@ -4014,7 +4022,7 @@ function openTripSettings(keep) {
   };
   openSheet(`
     <div class="sh-head"><div style="flex:1;min-width:0"><div class="sh-title" id="shTitle">旅程設定</div>
-      <div class="sh-sub">名稱、目的地、日期、交通方式、封面、同行的人</div></div>
+      <div class="sh-sub">名稱、目的地、日期、封面、同行的人</div></div>
       <button class="sh-close" aria-label="關閉"><i class="ti ti-x"></i></button></div>
     <div id="tsBody"></div><input type="file" accept="image/*" id="tsCoverFile" hidden>
     <div class="ed-actions">
@@ -4085,7 +4093,6 @@ function openTripSettings(keep) {
     if (b.id === 'tsHistory') { sheetSlide(1, () => openHistory({ back })); return; }
     if (b.id === 'tsReset') { sheetSlide(1, () => openResetLinks({ back })); return; }
     if (b.dataset.mrm) { st.members.splice(+b.dataset.mrm, 1); draw(); return; }
-    if (b.dataset.mode) { const k = b.dataset.mode; st.modes = st.modes.includes(k) ? st.modes.filter(x => x !== k) : WIZ_MODES.map(x => x[0]).filter(x => x === k || st.modes.includes(x)); draw(); }   // 可以複選，照固定順序存
   });
   sheet.querySelector('#tsSave').addEventListener('click', async e => {
     const err = msg => { const el = body.querySelector('#tsErr'); el.textContent = msg; el.hidden = false; el.scrollIntoView({ block: 'nearest' }); };
@@ -4096,8 +4103,6 @@ function openTripSettings(keep) {
     const wasMulti = tripCities().length > 0, isMulti = st.legs.length > 1;
     if (!isMulti && (wasMulti || st.dest.trim() !== TRIP.dest)) { changes.dest = st.dest.trim(); if (st.geo) Object.assign(changes, { region: st.geo.region, center: st.geo.center, en: st.geo.en ? st.geo.en + '.' : '' }); }
     if (!isMulti && wasMulti) changes.cities = [];
-    if (!st.modes.length && (getSetup().mode || TRIP.mode !== 'drive')) return err('交通方式至少選一種');
-    if (st.modes.length && st.modes.join(',') !== tripModeList().join(',')) changes.mode = st.modes.join(',');
     if (st.cover.busy) return err('封面照片還在上傳，等一下再按儲存');
     const cover = st.cover.src ? joinPhoto(st.cover.src, st.cover.x, st.cover.y) : '';
     if (cover !== (TRIP.cover || '')) changes.cover = cover;
@@ -4116,7 +4121,7 @@ function openTripSettings(keep) {
     if (JSON.stringify(types) !== JSON.stringify(tripTypes())) changes.types = types;
     const goneTypes = tripTypes().filter(t => !types.some(x => x.k === t.k)).map(t => t.k);
     if (canMem && st.members.join(',') !== (TRIP.members || []).join(',')) Object.assign(changes, { members: st.members, owner: myTrips().find(x => x.id === TRIP_ID)?.owner || '' });
-    if (!Object.keys(changes).length) { if (st.modes.length && !getSetup().mode) { markSetup('mode'); renderPage(current); } closeSheet(); return; }   // 選了跟原本一樣的開車：也算選好了
+    if (!Object.keys(changes).length) { closeSheet(); return; }   // 選了跟原本一樣的開車：也算選好了
     if (changes.days && n < n0 && DAY_KEYS.slice(n).some(k => (DATA[k] || []).length) && !confirm(dateNote() + '，確定要改嗎？')) return;
     if (changes.days && (syncing || pendingOps().count)) return err('剛剛的修改還在存到雲端，等幾秒再改日期');
     const btn = e.currentTarget; btn.disabled = true; btn.textContent = changes.dest ? '儲存中，查位置…' : '儲存中…';
@@ -4130,8 +4135,7 @@ function openTripSettings(keep) {
         if (goneTypes.length && retypeItems(goneTypes)) saveData('刪除類型');   // 刪掉的類型：用到的行程改成「其他」
         closeSheet(); updateHeader(current); if (current) renderPage(current);
       }
-      if (st.modes.length) markSetup('mode');
-      const notes = [changes.mode && '之前算好的交通時間不會自動改，可以在編輯模式按交通按鈕重算', r.moved && `${r.moved} 個行程移到備選`].filter(Boolean);
+      const notes = [r.moved && `${r.moved} 個行程移到備選`].filter(Boolean);
       toast(notes.length ? `已儲存。${notes.join('；')}` : '已儲存旅程設定', notes.length ? '知道了' : '', () => {}, notes.length ? 8000 : 2000);
     } catch (x) { btn.disabled = false; btn.textContent = '儲存'; err(x.code === 'network' ? '連不上雲端，請檢查網路' : x.message); }
   });
@@ -5724,7 +5728,7 @@ function openTripMenu(id) {
       <button class="sh-close" aria-label="關閉"><i class="ti ti-x"></i></button></div>
     <div class="tm-list">
       ${opt('share', 'ti-share', '分享旅程', '傳連結給朋友看行程，不會附上編輯碼')}
-      ${t.role === 'edit' ? opt('set', 'ti-settings', '旅程設定', '名稱、目的地、日期、交通方式、行程封面') : ''}
+      ${t.role === 'edit' ? opt('set', 'ti-settings', '旅程設定', '名稱、目的地、日期、行程封面') : ''}
       ${listIsCreator(t) ? '' : opt('hide', 'ti-eye-off', '從列表拿掉', '只有創建旅程的人可以刪除旅程，從你的列表拿掉後，原本的旅程不受影響')}
       ${listCanDelete(t) ? opt('del', 'ti-trash', '刪除旅程', '確定不去了嗎？刪掉後大家都看不到這趟旅程囉', ' danger') : ''}
     </div>`);
@@ -5773,8 +5777,6 @@ document.getElementById('tripNew').addEventListener('click', () => {
 
 // ---------- 建立旅程：一頁就好（名稱、目的地、日期；名稱沒自己填就自動帶入）；封面、住處、交通方式、匯入清單建好後在「開始規劃」卡片裡做 ----------
 const wizEl = document.getElementById('wiz'), wizBack = document.getElementById('wizBack'), wizNext = document.getElementById('wizNext');
-const WIZ_MODES = [['drive', 'car', '開車／叫車', 'Grab、Uber、計程車'], ['transit', 'bus', '大眾運輸', '捷運、公車、火車'],
-  ['moto', 'motorbike', '機車', '自己騎或叫機車'], ['walk', 'walk', '走路為主', '景點都在附近']];
 let wiz;
 function wizReset() { const t = todayYmd(); wiz = { name: '', legs: [{ name: '', geo: null, s: '', e: '' }], legOpen: -1, dest: '', geo: null, start: '', end: '', cal: t.slice(0, 7), err: '' }; }   // 選好地點才自動展開日曆
 const ymd = d => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
@@ -5814,7 +5816,7 @@ function renderWiz() {
   const html = legsHtml(wiz, wiz.legs.length > 1 ? '每一段是一個城市，移動那天兩段都算' : wiz.geo ? wiz.geo.label : '打城市名稱，從清單選一個');   // 先算好日期（wizDays 要用）
   const n = wizDays();
   daySub.textContent = '建立旅程';
-  wizEl.innerHTML = `<div class="wiz-h">要去哪裡？</div><p class="wiz-p">住處、交通方式、想去的店、封面照片，建好之後再慢慢加。</p>
+  wizEl.innerHTML = `<div class="wiz-h">要去哪裡？</div><p class="wiz-p">住處、想去的店、封面照片，建好之後再慢慢加。</p>
     ${field('旅程名稱', `<input type="text" data-k="name" id="wizName" value="${esc(wiz.name)}" placeholder="${esc(autoName() || '京都四天三夜快樂之旅')}" autocomplete="off" maxlength="40">`)}
     ${html}
     <div class="wiz-note${wiz.err ? ' err' : ''}" id="wizNote">${wiz.err ? esc(wiz.err) : ''}</div>
@@ -5898,7 +5900,7 @@ function showPage(page, animate = true) {
   else if (!['overview', 'cand', 'trips', 'new'].includes(page) && !isDay(page)) page = 'overview';
   if (page === current) return;
   // 電腦：旁邊開著某張卡片的資訊，換到別天／別頁就收起來（那張卡片已經不在畫面上了；編輯表單不收，免得改到一半不見）（10/23）
-  if (sheet._infoId && sheet.classList.contains('on') && !sheet.classList.contains('dlg')) closeSheet();
+  if ((sheet._infoId || sheet._routeDay) && sheet.classList.contains('on') && !sheet.classList.contains('dlg')) closeSheet();
   // 編輯中跑去我的旅程（或建立旅程）：直接結束編輯（跟按「儲存」一樣，改好的照樣存），回來時是一般模式（10/22 電腦版回來還停在編輯中）
   if (editing && (page === 'trips' || page === 'new')) { document.activeElement?.blur(); editing = false; setEditing(false); if (pendingOps().count) sync(); }
   const prev = current; current = page;
@@ -6714,7 +6716,7 @@ let lastFocus = null;
 function openSheet(html, focusSel, dialog) {
   sheet.innerHTML = '<div class="grab"></div>' + html;
   sheet.classList.remove('soft', 'center', 'ed-look', 'ed-in', 'info-in');   // 要淺色表單樣式（旅程設定、編輯卡片）、內容置中（Google 登入）的面板打開後自己加
-  sheet._infoId = null;   // 換成別的面板：背景查好時不要蓋掉
+  sheet._infoId = null; sheet._routeDay = null;   // 換成別的面板：背景查好時不要蓋掉
   sheet._photoJob = null;
   lastFocus = document.activeElement;
   sheet.scrollTop = 0;
@@ -8473,9 +8475,14 @@ function wireEditor() {
   // 停留多久：左右滑的刻度尺（5 分鐘一格，整點有標字）
   const setRuler = $('edRuler') ? wireRuler($('edRuler'), () => ed.dur, v => { ed.dur = v; refresh(); }, !ed.isNew) : null;
   // 已訂位：一動到時間（開始、結束、停留時間刻度尺）就先問一次，跟時間線上拖動一樣（10/27 拿掉面板上常駐的提醒框）；按取消就不讓改
+  // 手機點一下會連續來 pointerdown、touchstart、focusin：按取消後 800ms 內的同一下點擊直接擋掉、不再問（10/27 會跳兩次）
+  let bookNo = 0;
   const bookGuard = e => {
     if (ed.isNew || ed.bookOk || !$('edBooked')?.checked) return;
-    if (confirm(`「${ed.t || '這個行程'}」是已訂位的行程，確定要改時間嗎？`)) { ed.bookOk = true; return; }
+    if (Date.now() - bookNo > 800) {
+      if (confirm(`「${ed.t || '這個行程'}」是已訂位的行程，確定要改時間嗎？`)) { ed.bookOk = true; return; }
+      bookNo = Date.now();
+    }
     e.preventDefault(); e.stopPropagation(); document.activeElement?.blur();
   };
   [sheet.querySelector('.ed-time'), $('edRuler')].filter(Boolean).forEach(el => ['pointerdown', 'touchstart', 'keydown', 'focusin'].forEach(t => el.addEventListener(t, bookGuard, { capture: true, passive: false })));
@@ -9141,29 +9148,55 @@ async function openRoutePlanner(day) {
   const items = withFlights(DATA[day], day);   // 航班卡片也算一站：抵達後的下一站從機場算、回程算到機場
   const home = homePrev(day), list = home && items.length ? [home, ...items] : items;   // 有住處：第一段是從住處出發
   const segs = list.slice(1).map((it, i) => { const prev = list[i]; return { it, prev, a: lastLoc(prev), b: firstLoc(it) }; }).filter(g => g.it.kind !== 'arr' && !g.it.ride && !g.prev.ride);
+  // 10/27：交通方式從旅程設定搬到這裡，先選（可以複選，預設上次選的）再按「開始計算」；選的記在這趟旅程上。大眾運輸不自動算，要搭車用交通卡片
+  let sel = tripModeList();
   openSheet(`
     <div class="sh-head"><div style="flex:1;min-width:0"><div class="sh-title" id="shTitle">計算交通時間</div>
-      <div class="sh-sub">第 ${dayNum(day)} 天．${routeRule()}</div></div>
+      <div class="sh-sub">第 ${dayNum(day)} 天．${dayInfo(day).date}</div></div>
       <button class="sh-close" aria-label="關閉"><i class="ti ti-x"></i></button></div>
+    <div class="ed-field rt-pick"><span class="ed-lab">交通方式 <span class="ed-lab-hint">可以複選</span></span>
+      <div class="rt-modes" id="rtModes">${PICK_MODES.map(([k, ic, nm]) => `<button type="button" data-m="${k}"><i class="ti ti-${ic}"></i>${nm}</button>`).join('')}</div>
+      <div class="rt-rule" id="rtRule"></div>
+      <div class="rt-rule"><i class="ti ti-train"></i> 要搭電車、公車的段落，請用交通卡片（可以從截圖帶入）</div>
+      ${segs.length ? '<button type="button" class="btn primary rt-calc" id="rtCalc"><i class="ti ti-route"></i> 開始計算</button>' : ''}</div>
     ${segs.length ? `<div class="rt-list" id="rtList">${segs.map((g, i) => `
       <label class="rt-row" data-i="${i}"><input type="checkbox" disabled>
         <span class="rt-main"><span class="rt-names">${g.prev.home ? '🏠 ' : ''}${esc(shortName(g.prev.t))} → ${esc(shortName(g.it.t))}</span>
           <span class="rt-val">${g.it.travel ? esc(g.it.travel) : '<span class="rt-sub">沒有填</span>'}</span>
-          <span class="rt-sub rt-st">${g.a && g.b ? '計算中…' : '缺座標，略過'}</span></span></label>`).join('')}</div>` : '<div class="ov-empty">這天只有一個行程，沒有交通要算</div>'}
+          <span class="rt-sub rt-st">${g.a && g.b ? '' : '缺座標，略過'}</span></span></label>`).join('')}</div>` : '<div class="ov-empty">這天只有一個行程，沒有交通要算</div>'}
     <div class="ed-actions">
       <button type="button" class="btn ghost ed-cancel">取消</button>
       <button type="button" class="btn primary" id="rtGo" disabled>套用</button>
     </div>`);
+  sheet._routeDay = day;   // 換到別天、別頁就自動關掉（10/27：開著第 2 天的交通，切到第 3 天還停在第 2 天的）
+  const pick = sheet.querySelector('#rtModes'), calc = sheet.querySelector('#rtCalc');
+  const drawPick = () => {
+    pick.querySelectorAll('button').forEach(b => { const on = sel.includes(b.dataset.m); b.classList.toggle('on', on); b.setAttribute('aria-pressed', on); });
+    sheet.querySelector('#rtRule').textContent = sel.length ? routeRule(sel) : '至少選一種';
+    if (calc) calc.disabled = !sel.length;
+  };
+  pick.addEventListener('click', e => { const b = e.target.closest('[data-m]'); if (!b) return; const k = b.dataset.m;
+    sel = sel.includes(k) ? sel.filter(x => x !== k) : PICK_MODES.map(x => x[0]).filter(x => x === k || sel.includes(x)); drawPick(); });   // 照固定順序存
+  drawPick();
   if (!segs.length) return;
   const rows = [...sheet.querySelectorAll('.rt-row')], go = sheet.querySelector('#rtGo');
   const count = () => { const n = rows.filter(r => r.querySelector('input:checked')).length; go.disabled = !n; go.textContent = n ? `套用 ${n} 段` : '套用'; };
   sheet.querySelector('#rtList').addEventListener('change', count);
   const todo = segs.map((g, i) => ({ g, i })).filter(x => x.g.a && x.g.b);
   segs.forEach((g, i) => { if (!(g.a && g.b)) rows[i].classList.add('off'); });
+  calc.addEventListener('click', () => run());
+  async function run() {
+  const modes = sel.slice();
+  calc.disabled = true; calc.innerHTML = '<i class="ti ti-loader-2 spin"></i> 計算中…'; go.disabled = true;
+  todo.forEach(x => { const row = rows[x.i], box = row.querySelector('input'); box.checked = false; box.disabled = true; row.classList.remove('off'); row.querySelector('.rt-st').textContent = '計算中…'; });
   let res = [];
-  try { res = todo.length ? (await api({ ...getAuth(), action: 'routeTimes', pairs: todo.map(x => ({ a: x.g.a, b: x.g.b })) }, 90000)).routes : []; }
-  catch (e) { if (sheet.contains(go)) todo.forEach(x => { rows[x.i].querySelector('.rt-st').textContent = '計算失敗：' + (e.message || '網路不穩'); }); return; }
+  try { res = todo.length ? (await api({ ...getAuth(), action: 'routeTimes', modes, pairs: todo.map(x => ({ a: x.g.a, b: x.g.b })) }, 90000)).routes : []; }
+  catch (e) { if (sheet.contains(go)) { todo.forEach(x => { rows[x.i].querySelector('.rt-st').textContent = '計算失敗：' + (e.message || '網路不穩'); }); calc.disabled = false; calc.innerHTML = '<i class="ti ti-route"></i> 重新計算'; } return; }
   if (!sheet.contains(go)) return;
+  calc.disabled = false; calc.innerHTML = '<i class="ti ti-route"></i> 重新計算';
+  // 記住這次選的交通方式（下次打開、編輯卡片的方式按鈕都照這個）
+  if (modes.join(',') !== tripModeList().join(',') || String(TRIP.mode || '') !== modes.join(','))
+    api({ ...getAuth(), action: 'saveTrip', mode: modes.join(',') }, 30000).then(r => { if (r?.trip) setTrip({ ...TRIP, ...r.trip }); else TRIP.mode = modes.join(','); cache(); }).catch(() => {});
   todo.forEach((x, n) => {
     const r = res[n] || { error: '沒有結果' }, row = rows[x.i], box = row.querySelector('input'), it = x.g.it;
     x.g.r = r;
@@ -9177,6 +9210,7 @@ async function openRoutePlanner(day) {
     if (src === 'manual') row.querySelector('.rt-st').textContent += '・手動填的';
   });
   count();
+  }
   go.addEventListener('click', () => {
     const snap = takeSnap();
     let n = 0;
