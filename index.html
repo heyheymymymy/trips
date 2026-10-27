@@ -758,6 +758,8 @@ html.on-map:not(.sheet-lock),html.on-map:not(.sheet-lock) body{background:#f4f0e
 .pin b{flex:none;width:22px;height:22px;border-radius:50%;background:var(--c-fg);color:#fff;border:2px solid #fff;box-shadow:0 1px 4px rgba(0,0,0,.25);
   font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;font-variant-numeric:tabular-nums}
 .pin.alt b{border-style:dashed;border-color:var(--c-fg);background:#fff;color:var(--c-fg)}
+.pin.home span{max-width:170px}
+.pin span small{display:block;overflow:hidden;text-overflow:ellipsis;font-size:10.5px;font-weight:500;color:var(--text2)}
 .pin span{max-width:110px;overflow:hidden;text-overflow:ellipsis;padding:1px 6px;border-radius:6px;background:rgba(255,255,255,.92);color:var(--text);
   font-size:11px;font-weight:600;box-shadow:0 1px 3px rgba(0,0,0,.12)}
 .pin.dim{opacity:.45}
@@ -767,7 +769,7 @@ html.on-map:not(.sheet-lock),html.on-map:not(.sheet-lock) body{background:#f4f0e
 .pin.home b svg{width:16px;height:16px;display:block}
 .pin.air{transform:translate(-14px,-14px);z-index:3}
 .pin.air b{width:28px;height:28px;background:#3E6E9E;border-width:2.5px}
-.pin.air b svg,.ms-card.air b svg{width:15px;height:15px;display:block;transform:rotate(45deg)}
+.pin.air b svg,.ms-card.air b svg{width:15px;height:15px;display:block;transform:translate(.8px,-.3px) rotate(45deg)}   /* 轉 45 度後飛機偏左下（外框中心 10.6,12.6／重心 11,12.2，24 格）：挪回正中間 */
 .ms-card.air b{background:#3E6E9E}.ms-card.nonum.air b svg{display:none}
 .ms-card.home b{background:#E4572E}.ms-card.home b svg{width:13px;height:13px;display:block}.ms-card.nonum.home b svg{display:none}
 .map-view.far .pin span{display:none}   /* 拉遠時只留編號圓點，店名才不會疊在一起 */
@@ -3249,6 +3251,10 @@ function renderCards(items, day) {
       place(el, Math.round(a + Math.max(h, 0) / 2 - 9)); };
     const rideGo = (x, end) => { const r = x.ride, sts = legStops(x), st = end ? sts[sts.length - 1]?.b : sts[0]?.a, { b } = rideEnds(x);
       return end ? (b && firstLoc(b) ? walkHref(firstLoc(b)) : '') : st ? walkHref(r.fromSt?.loc || withCity(st)) : ''; };
+    // 這天第一張就是交通卡片（從住處直接去搭車）：虛線從最上面的住處卡片連下來；截圖上有寫走到車站幾分就標上（10/27）
+    if (it.ride?.legs?.length && !it.ride.fromId && prev?.id === 'home') { const a = -HOME_GAP, h = y(hhmm(S(it))) - a, w = it.ride.walkA || 0;
+      if (h > 18) { const ln = div('car-line'); ln.style.height = h + 'px'; place(ln, a); }
+      if (w) { const el = document.createElement('a'); el.className = 'car walk-go'; el.innerHTML = `<i class="ti ti-walk"></i>${w}分<i class="ti ti-navigation go"></i>`; const go = rideGo(it); if (go) { el.href = go; el.target = '_blank'; el.rel = 'noopener'; } place(el, Math.round(a + Math.max(h, 0) / 2 - 9)); } }
     if (it.ride?.legs?.length) { const o = items.find(x => x.id === it.ride.fromId); if (o) { const w = rideWalks(it).wa, f = m(o.e), t = S(it); w ? walk(Math.max(f, t - w), t, w, w > t - f, rideGo(it)) : conn(f, t); } }
     if (prev?.ride?.legs?.length && prev.ride.toId === it.id) { const w = rideWalks(prev).wb, f = E(prev), t = m(it.s); w ? walk(f, Math.min(t, f + w), w, w > t - f, rideGo(prev, true)) : conn(f, t); }
     if (it.travel && prev && !it.ride && !prev.ride) {   // 交通卡片前後不畫泡泡（那段移動就是交通卡片）
@@ -4696,12 +4702,16 @@ function rideDepart(it) {
   const { a } = rideEnds(it), first = rideLegs(it)[0]?.s || it.s;
   return a?.e && (!first || m(a.e) <= m(first)) ? a.e : first;
 }
+// 起點終點很近（估走路 15 分以內）：Google 的大眾運輸會直接給走路路線，不會出現車班（10/27 使用者看到一頁泰文走路步驟，不知道是哪種交通方式）
+const rideNearWalk = it => { const { a, b } = rideEnds(it), w = a && b ? walkEst(lastLoc(a), firstLoc(b)) : 0; return w && w <= 15 ? w : 0; };
 function rideHref(it, day) {
   const { from, to, a, b } = rideEnds(it);
   const o = (a && lastLoc(a)) || withCity(from), d = (b && firstLoc(b)) || withCity(to);
   const date = isDay(day) && tripDates()[dayNum(day) - 1]?.ymd, dep = rideDepart(it);
   if (!date || !dep) return `https://www.google.com/maps/dir/?api=1&origin=${encodeURIComponent(o)}&destination=${encodeURIComponent(d)}&travelmode=transit`;
   const [y, mo, dd] = date.split('-'), n = m(dep) % (24 * 60), h = Math.floor(n / 60), mi = String(n % 60).padStart(2, '0');
+  // 電腦：用新網址（data 裡 8j＝當地時間當成 UTC 的秒數），停在路線總覽、上面一排交通方式自己選，出發時間已帶好（10/27）。手機維持舊網址直接開大眾運輸（App 不吃時間）
+  if (DESK.matches) return `https://www.google.com/maps/dir/${encodeURIComponent(o)}/${encodeURIComponent(d)}/data=!4m5!4m4!2m3!6e0!7e2!8j${Date.UTC(+y, +mo - 1, +dd, 0, m(dep)) / 1000}`;
   const time = `${h % 12 || 12}:${mi}${h < 12 ? 'am' : 'pm'}`;
   return `https://www.google.com/maps?saddr=${encodeURIComponent(o)}&daddr=${encodeURIComponent(d)}&dirflg=r&ttype=dep&date=${mo}/${dd}/${y.slice(2)}&time=${time}`;
 }
@@ -4816,7 +4826,9 @@ function drawRide() {
     grab();
     const x = { s: rd.legs[0].s || '12:00', e: rd.e, ride: { from: rd.from, to: rd.to, fromId: rd.fromId, toId: rd.toId, legs: rd.legs, at: rd.legs[0].s } }, dep = rideDepart(x);
     $('rdGm').href = rideHref(x, rd.day);
-    $('rdGm').querySelector('span').textContent = dep ? `Google 地圖查詢．${dayInfo(rd.day).date} ${T(dep)} 出發` : 'Google 地圖查詢';
+    const near = rideNearWalk(x);   // 按鈕上寫清楚查的是大眾運輸；太近 Google 只會給走路
+    const what = DESK.matches ? 'Google 地圖查路線' : 'Google 地圖查大眾運輸';   // 電腦：到 Google 再自己選交通方式
+    $('rdGm').querySelector('span').textContent = near && !DESK.matches ? `${what}．太近會只給走路` : dep ? `${what}．${dayInfo(rd.day).date} ${T(dep)} 出發` : what;
   };
   gm(); $('rdGm').addEventListener('pointerdown', gm); $('rdGm').addEventListener('focus', gm);
   setTimeout(dsPlanDraw); $('rdLegs').addEventListener('input', () => { rideGrab(); dsPlanDraw(); });   // 新增交通：時間線上預留這段時間
@@ -6285,6 +6297,7 @@ const MAP_STYLE = [
   { featureType: 'water', elementType: 'geometry', stylers: [{ color: '#d5e3ea' }] },
 ];
 // 地圖上要標的點：每天照時間排，一個地點一個編號（合併區塊每一站各一號，多選一的幾家同一號、虛線圈）
+const HOME_PLAIN = /^(回住處休息|回住處|回飯店|回家休息|check[ -]?in|check[ -]?out|入住|退房|放行李)$/i;   // 只是回住處、入住退房：地圖上不另外寫
 function mapPoints(page) {
   if (page === 'new') return (wiz?.legs || []).map(l => ({ l, ll: /^\s*(-?\d+(?:\.\d+)?),\s*(-?\d+(?:\.\d+)?)/.exec(l.geo?.center || '') })).filter(o => o.ll)
     .map((o, i) => ({ p: { lat: +o.ll[1], lng: +o.ll[2] }, n: i + 1, cls: 'see', name: o.l.geo.name || o.l.name, id: '', when: '', desc: '' }));
@@ -6300,7 +6313,11 @@ function mapPoints(page) {
     const sub = page === 'cand' ? '' : T(it.s);
     if (it.group) for (const [i, x] of (it.stops || []).entries()) { const p = ll(x.loc); if (p) pts.push({ p, n: ++n, cls, name: x.name, id: it.id, kind: 'stop', idx: i, when: page === 'cand' ? '' : T(x.s), desc: x.desc || it.t }); }
     else if (it.alts?.length) { const ps = it.alts.map((x, i) => ({ p: ll(x.loc), x, i })).filter(o => o.p); if (ps.length) { n++; ps.forEach(o => pts.push({ p: o.p, n, cls, name: o.x.name, id: it.id, kind: 'alt', idx: o.i, alt: true, when: sub, desc: it.t })); } }
-    else { const p = ll(it.loc), home = page !== 'cand' && !!homeStay(it, page); if (p) pts.push({ p, n: home ? 0 : ++n, home, cls, name: it.t, id: it.id, when: sub, desc: it.desc === PENDING ? '' : it.desc || '' }); }   // 住處：地圖上是房子，不佔編號（10/25）
+    else { const p = ll(it.loc), hs = page !== 'cand' && homeStay(it, page), home = !!hs;
+      // 同一間住處一天只標一個房子（Check in、回住處休息都連到它）；在住處的其他安排（例如「晚餐 山屋提供」）寫在住宿名稱下面一行（10/27）
+      const extra = home && !HOME_PLAIN.test(it.t.trim()) ? it.t.trim() : '', same = home && p && pts.find(x => x.home && x.p.lat === p.lat && x.p.lng === p.lng);
+      if (same) { if (extra && !same.extra.includes(extra)) { same.extra.push(extra); same.desc = same.extra.join('、'); } continue; }
+      if (p) pts.push({ p, n: home ? 0 : ++n, home, cls, name: home ? hs.name : it.t, id: it.id, when: sub, ...(home ? { extra: extra ? [extra] : [], desc: extra || it.t } : { desc: it.desc === PENDING ? '' : it.desc || '' }) }); }   // 住處：地圖上是房子，不佔編號（10/25）；名字一律寫住處名稱，卡片上寫的放說明（10/27）
   }
   // 每天都標出住處：前一晚住的（早上出發的地方）、今晚住的；行程裡已經有那間的房子就不重複（10/25）
   if (isDay(page)) for (const h of new Set([morningStay(page), tonightStay(page)])) {
@@ -6452,7 +6469,7 @@ async function drawMap(page) {
   for (const pt of pts) {
     const el = document.createElement('button');
     el.type = 'button'; el.className = `pin ${pt.cls}${pt.alt ? ' alt' : ''}${pt.home ? ' home' : ''}${pt.air ? ' air' : ''}`;
-    el.innerHTML = `<b>${pt.home ? HOUSE_SVG : pt.air ? PLANE_SVG : day || page === 'new' ? pt.n : ''}</b><span>${esc(shortName(pt.name))}</span>`;
+    el.innerHTML = `<b>${pt.home ? HOUSE_SVG : pt.air ? PLANE_SVG : day || page === 'new' ? pt.n : ''}</b><span>${esc(shortName(pt.name))}${pt.extra?.length ? `<small>${esc(pt.extra.join('、'))}</small>` : ''}</span>`;
     el.setAttribute('aria-label', pt.name);
     const i = mapPins.length;
     el.addEventListener('click', e => { e.stopPropagation(); mapFocus(i, { pan: false, scroll: true }); if (deskMap(current) && deskCard(pt.id)) { if (isDay(current)) deskShowItem(pt); return; } openPt(pt); });   // 電腦：左邊捲到那張卡片、閃一下，地圖上跳出店家卡（刪除、編輯…）
@@ -6754,7 +6771,7 @@ function openRideInfo(id) {
   if (it.alert) meta.push(['ti-alert-triangle', it.alert]);
   openNote(`${from || '出發'} → ${to || '抵達'}`, null, it.mine, '', { quiet: true, meta, alert: it.alert,
     html: `<div class="ri-sum"><i class="ti ti-clock"></i>${sum}</div><div class="ri-legs">${rows}<div class="ri-leg end"><b>${T(arr)}</b><span><i class="ti ti-map-pin-filled"></i>抵達${to ? ' ' + esc(to) : ''}</span></div></div>
-      ${walkBtns}<a class="btn ghost ri-gm" target="_blank" rel="noopener" href="${esc(rideHref(it, day))}"><i class="ti ti-map-2"></i> 在 Google 地圖看路線${dep && isDay(day) ? `<small>${esc(dayInfo(day).date || '')} ${T(dep)} 出發</small>` : ''}</a>`,
+      ${walkBtns}<a class="btn ghost ri-gm" target="_blank" rel="noopener" href="${esc(rideHref(it, day))}"><i class="ti ti-map-2"></i> 在 Google 地圖看${DESK.matches ? '' : '大眾運輸'}路線${rideNearWalk(it) && !DESK.matches ? `<small>很近，大概會直接給走路 ${rideNearWalk(it)} 分</small>` : dep && isDay(day) ? `<small>${esc(dayInfo(day).date || '')} ${T(dep)} 出發</small>` : ''}</a>`,
     action: { label: '編輯交通', icon: 'ti-pencil', fn: () => withAuth(() => openRideEditor(id)) } });
   sheet._infoId = id;   // 跟卡片資訊一樣算「開著資訊」：← → 換天、拖卡片、換天自動收（10/23 交通資訊原本沒有）
 }
