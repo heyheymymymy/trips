@@ -7633,7 +7633,7 @@ function wireRuler(box, get, set, mark) {
   sc.addEventListener('wheel', e => {
     if (Math.abs(e.deltaY) <= Math.abs(e.deltaX)) { clearTimeout(wheelT); wheelT = setTimeout(settle, 140); free(true); return; }   // 觸控板左右滑：照原本捲，停了才吸
     e.preventDefault(); cancelAnimationFrame(fling); free(true);
-    sc.scrollLeft += e.deltaMode === 1 ? e.deltaY * 16 : e.deltaY * .6;
+    sc.scrollLeft += e.deltaMode === 1 ? e.deltaY * DR_PX / 3 : e.deltaY * DR_PX / 100;   // 滑鼠滾輪一格（約 100px、3 行）＝一格刻度 5 分鐘（10/27 使用者：原本一格跳 30 分鐘太快）
     clearTimeout(wheelT); wheelT = setTimeout(settle, 140);
   }, { passive: false });
   sc.tabIndex = 0;
