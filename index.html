@@ -400,6 +400,7 @@ html.sheet-lock body{position:fixed;left:0;right:0;bottom:0;overflow:hidden}
 .seg[data-i="2"] .seg-thumb{transform:translateX(200%)}
 .seg button{position:relative;z-index:1;flex:1;min-width:0;padding:0;border:0;border-radius:8px;background:none;font:inherit;font-size:14px;color:var(--text2);cursor:pointer;transition:color .2s}
 .seg button.on{color:var(--text);font-weight:600}
+:is(#edKind,#edConv,#rdKind) button > .ti{font-size:15px;vertical-align:-2px;margin-right:1px}   /* 卡片樣式的圖示（10/27） */
 @media (prefers-reduced-motion:reduce){.seg-thumb{transition:none}}
 .map-btn{position:fixed;right:max(9px,calc(50vw - 231px));bottom:calc(82px + env(safe-area-inset-bottom));z-index:40;width:84px;height:48px;padding:0;border:0;border-radius:999px;background:#fff;
   color:var(--accent-fg);font-size:24px;display:flex;align-items:center;justify-content:center;box-shadow:0 2px 12px rgba(60,30,10,.16),0 0 0 .5px rgba(60,30,10,.06);cursor:pointer}
@@ -4828,7 +4829,7 @@ function drawRide() {
       <div class="sh-sub">${rd.embed != null ? `${d.date}．${esc(d.zh)}` : `第 ${dayNum(rd.day)} 天．${d.date}`}</div></div>
       <button class="sh-close" aria-label="關閉"><i class="ti ti-x"></i></button></div>
     ${rd.embed != null ? `<div class="ed-field"><span class="ed-lab">卡片樣式</span><div class="seg n4" id="rdKind" data-i="${rd.embed}"><span class="seg-thumb"></span>
-      <button type="button" data-v="one">一個地點</button><button type="button" data-v="group">多個地點</button><button type="button" data-v="pick">多選一</button><button type="button" class="on" data-v="ride">交通</button></div></div>` : ''}
+      <button type="button" data-v="one"><i class="ti ti-map-pin"></i> 一個地點</button><button type="button" data-v="group"><i class="ti ti-stack-2"></i> 多個地點</button><button type="button" data-v="pick"><i class="ti ti-arrows-split-2"></i> 多選一</button><button type="button" class="on" data-v="ride"><i class="ti ti-train"></i> 交通</button></div></div>` : ''}
     <div class="ed-field"><span class="ed-lab">你要去哪？</span>
       <div class="rd-ends">
         ${[['from', 'rdFrom', '', '從哪裡出發', '起點'], ['to', 'rdTo', ' on', '到哪裡', '終點']].map(([k, id, on, ph, lab]) => `
@@ -8167,18 +8168,18 @@ function openEditor(id, startAt, toDay, replaceId, keep) {
   ed.fixedLen = ed.group || (ed.pick && (it?.alts || []).some(a => +a.dur > 0));
   const cands = ed.isNew && isDay(current) ? DATA.cand || [] : [];
   const f_hints = `    ${old ? `<div class="ed-hint"><i class="ti ti-arrows-exchange"></i> 儲存後，「${esc(old.t)}」會移到備選</div>` : ''}
-    ${ed.booked ? '<div class="ed-lock"><i class="ti ti-lock"></i> 這是已訂位的行程，改時間前請先確認</div>' : ''}
+
 `;
   const f_kind = `    ${ed.group || ed.pick ? `
     <div class="ed-field"><span class="ed-lab">卡片樣式</span><div class="seg" id="edConv" data-i="${ed.group ? 1 : 2}"><span class="seg-thumb"></span>
-      <button type="button" data-v="split">一個地點</button>
-      <button type="button" class="${ed.group ? 'on' : ''}" data-v="group">多個地點</button>
-      <button type="button" class="${ed.pick ? 'on' : ''}" data-v="pick">多選一</button></div>
+      <button type="button" data-v="split"><i class="ti ti-map-pin"></i> 一個地點</button>
+      <button type="button" class="${ed.group ? 'on' : ''}" data-v="group"><i class="ti ti-stack-2"></i> 多個地點</button>
+      <button type="button" class="${ed.pick ? 'on' : ''}" data-v="pick"><i class="ti ti-arrows-split-2"></i> 多選一</button></div>
       <div class="ed-hint" id="edConvHint" hidden></div></div>` : `
     <div class="ed-field"><span class="ed-lab">卡片樣式</span><div class="seg${ed.isNew && isDay(ed.day) ? ' n4' : ''}" id="edKind" data-i="0"><span class="seg-thumb"></span>
-      <button type="button" class="on" data-v="one">一個地點</button>
-      <button type="button" data-v="group">多個地點</button>
-      <button type="button" data-v="pick">多選一</button>${ed.isNew && isDay(ed.day) ? '<button type="button" data-v="ride">交通</button>' : ''}</div></div>
+      <button type="button" class="on" data-v="one"><i class="ti ti-map-pin"></i> 一個地點</button>
+      <button type="button" data-v="group"><i class="ti ti-stack-2"></i> 多個地點</button>
+      <button type="button" data-v="pick"><i class="ti ti-arrows-split-2"></i> 多選一</button>${ed.isNew && isDay(ed.day) ? '<button type="button" data-v="ride"><i class="ti ti-train"></i> 交通</button>' : ''}</div></div>
     ${cands.length ? `<div id="edCandWrap">${candDropHtml(cands)}</div>` : ''}
 `}
 `;
@@ -8471,6 +8472,13 @@ function wireEditor() {
   });
   // 停留多久：左右滑的刻度尺（5 分鐘一格，整點有標字）
   const setRuler = $('edRuler') ? wireRuler($('edRuler'), () => ed.dur, v => { ed.dur = v; refresh(); }, !ed.isNew) : null;
+  // 已訂位：一動到時間（開始、結束、停留時間刻度尺）就先問一次，跟時間線上拖動一樣（10/27 拿掉面板上常駐的提醒框）；按取消就不讓改
+  const bookGuard = e => {
+    if (ed.isNew || ed.bookOk || !$('edBooked')?.checked) return;
+    if (confirm(`「${ed.t || '這個行程'}」是已訂位的行程，確定要改時間嗎？`)) { ed.bookOk = true; return; }
+    e.preventDefault(); e.stopPropagation(); document.activeElement?.blur();
+  };
+  [sheet.querySelector('.ed-time'), $('edRuler')].filter(Boolean).forEach(el => ['pointerdown', 'touchstart', 'keydown', 'focusin'].forEach(t => el.addEventListener(t, bookGuard, { capture: true, passive: false })));
   ed.syncRuler = setRuler;
   sheet.querySelectorAll('.step').forEach(b => b.addEventListener('click', () => { ed.dur = Math.max(5, ed.dur + +b.dataset.d); refresh(); }));
   $('edS').addEventListener('input', refresh);
@@ -8638,8 +8646,8 @@ function saveEditor() {
   const push = $('edPush')?.checked && ed.day === ed.fromDay;
   const delta = ed.isNew ? 0 : eMin - m(ed.orig.e);
   if (push && laterItems().some(x => m(x.e) + delta > DAY_END)) return timeErr('順延後有行程會超過凌晨 05:00，請調整一下');
-  if (!ed.isNew && ed.booked && (hhmm(sMin) !== ed.orig.s || hhmm(eMin) !== ed.orig.e) &&
-      !confirm('這是已訂位的行程，確定要改時間嗎？')) return;
+  if (!ed.isNew && ed.booked && !ed.bookOk && (hhmm(sMin) !== ed.orig.s || hhmm(eMin) !== ed.orig.e) &&
+      !confirm('這是已訂位的行程，確定要改時間嗎？')) return;   // 動時間時已經問過就不再問
   const fields = { t, s: hhmm(sMin), e: hhmm(eMin), travel: ed.tval };
   // 交通時間怎麼來的：按「計算」選的＝auto；自己填的、只換了方式的＝manual（記下當時的起點終點，地點變了一樣會提醒）
   const nowKey = () => routeKey(prevOf(ed.day, ed.replaceId || ed.id, sMin), ed.id ? findItem(ed.id)[1] : null);
