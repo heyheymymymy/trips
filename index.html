@@ -6527,10 +6527,12 @@ async function drawMap(page) {
   mapView.classList.add('has-strip'); stripAuto = Date.now(); mapStrip.scrollLeft = 0;
   // 每天：照順序用線連起來（多選一的幾家不連，到時候才決定去哪一家）
   if (day) {
-    const path = pts.filter(p => !p.alt && p.stay == null).map(p => p.p);   // 住處的房子不連線
+    // 住處的房子不連線；只有早上出發的住處（時間線最上面那張）當成第一站，連到這天第一個地點（10/27）
+    const line = pts.filter(p => !p.alt && p.stay == null), hp = homePrev(page), h0 = hp && llOf(hp.loc);
+    if (h0 && line.length && !(line[0].home && line[0].p.lat === h0.lat && line[0].p.lng === h0.lng)) line.unshift({ p: h0, id: 'home' });
+    const path = line.map(p => p.p);
     if (path.length > 1) mapLine = new google.maps.Polyline({ path, map: gmap, strokeColor: '#9A4A25', strokeOpacity: 0.45, strokeWeight: 2.5, clickable: false });
     // 兩站中間標交通時間（卡片上填的「怎麼過去」）：每張卡片第一個點和上一個點的中間
-    const line = pts.filter(p => !p.alt && p.stay == null);
     line.forEach((p, i) => {
       const prev = line[i - 1]; if (!prev || prev.id === p.id || (p.kind === 'stop' && p.idx > 0)) return;
       const it = p.air ? p : findItem(p.id)[1]; if (!it?.travel) return;   // 到機場的交通存在機票上
