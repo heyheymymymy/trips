@@ -765,6 +765,10 @@ html.on-map:not(.sheet-lock),html.on-map:not(.sheet-lock) body{background:#f4f0e
 .pin.home{transform:translate(-15px,-15px);z-index:3}
 .pin.home b{width:30px;height:30px;background:#E4572E;border-width:2.5px;box-shadow:0 2px 8px rgba(160,50,20,.45)}
 .pin.home b svg{width:16px;height:16px;display:block}
+.pin.air{transform:translate(-14px,-14px);z-index:3}
+.pin.air b{width:28px;height:28px;background:#3E6E9E;border-width:2.5px}
+.pin.air b svg,.ms-card.air b svg{width:15px;height:15px;display:block;transform:rotate(45deg)}
+.ms-card.air b{background:#3E6E9E}.ms-card.nonum.air b svg{display:none}
 .ms-card.home b{background:#E4572E}.ms-card.home b svg{width:13px;height:13px;display:block}.ms-card.nonum.home b svg{display:none}
 .map-view.far .pin span{display:none}   /* 拉遠時只留編號圓點，店名才不會疊在一起 */
 /* 編輯列：天數列原地變成一條灰色膠囊（跟總覽按鈕一樣 40px 高），從總覽按鈕往右拉長蓋過去；天數、備選淡出。離開時縮回總覽按鈕 */
@@ -1470,6 +1474,9 @@ html.tut .sheet:not(.dlg){max-height:calc(100vh - 214px - env(safe-area-inset-to
 .sheet.soft .rd-end input,.sheet.soft .rd-end input:focus{flex:1;min-width:0;height:44px;padding:0;border:0;background:none;font-size:17px;outline:none}   /* 打字中也不要框（底是灰的，看得出在哪一格）*/
 .rd-ok{flex:none;margin-right:-6px;font-size:18px;color:var(--spa-fg)}   /* 連到前後卡片：名字前面綠色勾勾（跟其他已連結地點一樣），後面的 × 取消連結 */
 .rd-unlink[hidden]{display:none}
+.rd-ends{padding-right:44px}
+.rd-swap{position:absolute;right:6px;top:50%;width:36px;height:36px;margin-top:-18px;border:1px solid var(--border);border-radius:50%;background:#fff;color:var(--text2);font-size:18px;display:flex;align-items:center;justify-content:center;cursor:pointer}   /* 起點終點中間右邊：對調（10/27） */
+.rd-swap:hover{color:var(--accent-fg)}
 .rd-unlink{flex:none;width:32px;height:32px;margin-right:-6px;border:0;border-radius:50%;background:none;color:var(--muted);font-size:16px;display:flex;align-items:center;justify-content:center;cursor:pointer}
 .rd-pt{flex:none;position:relative;z-index:1;width:12px;height:12px;box-sizing:border-box;border-radius:50%;border:2px solid var(--accent-fg);background:var(--page)}
 .rd-ends .rd-pt{background:var(--fill)}
@@ -2507,7 +2514,7 @@ const routeKey = (prev, it) => { const a = prev && lastLoc(prev), b = it && firs
 const parseRoute = r => { const [src = '', mode = 'drive', key = ''] = String(r || '').split('|'); return { src, mode, key }; };
 const routeStale = (prev, it) => { const r = parseRoute(it.troute); return !!r.key && r.key !== routeKey(prev, it); };
 // 同一天排在它前面的那張（開始時間比它早；editing 的卡片用面板上的開始時間）
-const prevOf = (day, id, start) => [...(DATA[day] || [])].filter(x => x.id !== id && m(x.s) < start).sort((a, b) => m(a.s) - m(b.s) || m(a.e) - m(b.e)).pop() || homePrev(day);
+const prevOf = (day, id, start) => withFlights(DATA[day] || [], day).filter(x => x.id !== id && m(x.s) < start).sort((a, b) => m(a.s) - m(b.s) || m(a.e) - m(b.e)).pop() || homePrev(day);
 // 交通方式：名稱、圖示（要加新的方式，在這裡和 Code.gs 的 ROUTE_MODES 各加一項）
 const ROUTE_MODES = { drive: ['開車', 'car'], walk: ['步行', 'walk'], transit: ['大眾運輸', 'bus'], moto: ['機車', 'motorbike'] };
 // 這趟旅程會用到的交通方式（建立旅程時選的主要方式＋步行，不是開車的再加開車當備案）；跟 Code.gs 的 modesFor 一樣
@@ -3248,11 +3255,12 @@ function renderCards(items, day) {
       // 交通時間：小泡泡放在上一張結尾和這一張開頭的正中間（太近就壓在兩張中間，重疊的話放在這一張的上緣）；
       // 空隙比泡泡高時，虛線把兩張卡片連起來。前後地點變了（換店、搬動）就變淡加問號
       // 從住處出發：虛線從最上面的住處卡片（在時間軸上面 10px）連下來；太近就把泡泡壓在這張卡片上緣（10/24 之前一律壓在上緣，沒有虛線）
-      const end = prev.home ? -HOME_GAP : y(prev.e) - 3, gap = y(it.s) - end, stale = routeStale(prev, it);
+      // 從住處出發＝homePrev 那張（id 'home'）；「Check in」這種連到住處的一般卡片也有 home，不能當成最上面的住處（10/27 虛線從最上面穿過航班卡片）
+      const top0 = prev.id === 'home', end = top0 ? -HOME_GAP : y(prev.e) - 3, gap = y(it.s) - end, stale = routeStale(prev, it);
       if (gap > 18) { const ln = div('car-line' + (stale ? ' stale' : '')); ln.style.height = gap + 'px'; place(ln, Math.round(end)); }
       const el = div('car' + (stale ? ' stale' : ''), `<i class="ti ti-${modeIcon(parseRoute(it.troute).mode)}"></i>${esc(it.travel.replace(/\s+/g, ''))}${stale ? '<span class="q">?</span>' : ''}`);
       if (stale) el.title = '前後的地點變了，這個時間可能不準，可以重新計算';
-      place(el, Math.round((prev.home && gap <= 24 ? y(it.s) - 3 : gap >= 0 ? end + gap / 2 : y(it.s)) - 9));
+      place(el, Math.round((top0 && gap <= 24 ? y(it.s) - 3 : gap >= 0 ? end + gap / 2 : y(it.s)) - 9));
     }
     const top = y(it.s), mins = m(it.e) - m(it.s), h = Math.max(mins * PX - 3, 28);
     const extra = clash.has(it.id) ? ' clash' : '';
@@ -3395,7 +3403,7 @@ function renderPage(page) {
   if (page === 'trips') renderTrips();
   wizEl.hidden = page !== 'new';
   if (page === 'new') { if (prevPage !== 'new') wizReset(); wizMapSig = null; renderWiz(); }   // 電腦版地圖在 renderWiz 裡畫
-  if (isDay(page) && tripFlights().length && flightItems(page).length) { fillAirportLocs().then(() => fillAirportRoute(page)); refreshFlights(); }   // 航班那天：補機場座標、算到機場的交通、查最新狀態
+  if (isDay(page) && tripFlights().length && flightItems(page).length) { fillAirportLocs().then(() => { fillAirportRoute(page); fillArrivalRoute(page); }); refreshFlights(); }   // 航班那天：補機場座標、算到機場的交通、查最新狀態
   if (onMap) { ovEl.hidden = candEl.hidden = true; tl.style.display = 'none'; cardsEl = curLayer = null; drawMap(page); return; }
   if (side && page !== 'new' && page !== 'trips') drawMap(page);   // 電腦：右邊的地圖跟著這一頁
   document.getElementById('wkOpen').hidden = !(side && (isDay(page) || page === 'overview'));
@@ -4774,6 +4782,7 @@ function drawRide() {
       <div class="rd-ends">
         ${[['from', 'rdFrom', '', '從哪裡出發', '起點'], ['to', 'rdTo', ' on', '到哪裡', '終點']].map(([k, id, on, ph, lab]) => `
         <label class="rd-end" data-k="${k}"><span class="rd-pt${on}"></span>${lk(k) ? '<i class="ti ti-map-pin-check rd-ok" aria-label="已連到卡片"></i>' : ''}<input id="${id}" type="text" value="${esc(rd[k])}" placeholder="${ph}" autocomplete="off" aria-label="${lab}"><button type="button" class="rd-unlink" aria-label="清掉${lab}"${rd[k] ? '' : ' hidden'}><i class="ti ti-x"></i></button></label>`).join('')}
+        <button type="button" class="rd-swap" id="rdSwap" aria-label="起點終點對調" title="起點終點對調"><i class="ti ti-arrows-up-down"></i></button>
       </div></div>
     <hr class="ed-sep">
     <div class="ed-field"><span class="ed-lab-row"><span class="ed-lab">怎麼去</span>
@@ -4880,6 +4889,8 @@ function drawRide() {
     if (rd[end.dataset.k + 'Id']) unlink(end);
     end.querySelector('.rd-unlink').hidden = !e.target.value;
   }); $('rdLegs').addEventListener('keydown', onEnter);
+  // 起點終點對調（10/27）：連到的卡片跟著名字一起換
+  $('rdSwap').addEventListener('click', () => { grab(); [rd.from, rd.to, rd.fromId, rd.toId] = [rd.to, rd.from, rd.toId, rd.fromId]; drawRide(); });
   $('rdDel')?.addEventListener('click', () => { ed = { id: rd.id }; rd = null; deleteItem(); });
   $('rdSave').addEventListener('click', saveRide);
 }
@@ -5015,6 +5026,23 @@ async function fillAirportRoute(day) {
     const list = tripFlights().map(f => f.id === it.flight.id ? { ...f, toAirport: { text: routeText(r) || '0 分', troute: `auto|${r.mode}|${key}` } } : f);
     saveFlights(list, '', 0, true);
   } catch {}
+}
+// 抵達那天（也包括旅途中間轉飛）：降落後的下一站還沒填交通時間、或之前自動算的起點不是這個機場，就從機場算一次（10/27）。自己手動填的不動
+async function fillArrivalRoute(day) {
+  if (!getAuth() || editing) return;
+  const items = withFlights(itemsOf(day), day);
+  for (const [i, fl] of items.entries()) {
+    if (!fl.flight || fl.kind !== 'arr' || !fl.loc) continue;
+    const it = items[i + 1]; if (!it || it.flight || it.ride || !findItem(it.id)[1]) continue;
+    const key = routeKey(fl, it), r0 = parseRoute(it.troute); if (!key || r0.key === key || (it.travel && r0.src !== 'auto') || airportRouteAsked[key]) continue;
+    airportRouteAsked[key] = true;
+    try {
+      const r = (await api({ ...getAuth(), action: 'routeTimes', pairs: [{ a: lastLoc(fl), b: firstLoc(it) }] }, 60000)).routes[0];
+      const x = findItem(it.id)[1]; if (!r || r.error || !x || editing) continue;
+      x.travel = routeText(r) || '0 分'; x.troute = `auto|${r.mode}|${key}`;
+      saveData('從機場出發的交通時間'); if (current === day) renderPage(day);
+    } catch {}
+  }
 }
 function stayListHtml() {
   const list = tripStays().map((h, i) => ({ h, i, first: tripDates().findIndex(x => (h.nights || []).includes(x.md)) })).sort((a, b) => (a.first < 0 ? 99 : a.first) - (b.first < 0 ? 99 : b.first));
@@ -6262,10 +6290,13 @@ function mapPoints(page) {
     .map((o, i) => ({ p: { lat: +o.ll[1], lng: +o.ll[2] }, n: i + 1, cls: 'see', name: o.l.geo.name || o.l.name, id: '', when: '', desc: '' }));
   if (page === 'overview') { const seen = new Set(); return DAY_KEYS.flatMap(k => mapPoints(k).map(p => ({ ...p, day: k }))).filter(p => p.stay == null || (!seen.has(p.stay) && seen.add(p.stay))); }   // 同一間住處只標一次
   const pts = [], ll = s => { const [a, b] = String(s || '').split(',').map(Number); return isFinite(a) && isFinite(b) && (a || b) ? { lat: a, lng: b } : null; };
-  const items = [...(DATA[page] || [])].sort((a, b) => m(a.s) - m(b.s));
+  const items = isDay(page) ? withFlights(DATA[page] || [], page) : [...(DATA[page] || [])].sort((a, b) => m(a.s) - m(b.s));
   let n = 0;
   for (const it of items) {
     const cls = it.cls || 'eat';
+    // 航班：機場也是一站（抵達＝這天第一站、轉機＝中繼、回程＝最後一站），飛機圖示、不佔編號（10/27）
+    if (it.flight) { const p = ll(it.loc); if (p) pts.push({ p, n: 0, air: true, flid: it.flight.id, cls: 'other', name: endName(it, page), id: it.id, travel: it.travel || '', troute: it.troute || '',
+      when: T(it.kind === 'arr' ? hhmm(it.fly.arr) : hhmm(it.fly.dep)), desc: it.kind === 'arr' ? '抵達' : '起飛' }); continue; }
     const sub = page === 'cand' ? '' : T(it.s);
     if (it.group) for (const [i, x] of (it.stops || []).entries()) { const p = ll(x.loc); if (p) pts.push({ p, n: ++n, cls, name: x.name, id: it.id, kind: 'stop', idx: i, when: page === 'cand' ? '' : T(x.s), desc: x.desc || it.t }); }
     else if (it.alts?.length) { const ps = it.alts.map((x, i) => ({ p: ll(x.loc), x, i })).filter(o => o.p); if (ps.length) { n++; ps.forEach(o => pts.push({ p: o.p, n, cls, name: o.x.name, id: it.id, kind: 'alt', idx: o.i, alt: true, when: sub, desc: it.t })); } }
@@ -6281,7 +6312,7 @@ function mapPoints(page) {
 // 電腦：卡片標題前面標跟地圖一樣的編號（合併區塊標第一站～最後一站，例如 3–5）
 function pinNumbers(root, page) {
   const by = {};
-  for (const p of mapPoints(page)) if (!p.home) (by[p.id] = by[p.id] || []).push(p.n);
+  for (const p of mapPoints(page)) if (!p.home && !p.air) (by[p.id] = by[p.id] || []).push(p.n);
   for (const [id, ns] of Object.entries(by)) {
     const t = root.querySelector(`[data-id="${CSS.escape(id)}"] .t, [data-id="${CSS.escape(id)}"] .head .t`); if (!t || t.querySelector('.pin-no')) continue;
     const a = Math.min(...ns), b = Math.max(...ns);
@@ -6338,7 +6369,7 @@ const mapStrip = document.getElementById('mapStrip');
 let mapPts = [], mapActive = -1, stripAuto = 0;   // 備選地圖顯示哪一類＝清單上選的那一類（candView.f，兩邊連動）
 // 住處的房子：用 SVG（tabler 的 ti-home-filled 字碼落在組合字元區，寬度算 0、會歪一邊）
 const HOUSE_SVG = '<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M11.3 3.3a1 1 0 0 1 1.4 0l8 7.6c.6.6.2 1.6-.7 1.6H19v7a1.5 1.5 0 0 1-1.5 1.5H15v-5a1 1 0 0 0-1-1h-4a1 1 0 0 0-1 1v5H6.5A1.5 1.5 0 0 1 5 19.5v-7H4c-.9 0-1.3-1-.7-1.6z"/></svg>';
-const openPt = pt => pt.stay != null ? openStayInfo(pt.stay) : pt.kind ? openSubInfo(pt.id, pt.kind, pt.idx) : openCardInfo(pt.id);
+const openPt = pt => pt.flid ? openFlightSheet(pt.flid) : pt.stay != null ? openStayInfo(pt.stay) : pt.kind ? openSubInfo(pt.id, pt.kind, pt.idx) : openCardInfo(pt.id);
 // 選中第 i 個點：圖釘放大、卡片加框；pan＝地圖移過去，scroll＝卡片列捲到那張
 function mapFocus(i, { pan = true, scroll = true } = {}) {
   if (!mapPts[i]) return;
@@ -6420,8 +6451,8 @@ async function drawMap(page) {
   if (!pts.length) { mapMsg.textContent = day ? '這一天還沒有標上位置的地點' : page === 'overview' ? '還沒有標上位置的地點' : '備選還沒有標上位置的地點'; gmap.setCenter(tripCenter()); gmap.setZoom(13); return; }
   for (const pt of pts) {
     const el = document.createElement('button');
-    el.type = 'button'; el.className = `pin ${pt.cls}${pt.alt ? ' alt' : ''}${pt.home ? ' home' : ''}`;
-    el.innerHTML = `<b>${pt.home ? HOUSE_SVG : day || page === 'new' ? pt.n : ''}</b><span>${esc(shortName(pt.name))}</span>`;
+    el.type = 'button'; el.className = `pin ${pt.cls}${pt.alt ? ' alt' : ''}${pt.home ? ' home' : ''}${pt.air ? ' air' : ''}`;
+    el.innerHTML = `<b>${pt.home ? HOUSE_SVG : pt.air ? PLANE_SVG : day || page === 'new' ? pt.n : ''}</b><span>${esc(shortName(pt.name))}</span>`;
     el.setAttribute('aria-label', pt.name);
     const i = mapPins.length;
     el.addEventListener('click', e => { e.stopPropagation(); mapFocus(i, { pan: false, scroll: true }); if (deskMap(current) && deskCard(pt.id)) { if (isDay(current)) deskShowItem(pt); return; } openPt(pt); });   // 電腦：左邊捲到那張卡片、閃一下，地圖上跳出店家卡（刪除、編輯…）
@@ -6448,8 +6479,8 @@ async function drawMap(page) {
     return;
   }
   // 底部卡片列：一個點一張；點一下移到那裡，再點一次（或點已經選中的）看資訊
-  mapStrip.innerHTML = pts.map((pt, i) => `<button type="button" class="ms-card ${pt.cls}${pt.alt ? ' alt' : ''}${pt.home ? ' home' : ''}${day ? '' : ' nonum'}" data-i="${i}">
-    <b>${pt.home ? HOUSE_SVG : day ? pt.n : ''}</b><span class="ms-txt"><div>${esc(pt.name)}</div><span>${esc([pt.when, pt.desc].filter(Boolean).join(' · ') || ' ')}</span></span></button>`).join('');
+  mapStrip.innerHTML = pts.map((pt, i) => `<button type="button" class="ms-card ${pt.cls}${pt.alt ? ' alt' : ''}${pt.home ? ' home' : ''}${pt.air ? ' air' : ''}${day ? '' : ' nonum'}" data-i="${i}">
+    <b>${pt.home ? HOUSE_SVG : pt.air ? PLANE_SVG : day ? pt.n : ''}</b><span class="ms-txt"><div>${esc(pt.name)}</div><span>${esc([pt.when, pt.desc].filter(Boolean).join(' · ') || ' ')}</span></span></button>`).join('');
   mapView.classList.add('has-strip'); stripAuto = Date.now(); mapStrip.scrollLeft = 0;
   // 每天：照順序用線連起來（多選一的幾家不連，到時候才決定去哪一家）
   if (day) {
@@ -6459,7 +6490,7 @@ async function drawMap(page) {
     const line = pts.filter(p => !p.alt && p.stay == null);
     line.forEach((p, i) => {
       const prev = line[i - 1]; if (!prev || prev.id === p.id || (p.kind === 'stop' && p.idx > 0)) return;
-      const it = findItem(p.id)[1]; if (!it?.travel) return;
+      const it = p.air ? p : findItem(p.id)[1]; if (!it?.travel) return;   // 到機場的交通存在機票上
       const mid = { lat: (prev.p.lat + p.p.lat) / 2, lng: (prev.p.lng + p.p.lng) / 2 };
       mapTT.push(mapThing(gmap, mid, div('map-tt', `<i class="ti ti-${modeIcon(parseRoute(it.troute).mode)}"></i>${esc(it.travel.replace(/\s+/g, ''))}`)));
     });
