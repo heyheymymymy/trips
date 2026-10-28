@@ -811,9 +811,9 @@ a.car.walk-go.late{color:#B4412F}
 .rt-calc{width:100%;margin-top:12px}   /* 自動排交通：先選交通方式再算（10/27） */
 /* 自動排交通：一站一站往下排，中間是交通（10/27 改成時間線樣式，點交通可以換方式） */
 .rt-line{margin-top:10px;padding-bottom:4px}
-.rt-stop{display:flex;align-items:center;gap:12px;min-height:28px;font-size:16px;font-weight:600;line-height:1.35}
-.rt-stop .rt-nm{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.rt-dot{flex:none;width:16px;height:16px;border:3px solid var(--cafe-fg);border-radius:50%;background:var(--page)}
+.rt-stop{display:flex;align-items:flex-start;gap:12px;min-height:28px;font-size:16px;font-weight:600;line-height:1.35}
+.rt-stop .rt-nm{min-width:0}   /* 寫全名、太長就換行（10/28：原本用地圖釘的短名，「Neng 脆皮豬」只剩 Neng） */
+.rt-dot{flex:none;margin-top:3px;width:16px;height:16px;border:3px solid var(--cafe-fg);border-radius:50%;background:var(--page)}
 .rt-gap{margin-left:7px;border-left:2px dotted var(--cafe-fg);padding:12px 0 12px 19px;min-height:22px}
 .rt-seg{display:flex;flex-wrap:wrap;align-items:center;gap:8px}
 .rt-ride{margin-left:6px;border-left:4px solid var(--border);padding:6px 0 6px 18px}   /* 交通卡片：灰色、沒有下拉，只是給你看時間，不能在這裡改 */
@@ -9220,7 +9220,7 @@ async function openRoutePlanner(day) {
     ${segs.length ? `<div class="rt-line" id="rtList">${list.map((it, i) => {
       const g = i ? segs.find(x => x.prev === list[i - 1] && x.it === it) : null;
       return `${i ? `<div class="rt-gap">${g ? `<div class="rt-seg" data-i="${segs.indexOf(g)}"></div>` : rideGap(list[i - 1], it)}</div>` : ''}
-      ${it.ride ? rideBlock(it) : `<div class="rt-stop"><span class="rt-dot"></span><span class="rt-nm">${it === home ? '🏠 ' : ''}${esc(shortName(it.t))}</span></div>`}`; }).join('')}</div>` : '<div class="ov-empty">這天只有一個行程，沒有交通要算</div>'}
+      ${it.ride ? rideBlock(it) : `<div class="rt-stop"><span class="rt-dot"></span><span class="rt-nm">${it === home ? '🏠 ' : ''}${esc(it.t)}</span></div>`}`; }).join('')}</div>` : '<div class="ov-empty">這天只有一個行程，沒有交通要算</div>'}
     <div class="ed-actions">
       <button type="button" class="btn ghost ed-cancel">取消</button>
       <button type="button" class="btn primary" id="rtGo" disabled>套用</button>
