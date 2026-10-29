@@ -274,6 +274,11 @@ button:focus,a:focus,.tab:focus-visible{outline:none}   /* 滑鼠點過的按鈕
 .now{pointer-events:none}
 .tab.today::after{content:"";position:absolute;left:50%;bottom:3px;width:4px;height:4px;margin-left:-2px;border-radius:50%;background:var(--accent-fg)}
 .tab.today.on::after{background:#fff}
+/* 今天那一格：圓圈換成刺刺的球（24 個尖角，10/29 使用者給的樣子）；尖角往外多 3px，球身跟原本的圓一樣大，不用小圓點 */
+.tab.day.today{background:none;isolation:isolate}
+.tab.day.today::before{content:"";position:absolute;inset:-3px;z-index:-1;background:var(--fill);clip-path:polygon(50.0% 0.0%,55.4% 9.4%,62.9% 1.7%,65.7% 12.1%,75.0% 6.7%,75.0% 17.5%,85.4% 14.6%,82.5% 25.0%,93.3% 25.0%,87.9% 34.3%,98.3% 37.1%,90.6% 44.6%,100.0% 50.0%,90.6% 55.4%,98.3% 62.9%,87.9% 65.7%,93.3% 75.0%,82.5% 75.0%,85.4% 85.4%,75.0% 82.5%,75.0% 93.3%,65.7% 87.9%,62.9% 98.3%,55.4% 90.6%,50.0% 100.0%,44.6% 90.6%,37.1% 98.3%,34.3% 87.9%,25.0% 93.3%,25.0% 82.5%,14.6% 85.4%,17.5% 75.0%,6.7% 75.0%,12.1% 65.7%,1.7% 62.9%,9.4% 55.4%,0.0% 50.0%,9.4% 44.6%,1.7% 37.1%,12.1% 34.3%,6.7% 25.0%,17.5% 25.0%,14.6% 14.6%,25.0% 17.5%,25.0% 6.7%,34.3% 12.1%,37.1% 1.7%,44.6% 9.4%)}
+.tab.day.today.on::before{background:var(--accent-fg)}
+.tab.day.today::after{display:none}
 .ov-today{margin-left:6px;padding:0 6px;border-radius:999px;background:var(--accent-fg);color:#fff;font-size:10px;font-weight:600;vertical-align:1px}
 .sh-tab{display:none}   /* 電腦版資訊面板的收起把手：手機不用（10/25 修：原本這行放在電腦版區塊裡，手機最下面跑出一顆按鈕） */
 .sheet-bg{position:fixed;inset:0;z-index:50;background:rgba(20,20,18,.35);opacity:0;pointer-events:none;transition:opacity .2s}
@@ -8608,6 +8613,8 @@ function wireEditor() {
   refresh();
 }
 // 原本排在這張「後面」的行程（用原本的開始時間判斷）
+// 整張卡片前後移：多個地點裡面每一站跟著移（10/28 修：原本只移卡片，展開後各站還是舊時間）
+function shiftItem(x, d) { x.s = hhmm(m(x.s) + d); x.e = hhmm(m(x.e) + d); (x.stops || []).forEach(st => { if (st.s) st.s = hhmm(m(st.s) + d); }); }
 function laterItems() {
   if (!ed || ed.isNew) return [];
   return DATA[current].filter(x => x.id !== ed.id && m(x.s) >= m(ed.orig.s));
@@ -8697,7 +8704,7 @@ function saveEditor() {
   if (ed.kind !== 'one') {
     // 這張卡片變成第一站／第一個選項，卡片本身改用新的標題
     const it = ed.isNew ? { id: uid() } : findItem(ed.id)[1];
-    if (!ed.isNew && push && delta) laterItems().forEach(x => { x.s = hhmm(m(x.s) + delta); x.e = hhmm(m(x.e) + delta); });
+    if (!ed.isNew && push && delta) laterItems().forEach(x => shiftItem(x, delta));
     const first = placeOf({ ...it, ...fields, t });   // 店家資料整份變成第一站／第一個選項（提醒、營業時間都是那一家店的）
     Object.assign(it, fields, { t: gt }); PLACE_KEYS.filter(k => k !== 'cls').forEach(k => it[k] = '');
     // 第一站＋「加入第二站」加的那幾站：一站接一站排下去；從備選挑的，備選裡那張拿掉
@@ -8717,7 +8724,7 @@ function saveEditor() {
   if (ed.isNew) {
     DATA[ed.day].push({ id: uid(), ...fields });
   } else {
-    if (push && delta) laterItems().forEach(x => { x.s = hhmm(m(x.s) + delta); x.e = hhmm(m(x.e) + delta); });
+    if (push && delta) laterItems().forEach(x => shiftItem(x, delta));
     // 合併區塊整組移動：裡面每一站跟著平移
     if (ed.group && !ed.subsDirty) { const shift = sMin - m(ed.orig.s); if (shift) findItem(ed.id)[1].stops.forEach(x => x.s = hhmm(m(x.s) + shift)); }
     const me = findItem(ed.id)[1], before = { ...me };
