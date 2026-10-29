@@ -58,8 +58,8 @@ header{position:sticky;top:0;z-index:10;background:var(--page);padding:calc(12px
 .tab.side svg{display:block}   /* 月曆（含右上角小圓點）、書籤：使用者給的 SVG（icon/），顏色跟著文字色，選中時變白 */
 .tab.side.on{background:var(--accent-fg);color:#fff;font-weight:400}
 .on-trips .tabs-row{display:none}
-.tabs{overflow-x:auto;scrollbar-width:none;flex:1;min-width:0;-webkit-overflow-scrolling:touch;scroll-padding:0 16px}
-.tabs-in{display:flex;align-items:center;gap:6px;width:max-content;margin:0 auto;padding:0 11px}
+.tabs{overflow-x:auto;overflow-y:hidden;touch-action:pan-x;scrollbar-width:none;flex:1;min-width:0;-webkit-overflow-scrolling:touch;scroll-padding:0 16px;margin:-3px 0}   /* 上下各多 3px 給「今天」刺球的尖角（不然被切掉、整排還會變成可以上下拖），用負邊距抵掉，版面不動 */
+.tabs-in{display:flex;align-items:center;gap:6px;width:max-content;margin:0 auto;padding:3px 11px}
 .tabs::-webkit-scrollbar{display:none}
 /* 還能往左／往右滑時，該側邊緣淡出 */
 .tabs{--fl:0px;--fr:0px;
