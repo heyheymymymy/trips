@@ -6548,6 +6548,11 @@ async function drawMap(page) {
     gmap.addListener('zoom_changed', () => dsScale());   // 電腦版店家卡跟著地圖縮放
     // 電腦版每一天：點地圖上的店家、景點，直接當成要加入的地點（跟搜尋選到一樣）
     gmap.addListener('click', async e => {
+      // 店家卡開著時點地圖空白處：關掉卡片（有搜尋結果的話其他結果留著，跟「不是這家」一樣）
+      if (!e.placeId && !dsCard.hidden && deskMap(current)) {
+        if (srPins.length) { deskClear(true); dsQ.value = srQ; document.getElementById('dsX').hidden = false; } else deskClear();
+        return;
+      }
       if (!e.placeId || !deskMap(current) || !isDay(current)) return;
       e.stop();
       const { Place } = await google.maps.importLibrary('places');
