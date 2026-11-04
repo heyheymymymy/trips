@@ -57,6 +57,13 @@ header{position:sticky;top:0;z-index:10;background:var(--page);padding:calc(12px
 .tab.side[data-page="cand"]{width:52px;font-size:20px}
 .tab.side svg{display:block}   /* 月曆（含右上角小圓點）、書籤：使用者給的 SVG（icon/），顏色跟著文字色，選中時變白 */
 .tab.side.on{background:var(--accent-fg);color:#fff;font-weight:400}
+/* 選到的那顆往兩側拉長成咖啡色膠囊、字淡入（11/4 照 App 的 sideTab：寬度用彈簧一點點彈，字在變寬到一半左右才淡入、收回時先淡掉再被裁掉；中間天數區跟著讓出空間） */
+.tab.side{gap:0;overflow:hidden;white-space:nowrap;transition:width .26s cubic-bezier(.34,1.32,.64,1),gap .26s cubic-bezier(.34,1.32,.64,1),background-color .18s,color .18s,opacity .2s,transform .2s cubic-bezier(.3,1.4,.6,1)}
+.tab.side .side-lb{max-width:0;opacity:0;font-size:15px;font-weight:600;line-height:1;transition:max-width .26s cubic-bezier(.34,1.32,.64,1),opacity .1s}
+.tab.side.on{width:96px;gap:6px}
+.tab.side[data-page="cand"].on{width:92px}
+.tab.side.on .side-lb{max-width:3em;opacity:1;transition:max-width .26s cubic-bezier(.34,1.32,.64,1),opacity .16s .09s}
+@media (prefers-reduced-motion:reduce){.tab.side,.tab.side .side-lb{transition:none}}
 .on-trips .tabs-row{display:none}
 .tabs{overflow-x:auto;overflow-y:hidden;touch-action:pan-x;scrollbar-width:none;flex:1;min-width:0;-webkit-overflow-scrolling:touch;scroll-padding:0 16px;margin:-3px 0}   /* 上下各多 3px 給「今天」刺球的尖角（不然被切掉、整排還會變成可以上下拖），用負邊距抵掉，版面不動 */
 .tabs-in{display:flex;align-items:center;gap:6px;width:max-content;margin:0 auto;padding:3px 11px}
@@ -172,6 +179,7 @@ button:focus,a:focus,.tab:focus-visible{outline:none}   /* 滑鼠點過的按鈕
 .ck-bullet{flex:none;width:5px;height:5px;margin:8px 8px 0;border-radius:50%;background:var(--accent-fg)}
 .ck-txt{flex:1;min-width:0;padding:0;border:0;background:none;font:inherit;font-size:14px;line-height:1.45;color:var(--text);text-align:left;cursor:pointer;word-break:break-word}
 .ck.done .ck-txt{color:var(--muted);text-decoration:line-through}
+.ck-grip{flex:none;align-self:center;margin-right:-4px;padding:2px 4px;color:var(--muted);font-size:18px;line-height:1;cursor:grab;touch-action:none}   /* 右邊六個點：按住直接拖，不用長按（11/4 照 App） */
 .ck-who{display:inline-block;margin-left:6px;padding:0 7px;border-radius:999px;background:var(--fill2);color:var(--text2);font-size:11px;line-height:18px;text-decoration:none;vertical-align:1px}
 .ck{position:relative;background:#fff;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
 .ck.ck-shift{transition:transform .15s ease}
@@ -364,6 +372,14 @@ html.sheet-lock body{position:fixed;left:0;right:0;bottom:0;overflow:hidden}
 @keyframes slInR{from{transform:translateX(70%);opacity:0}}@keyframes slInL{from{transform:translateX(-70%);opacity:0}}
 @media (prefers-reduced-motion:reduce){.sl-out-l,.sl-out-r,.sl-in-r,.sl-in-l{animation-duration:.01s}}
 .sh-head .nav{border:1px solid var(--line);color:var(--text2);width:30px;height:30px}
+.bk-box{margin-top:12px;padding:12px 14px;border-radius:14px;background:var(--fill)}   /* 訂位細節（11/4 照 App：人數、訂位名字、訂位代號可複製、備註、打開確認信） */
+.bk-box .bk-h{font-size:12px;font-weight:600;color:var(--muted);margin-bottom:4px}
+.bk-row{display:flex;align-items:center;gap:10px;min-height:30px;padding:3px 0}
+.bk-row .k{flex:none;width:64px;font-size:12px;color:var(--muted)}
+.bk-row .v{flex:1;min-width:0;font-size:14px;color:var(--text);overflow-wrap:anywhere;user-select:text;-webkit-user-select:text}
+.bk-copy{flex:none;width:30px;height:30px;border:0;background:none;color:var(--text2);font-size:16px;cursor:pointer}
+.bk-mail{display:flex;align-items:center;justify-content:center;gap:6px;height:40px;margin-top:6px;border-radius:12px;background:#fff;color:var(--text);font-size:14px;font-weight:600;text-decoration:none}
+.closed-box{margin-top:10px;padding:9px 12px;border-radius:10px;background:rgba(180,83,42,.08);color:#B4532A;font-size:13px;font-weight:500;display:flex;gap:6px;align-items:flex-start}   /* Google 顯示已歇業／暫停營業（11/4 照 App） */
 .mine{margin:14px 0 4px;padding:10px 12px;border-radius:10px;background:var(--eat-bg);color:var(--eat-fg);font-size:14px;line-height:1.6}
 .mine b{display:block;font-size:12px;font-weight:600;margin-bottom:2px}
 .sh-sec{font-size:12px;font-weight:600;color:var(--muted);margin:16px 0 6px}
@@ -789,7 +805,7 @@ html.on-map:not(.sheet-lock),html.on-map:not(.sheet-lock) body{background:#f4f0e
 .editing .editbar{width:100%;visibility:visible;transition:width .34s cubic-bezier(.3,.7,.2,1),visibility 0s}
 .editbar > *{opacity:0;transition:opacity .1s}
 .editing .editbar > *{opacity:1;transition:opacity .2s .22s}
-.tabs-row .tabs,.tabs-row .tab.side{transition:opacity .2s}
+.tabs-row .tabs{transition:opacity .2s}   /* 兩側按鈕的 opacity 漸變寫在 .tab.side（跟拉長的動態一起） */
 .editing .tabs-row .tabs,.editing .tabs-row .tab.side[data-page="cand"]{opacity:0;pointer-events:none}
 @media (prefers-reduced-motion:reduce){.editbar,.editing .editbar,.editbar > *,.editing .editbar > *,.tabs-row .tabs,.tabs-row .tab.side{transition:none}}
 .eb-label{flex:1;min-width:0;display:flex;align-items:center;gap:0;color:var(--accent-fg);overflow:hidden;text-overflow:ellipsis}
@@ -887,6 +903,18 @@ button.rt-chip{cursor:pointer}
 .stop.pressing{transform:none;background:rgba(0,0,0,.04)}
 .dragging{pointer-events:none;opacity:.4}   /* 卡片留在原位變半透明，虛線框標出新位置 */
 .drop-target{box-shadow:inset 0 0 0 2px var(--accent-fg)}
+/* 拖卡片停在上面天數的圓圈（或備選）上：圓圈加框放大，上面冒一個泡泡「移到第 5 天」（11/4 照 App 的 DayDropBubble；手指會蓋住圓圈） */
+.tab.day-drop{box-shadow:inset 0 0 0 2px var(--accent-fg);transform:scale(1.1);transition:transform .2s cubic-bezier(.3,1.4,.6,1)}
+.day-bubble{position:fixed;z-index:300;padding:12px 20px;border-radius:22px;background:#fff;text-align:center;white-space:nowrap;pointer-events:none;
+  box-shadow:0 3px 8px rgba(60,30,10,.2);transform:translate(-50%,-100%);animation:dayBubIn .18s ease-out}
+.day-bubble b{display:block;font-size:16px;color:var(--accent-fg)}
+.day-bubble small{display:block;margin-top:1px;font-size:12px;color:var(--text2)}
+.day-bubble::after{content:"";position:absolute;bottom:-7px;left:calc(50% + var(--ar, 0px));transform:translateX(-50%);border:8px solid transparent;border-top-color:#fff;border-bottom:0}
+@keyframes dayBubIn{from{opacity:0;transform:translate(-50%,-100%) scale(.7)}}
+/* 交換：被指到那張卡片下緣中間一個小標籤「⇅ 交換」（11/4 照 App 的 SwapBadge；卡片本身會裁切，所以另外放一個浮在上面） */
+.swap-badge{position:absolute;z-index:30;display:flex;align-items:center;gap:3px;padding:3px 8px;border-radius:999px;background:var(--accent-fg);color:#fff;font-size:11px;font-weight:600;line-height:1.2;white-space:nowrap;pointer-events:none;
+  box-shadow:0 1px 3px rgba(60,30,10,.2);transform:translate(-50%,-50%) scale(1);animation:swapIn .2s cubic-bezier(.3,1.4,.6,1)}
+@keyframes swapIn{from{opacity:0;transform:translate(-50%,-50%) scale(.6)}}
 /* 拖進展開的卡片：整張虛線框，插入的位置畫一條線 */
 .drop-into{box-shadow:inset 0 0 0 2px var(--accent-fg)}
 .sub-ph{display:flex;align-items:center;gap:6px;height:38px;margin:6px 0 0;padding:0 12px;border:1.5px dashed var(--accent-fg);border-radius:10px;background:rgba(154,74,37,.05);color:var(--accent-fg);font-size:13px;font-weight:600;box-sizing:border-box;pointer-events:none}   /* 等一下會加在這裡 */
@@ -1950,6 +1978,11 @@ html:not(.desk-map) .tl-add:not(.tl-route) small{color:rgba(255,255,255,.8)}   /
 .dp-row .tag{flex:none;font-size:11px;font-weight:600;padding:1px 6px;border-radius:999px;background:#fff}
 .dp-row.me{background:#fff;border:2px dashed var(--c-fg);cursor:default}
 .dp-row.hit{box-shadow:inset 0 0 0 2px #E24B4A}
+.dp-row.me{touch-action:none;cursor:grab;position:relative;z-index:1}   /* 「放這裡」可以上下拖（11/4 照 App） */
+.dp-row.me .grip{flex:none;margin-right:-4px;font-size:16px;opacity:.6}   /* 六個點放最右邊（跟待辦一樣） */
+.dp-row.me.dragging{cursor:grabbing;box-shadow:0 6px 16px rgba(0,0,0,.14)}
+.dp-list.dragging .dp-row:not(.me){transition:transform .15s ease}
+.dp-row .tm.moved{font-weight:700;opacity:1}   /* 自動往後移：後面的行程畫成移動後的時間 */
 .dp-row.hit .tag{color:#E24B4A}
 .chips.sm.day-chips .chip.cand{flex:0 0 auto;padding:0 10px}   /* 「備選」兩個字，不跟數字一樣窄 */
 .step{width:40px;height:40px;border-radius:50%;border:0;background:var(--fill);color:var(--text);font-size:16px;
@@ -2021,11 +2054,11 @@ input.sw:focus-visible{outline:2px solid var(--accent-bg);outline-offset:2px}
     <div class="tabs-row">
     <button class="tab side" data-page="overview" aria-label="總覽"><svg aria-hidden="true" width="22" height="19" viewBox="0 0 22 19" fill="none" xmlns="http://www.w3.org/2000/svg">
 <path d="M3.11955 18.7382C2.09229 18.7382 1.31549 18.475 0.78918 17.9487C0.262865 17.4287 -0.000293016 16.6614 -0.000293016 15.6468V4.07108C-0.000293016 3.05016 0.262865 2.27971 0.78918 1.75974C1.31549 1.23976 2.09229 0.979776 3.11955 0.979776H14.4004C14.1975 1.31586 14.039 1.68047 13.9249 2.07362C13.8171 2.46043 13.7632 2.8631 13.7632 3.28161C13.7632 3.71281 13.8171 4.12181 13.9249 4.50862C14.039 4.89543 14.1975 5.25688 14.4004 5.59296H3.10053C2.70104 5.59296 2.39666 5.69759 2.1874 5.90685C1.97814 6.1161 1.87352 6.42682 1.87352 6.83899V15.6278C1.87352 16.04 1.97814 16.3507 2.1874 16.56C2.39666 16.7629 2.70104 16.8643 3.10053 16.8643H16.2172C16.6167 16.8643 16.9211 16.7629 17.1303 16.56C17.3459 16.3507 17.4537 16.04 17.4537 15.6278V7.79968C17.5996 7.83772 17.7517 7.86943 17.9103 7.89479C18.0688 7.91382 18.2305 7.92333 18.3954 7.92333C18.5539 7.92333 18.7093 7.91382 18.8614 7.89479C19.02 7.86943 19.1753 7.83772 19.3275 7.79968V15.6468C19.3275 16.6614 19.0644 17.4287 18.538 17.9487C18.0181 18.475 17.2413 18.7382 16.2077 18.7382H3.11955ZM7.82785 8.89353C7.66298 8.89353 7.54567 8.86182 7.47592 8.79841C7.40617 8.735 7.37129 8.62086 7.37129 8.45599V7.89479C7.37129 7.72358 7.40617 7.60627 7.47592 7.54286C7.54567 7.47945 7.66298 7.44774 7.82785 7.44774H8.38904C8.56025 7.44774 8.67756 7.47945 8.74098 7.54286C8.81073 7.60627 8.8456 7.72358 8.8456 7.89479V8.45599C8.8456 8.62086 8.81073 8.735 8.74098 8.79841C8.67756 8.86182 8.56025 8.89353 8.38904 8.89353H7.82785ZM10.9477 8.89353C10.7701 8.89353 10.6497 8.86182 10.5862 8.79841C10.5228 8.735 10.4911 8.62086 10.4911 8.45599V7.89479C10.4911 7.72358 10.5228 7.60627 10.5862 7.54286C10.6497 7.47945 10.7701 7.44774 10.9477 7.44774H11.4994C11.6706 7.44774 11.7879 7.47945 11.8513 7.54286C11.9211 7.60627 11.9559 7.72358 11.9559 7.89479V8.45599C11.9559 8.62086 11.9211 8.735 11.8513 8.79841C11.7879 8.86182 11.6706 8.89353 11.4994 8.89353H10.9477ZM14.0485 8.89353C13.8773 8.89353 13.7568 8.86182 13.6871 8.79841C13.6237 8.735 13.592 8.62086 13.592 8.45599V7.89479C13.592 7.72358 13.6237 7.60627 13.6871 7.54286C13.7568 7.47945 13.8773 7.44774 14.0485 7.44774H14.6097C14.7809 7.44774 14.8982 7.47945 14.9616 7.54286C15.0251 7.60627 15.0568 7.72358 15.0568 7.89479V8.45599C15.0568 8.62086 15.0251 8.735 14.9616 8.79841C14.8982 8.86182 14.7809 8.89353 14.6097 8.89353H14.0485ZM4.71752 11.9468C4.54631 11.9468 4.42583 11.9183 4.35607 11.8612C4.29266 11.7978 4.26096 11.6805 4.26096 11.5092V10.9481C4.26096 10.7832 4.29266 10.669 4.35607 10.6056C4.42583 10.5422 4.54631 10.5105 4.71752 10.5105H5.27871C5.44992 10.5105 5.56723 10.5422 5.63064 10.6056C5.69406 10.669 5.72576 10.7832 5.72576 10.9481V11.5092C5.72576 11.6805 5.69406 11.7978 5.63064 11.8612C5.56723 11.9183 5.44992 11.9468 5.27871 11.9468H4.71752ZM7.82785 11.9468C7.66298 11.9468 7.54567 11.9183 7.47592 11.8612C7.40617 11.7978 7.37129 11.6805 7.37129 11.5092V10.9481C7.37129 10.7832 7.40617 10.669 7.47592 10.6056C7.54567 10.5422 7.66298 10.5105 7.82785 10.5105H8.38904C8.56025 10.5105 8.67756 10.5422 8.74098 10.6056C8.81073 10.669 8.8456 10.7832 8.8456 10.9481V11.5092C8.8456 11.6805 8.81073 11.7978 8.74098 11.8612C8.67756 11.9183 8.56025 11.9468 8.38904 11.9468H7.82785ZM10.9477 11.9468C10.7701 11.9468 10.6497 11.9183 10.5862 11.8612C10.5228 11.7978 10.4911 11.6805 10.4911 11.5092V10.9481C10.4911 10.7832 10.5228 10.669 10.5862 10.6056C10.6497 10.5422 10.7701 10.5105 10.9477 10.5105H11.4994C11.6706 10.5105 11.7879 10.5422 11.8513 10.6056C11.9211 10.669 11.9559 10.7832 11.9559 10.9481V11.5092C11.9559 11.6805 11.9211 11.7978 11.8513 11.8612C11.7879 11.9183 11.6706 11.9468 11.4994 11.9468H10.9477ZM14.0485 11.9468C13.8773 11.9468 13.7568 11.9183 13.6871 11.8612C13.6237 11.7978 13.592 11.6805 13.592 11.5092V10.9481C13.592 10.7832 13.6237 10.669 13.6871 10.6056C13.7568 10.5422 13.8773 10.5105 14.0485 10.5105H14.6097C14.7809 10.5105 14.8982 10.5422 14.9616 10.6056C15.0251 10.669 15.0568 10.7832 15.0568 10.9481V11.5092C15.0568 11.6805 15.0251 11.7978 14.9616 11.8612C14.8982 11.9183 14.7809 11.9468 14.6097 11.9468H14.0485ZM4.71752 15.0191C4.54631 15.0191 4.42583 14.9874 4.35607 14.924C4.29266 14.8605 4.26096 14.7432 4.26096 14.572V14.0108C4.26096 13.846 4.29266 13.7318 4.35607 13.6684C4.42583 13.605 4.54631 13.5733 4.71752 13.5733H5.27871C5.44992 13.5733 5.56723 13.605 5.63064 13.6684C5.69406 13.7318 5.72576 13.846 5.72576 14.0108V14.572C5.72576 14.7432 5.69406 14.8605 5.63064 14.924C5.56723 14.9874 5.44992 15.0191 5.27871 15.0191H4.71752ZM7.82785 15.0191C7.66298 15.0191 7.54567 14.9874 7.47592 14.924C7.40617 14.8605 7.37129 14.7432 7.37129 14.572V14.0108C7.37129 13.846 7.40617 13.7318 7.47592 13.6684C7.54567 13.605 7.66298 13.5733 7.82785 13.5733H8.38904C8.56025 13.5733 8.67756 13.605 8.74098 13.6684C8.81073 13.7318 8.8456 13.846 8.8456 14.0108V14.572C8.8456 14.7432 8.81073 14.8605 8.74098 14.924C8.67756 14.9874 8.56025 15.0191 8.38904 15.0191H7.82785ZM10.9477 15.0191C10.7701 15.0191 10.6497 14.9874 10.5862 14.924C10.5228 14.8605 10.4911 14.7432 10.4911 14.572V14.0108C10.4911 13.846 10.5228 13.7318 10.5862 13.6684C10.6497 13.605 10.7701 13.5733 10.9477 13.5733H11.4994C11.6706 13.5733 11.7879 13.605 11.8513 13.6684C11.9211 13.7318 11.9559 13.846 11.9559 14.0108V14.572C11.9559 14.7432 11.9211 14.8605 11.8513 14.924C11.7879 14.9874 11.6706 15.0191 11.4994 15.0191H10.9477ZM18.4049 6.58218C17.7961 6.58218 17.2445 6.43316 16.7498 6.13513C16.2552 5.83709 15.8589 5.4376 15.5609 4.93665C15.2628 4.4357 15.1138 3.88719 15.1138 3.29112C15.1138 2.68871 15.2628 2.14021 15.5609 1.6456C15.8589 1.14465 16.2552 0.745153 16.7498 0.447119C17.2445 0.149086 17.7961 6.86646e-05 18.4049 6.86646e-05C18.9946 6.86646e-05 19.5368 0.149086 20.0314 0.447119C20.5323 0.745153 20.9318 1.14465 21.2299 1.6456C21.5279 2.14021 21.6769 2.68871 21.6769 3.29112C21.6769 3.88719 21.5279 4.4357 21.2299 4.93665C20.9318 5.4376 20.5323 5.83709 20.0314 6.13513C19.5368 6.43316 18.9946 6.58218 18.4049 6.58218Z" fill="currentColor"/>
-</svg></button>
+</svg><span class="side-lb" aria-hidden="true">總覽</span></button>
     <nav class="tabs"><div class="tabs-in"><button class="tab day" data-page="d1" aria-label="第 1 天">1</button><button class="tab day" data-page="d2" aria-label="第 2 天">2</button><button class="tab day" data-page="d3" aria-label="第 3 天">3</button><button class="tab day" data-page="d4" aria-label="第 4 天">4</button><button class="tab day" data-page="d5" aria-label="第 5 天">5</button><button class="tab day" data-page="d6" aria-label="第 6 天">6</button><button class="tab day" data-page="d7" aria-label="第 7 天">7</button><button class="tab day" data-page="d8" aria-label="第 8 天">8</button></div></nav>
     <button class="tab side" data-page="cand" aria-label="備選"><svg aria-hidden="true" width="11" height="17" viewBox="0 0 11 17" fill="none" xmlns="http://www.w3.org/2000/svg">
 <path d="M0.973613 16.5425C0.671604 16.5425 0.432514 16.4443 0.256342 16.248C0.0852041 16.0568 -0.000365019 15.7925 -0.000365019 15.4553V2.28768C-0.000365019 1.5377 0.190907 0.968914 0.573452 0.581336C0.955996 0.193758 1.51975 -3.09944e-05 2.2647 -3.09944e-05H8.26712C9.01208 -3.09944e-05 9.57583 0.193758 9.95837 0.581336C10.3409 0.968914 10.5322 1.5377 10.5322 2.28768V15.4553C10.5322 15.7925 10.4441 16.0568 10.2679 16.248C10.0968 16.4443 9.86274 16.5425 9.56576 16.5425C9.35939 16.5425 9.17063 16.4796 8.99949 16.3537C8.82836 16.2329 8.5792 16.014 8.25202 15.6969L5.33009 12.8127C5.28982 12.7674 5.24704 12.7674 5.20173 12.8127L2.28735 15.6969C1.96017 16.014 1.7085 16.2329 1.53233 16.3537C1.36119 16.4796 1.17495 16.5425 0.973613 16.5425Z" fill="currentColor"/>
-</svg></button>
+</svg><span class="side-lb" aria-hidden="true">備選</span></button>
     <div class="editbar"><span class="eb-label"><i class="ti ti-pencil"></i><span id="ebDay"></span>編輯中<span id="ebSt" class="eb-st"></span></span>
       <button type="button" class="eb-btn" id="editCancel">取消</button><button type="button" class="eb-btn done" id="editDone">儲存</button></div></div>
     <button type="button" class="map-btn" id="mapBtn" aria-label="看地圖" hidden></button>
@@ -2082,16 +2115,18 @@ function springTabs(page) {
   if (page === tabsPage && tabsDrawn) return;   // 同一頁重畫（存檔、換頁動畫結束）：不要打斷正在彈的
   const max = Math.max(0, tabsEl.scrollWidth - tabsEl.clientWidth), inner = tabsEl.firstElementChild, id = ++tabsAnim;
   inner.style.transform = ''; tabsPage = page;
-  let to;
-  if (page === 'overview') to = 0;
-  else if (page === 'cand') to = max;
-  else {
-    const b = tabsEl.querySelector(`.tab[data-page="${page}"]`); if (!b) return;
+  const target = (mx = max) => {
+    if (page === 'overview') return 0;
+    if (page === 'cand') return mx;
+    const b = tabsEl.querySelector(`.tab[data-page="${page}"]`); if (!b) return null;
     const br = b.getBoundingClientRect(), tr = tabsEl.getBoundingClientRect();
-    to = Math.max(0, Math.min(max, tabsEl.scrollLeft + br.left + br.width / 2 - tr.left - tr.width / 2));
-  }
+    return Math.max(0, Math.min(mx, tabsEl.scrollLeft + br.left + br.width / 2 - tr.left - tr.width / 2));
+  };
+  const to = target(); if (to == null) return;
+  // 兩側按鈕拉長／收回（0.26 秒）會讓中間天數區變窄／變寬：動完再對準一次（11/4）
+  const settle = () => setTimeout(() => { if (id !== tabsAnim) return; const t = target(Math.max(0, tabsEl.scrollWidth - tabsEl.clientWidth)); if (t != null && Math.abs(t - tabsEl.scrollLeft) > 1) tabsEl.scrollTo({ left: t, behavior: 'smooth' }); }, 300);
   const from = tabsEl.scrollLeft, dir = Math.sign(to - from);
-  if (!tabsDrawn || !dir || matchMedia('(prefers-reduced-motion: reduce)').matches) { tabsDrawn = true; tabsEl.scrollLeft = to; return; }
+  if (!tabsDrawn || !dir || matchMedia('(prefers-reduced-motion: reduce)').matches) { tabsDrawn = true; tabsEl.scrollLeft = to; settle(); return; }
   const over = to + dir * 8, T1 = 260, T2 = 160, t0 = performance.now();
   const ease = t => 1 - Math.pow(1 - t, 3);
   const set = v => { const c = Math.max(0, Math.min(max, v)); tabsEl.scrollLeft = c; inner.style.transform = c !== v ? `translateX(${c - v}px)` : ''; };
@@ -2100,7 +2135,7 @@ function springTabs(page) {
     const t = now - t0;
     if (t < T1) set(from + (over - from) * ease(t / T1));
     else if (t < T1 + T2) set(over + (to - over) * ease((t - T1) / T2));
-    else { set(to); return; }
+    else { set(to); settle(); return; }
     requestAnimationFrame(step);
   };
   requestAnimationFrame(step);
@@ -3009,7 +3044,7 @@ async function load(force) {
     if (!force && (syncing || pendingOps().count)) return;   // 等待期間又改了東西：這次先不要蓋掉
     if (editing && !force) { deferred = r; return; }         // 編輯中不要整頁換掉，按「完成」後再套用
     const first = !TRIP;
-    applyServer(r); refreshView(); resumeLookups(); setTimeout(locateMissing, 3000);
+    applyServer(r); refreshView(); resumeLookups(); setTimeout(locateMissing, 3000); setTimeout(checkPlaceStatus, 2000);
     if (r.live) liveConnect(r.live);
     if (justCreated && TRIP?.code) { justCreated = false; setTimeout(openTutIntro, 400); }   // 剛建好：提醒存連結
     // 從「我的旅程」長按選了旅程設定／刪除：載入後打開（手機裡有舊資料時一打開就有 TRIP，所以不能只看第一次載入）
@@ -3253,9 +3288,44 @@ function buildLayer(page, isLive, st) {
 // 只把「營業 08:00–22:00」「07:00–15:30」「週三公休」這種當成營業時間；「05:20 集合」「18:00 回來」這種自己寫的提醒照常顯示
 const HR_PART = /^(營業.*|\d{1,2}:\d{2}\s*[–\-~～]\s*\d{1,2}:\d{2}|(週[日一二三四五六、]+)?(公休|休息))$/;
 // warn：不在營業時間、當天公休（放在名稱後面）；rest：其他自己寫的提醒（放在下面那排標籤）
+// Google 顯示已歇業／暫停營業（11/4 照 App）比營業時間重要，有的話只顯示這個；多個地點／多選一寫「N 家沒營業」（收合時也看得到）
 function alertParts(x, day, s, e) {
   const parts = String(x.alert || '').split(/\s*[・·]\s*/).filter(Boolean);
-  return { warn: hoursWarn(x, day, s, e, parts.filter(p => HR_PART.test(p)).join(' ')), rest: parts.filter(p => !HR_PART.test(p)).join('・') };
+  const nClosed = [...(x.stops || []), ...(x.alts || [])].filter(y => closedOf(y.pid)).length;
+  return { warn: closedOf(x.pid) || (nClosed ? `${nClosed} 家沒營業` : '') || hoursWarn(x, day, s, e, parts.filter(p => HR_PART.test(p)).join(' ')), rest: parts.filter(p => !HR_PART.test(p)).join('・') };
+}
+// ---------- 店家營業狀態（11/4 照 App；Google 顯示已歇業／暫停營業） ----------
+// 打開旅程時查一次：還沒去的那幾天排的地點、每一站、每個選項（不查備選）；一天一次，出發前一個月以上一週一次，旅程結束就不查。
+// 只看的人也查（後端不用編輯碼），結果記在這支手機、不存雲端
+const PSTAT_KEY = 'pstat-' + TRIP_ID + TEST_SUFFIX;
+let PSTAT = (() => { try { return JSON.parse(localStorage.getItem(PSTAT_KEY) || '{}'); } catch { return {}; } })();
+const closedOf = pid => pid && PSTAT.map?.[pid] ? (PSTAT.map[pid] === 'closed' ? '已歇業' : '暫停營業') : '';
+let pstatBusy = false;
+async function checkPlaceStatus() {
+  if (pstatBusy || TUT || !TRIP || !TRIP_ID) return;
+  const dates = tripDates(), today = ymd(new Date());
+  if (!dates.length || dates[dates.length - 1].ymd < today) return;
+  const far = (new Date(dates[0].ymd + 'T00:00') - new Date(today + 'T00:00')) / 864e5 > 30;
+  if (PSTAT.at && Date.now() - PSTAT.at < (far ? 7 : 1) * 864e5 - 36e5) return;
+  const pids = new Set();
+  DAY_KEYS.forEach((k, i) => { if (dates[i].ymd >= today) for (const it of DATA[k] || []) [it, ...(it.stops || []), ...(it.alts || [])].forEach(x => x.pid && pids.add(x.pid)); });
+  if (!pids.size) return;
+  pstatBusy = true;
+  try {
+    const list = [...pids], map = { ...(PSTAT.map || {}) };
+    let ok = false;
+    for (let i = 0; i < list.length; i += 40) {
+      try {
+        const r = await api({ trip: TRIP_ID, key: TRIP_KEY, action: 'placeStatus', pids: list.slice(i, i + 40) });
+        ok = true;
+        for (const [pid, v] of Object.entries(r.status || {})) { if (v === 'open') delete map[pid]; else map[pid] = v; }
+      } catch {}   // 次數到上限、沒網路：下次打開再查
+    }
+    if (!ok) return;
+    PSTAT = { at: Date.now(), map };
+    try { localStorage.setItem(PSTAT_KEY, JSON.stringify(PSTAT)); } catch {}
+    refreshView();
+  } finally { pstatBusy = false; }
 }
 // 排的時間跟營業時間只有一部分重疊（10/27 使用者分四種）：提早到＝「10:00 營業」、待太晚＝「營業到 18:00」、整段都關門＝「不在營業時間」（公休另外判斷）
 // 括號裡是完整營業時間：名稱後面的小標籤會切掉，滑鼠停留看得到
@@ -3681,12 +3751,13 @@ function renderOverview() {
   else html += '<div class="ov-empty">還沒有機票</div>';
   } else {
   // 待辦、注意事項都照新增的順序；做完的待辦留在原位，劃線變淡
+  const grip = '<span class="ck-grip" aria-hidden="true"><i class="ti ti-grip-vertical"></i></span>';   // 按住六個點直接拖（11/4 照 App）
   const addRow = (kind, ph) => `<label class="ck-add"><i class="ti ti-plus"></i><input type="text" class="ck-new" data-kind="${kind}" placeholder="${ph}" enterkeyhint="done" autocomplete="off"></label>`;
   html += `<div class="ck-list">${todos.map(c => `<div class="ck${c.done ? ' done' : ''}" data-ck="${c.id}">
       <button type="button" class="ck-box" aria-label="${c.done ? '取消勾選' : '勾選'}：${esc(c.text)}"><i class="ti ti-check"></i></button>
-      <button type="button" class="ck-txt">${esc(c.text)}${c.who ? `<span class="ck-who">${esc(c.who)}</span>` : ''}</button></div>`).join('')}${addRow('todo', '新增待辦')}</div>`;
+      <button type="button" class="ck-txt">${esc(c.text)}${c.who ? `<span class="ck-who">${esc(c.who)}</span>` : ''}</button>${grip}</div>`).join('')}${addRow('todo', '新增待辦')}</div>`;
   html += `<div class="ov-sec">注意事項</div>
-    <div class="ck-list">${tips.map(c => `<div class="ck" data-ck="${c.id}"><span class="ck-bullet"></span><button type="button" class="ck-txt">${esc(c.text)}</button></div>`).join('')}${addRow('tip', '新增注意事項')}</div>`;
+    <div class="ck-list">${tips.map(c => `<div class="ck" data-ck="${c.id}"><span class="ck-bullet"></span><button type="button" class="ck-txt">${esc(c.text)}</button>${grip}</div>`).join('')}${addRow('tip', '新增注意事項')}</div>`;
   }
   // 整個總覽的最下面（三頁都有）：編輯碼和邀請（可以編輯的人才看得到編輯碼）；旅程設定 10/27 拿掉，從選單（電腦版左側欄）進去
   if (TRIP) {
@@ -5371,7 +5442,8 @@ function openResetLinks(opts = {}) {
     } catch (e) { b.disabled = false; toast(e.message); }
   }));
 }
-// 總覽的住宿卡片：長按編輯（跟行程卡片一樣），點一下看資訊
+const PRESS_MS = 700;   // 長按多久算數（住宿卡片、我的旅程）
+// 總覽的住宿卡片：長按編輯，點一下看資訊
 let stayPress = null, stayPressed = false;
 function stayPressEnd() { if (!stayPress) return; clearTimeout(stayPress.timer); stayPress.el.classList.remove('pressing'); stayPress = null; }
 function stayPressStart(e, x, y) {
@@ -5442,10 +5514,11 @@ ovEl.addEventListener('keydown', e => {
 });
 ovEl.addEventListener('focusout', e => { if (e.target.matches('.ck-new')) addCheck(e.target); });
 const withAuth = fn => getAuth() ? fn() : openAuth(fn);
-// 長按待辦／注意事項 0.45 秒拿起來，上下拖曳換順序，放開就存
+// 長按待辦／注意事項 0.45 秒拿起來，上下拖曳換順序，放開就存；按住右邊六個點馬上拿起來（11/4 照 App）
 let ckPress = null, ckDrag = null, ckSuppress = false;
 function ckDown(e, y) {
   const row = e.target.closest('.ck[data-ck]'); if (!row || ckDrag) return;
+  if (e.target.closest('.ck-grip')) { ckLift(row, y); return; }
   ckPress = { row, y, timer: setTimeout(() => ckLift(row, y), 450) };
 }
 function ckCancel() { if (ckPress) { clearTimeout(ckPress.timer); ckPress = null; } }
@@ -6115,6 +6188,17 @@ function attachPlaceSuggest(input, onPick, onType, opts = {}) {
     if (!q || /https?:\/\//.test(q)) { close(); return; }   // 貼的是網址：不查地點建議
     let places;
     try {
+      // 目的地（opts.backend）：登入了就改由後端查（11/4 照 App 的 suggestCity；要帳號、防濫用），沒登入照舊在瀏覽器查
+      const a = opts.backend && getAccount();
+      if (a) {
+        token = token || (crypto.randomUUID ? crypto.randomUUID().replace(/-/g, '') : Math.random().toString(36).slice(2) + Date.now().toString(36));   // 同一次選擇算一次計費
+        const r = await api({ action: 'suggestCity', q, session: token, sub: a.sub, akey: a.akey });
+        if (my !== seq || document.activeElement !== input) return;
+        items = (r.list || []).map(x => ({ placeId: x.pid, mainText: { text: x.name }, secondaryText: { text: x.sub }, backend: true }));
+        box.innerHTML = items.map((p, i) => `<button type="button" data-i="${i}"><i class="ti ti-map-pin"></i><span><b>${esc(p.mainText.text)}</b><small>${esc(p.secondaryText.text || '')}</small></span></button>`).join('');
+        box.hidden = !items.length;
+        return;
+      }
       const key = await getMapsKey(); if (!key) return;
       await loadMaps(key); places = await google.maps.importLibrary('places');
       token = token || new places.AutocompleteSessionToken();   // 同一次選擇的查詢算一次計費
@@ -6147,6 +6231,12 @@ function attachPlaceSuggest(input, onPick, onType, opts = {}) {
     const p = items[+b.dataset.i]; close();
     const name = p.mainText?.text || p.text?.text || '', label = [name, p.secondaryText?.text].filter(Boolean).join('，');
     input.value = name;
+    if (p.backend) {   // 後端查的建議：國家、座標、英文名也問後端（lookupCity）
+      const a = getAccount(), tk = token; token = null;
+      try { const g = await api({ action: 'lookupCity', pid: p.placeId, session: tk, sub: a?.sub, akey: a?.akey }); onPick({ name, label, region: g.region || '', center: g.center || '', en: g.en || '' }); }
+      catch { onPick({ name, label, region: '', center: '', en: '' }); }
+      return;
+    }
     if (opts.resolve) { const tk = token; token = null; onPick(await opts.resolve(p, name, label, tk)); return; }
     try {
       const place = p.toPlace();
@@ -6236,7 +6326,7 @@ function legsOverviewHtml(S) {
 }
 // opts.onType()：打了地點名稱（建立旅程更新名稱提示）
 // 目的地的下拉清單：先城市、地區（regions），再其他地方（上高地、國家公園這種景區不算地區）
-const DEST_SUGGEST = { requests: () => [{ includedPrimaryTypes: ['(regions)'] }, {}], seq: true };
+const DEST_SUGGEST = { requests: () => [{ includedPrimaryTypes: ['(regions)'] }, {}], seq: true, backend: true };   // backend：登入了改由後端查（11/4）
 // 沒從清單選、自己打的地點名稱：跟下拉清單一樣先找城市地區，沒有再找其他地方；其他地方要名字對得上（不然亂打也會配到一家公司）
 const normName = v => String(v || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/\s+/g, '').toLowerCase();
 async function geoLookup(name) {
@@ -6445,7 +6535,7 @@ let rs = null;
 tl.addEventListener('mousedown', e => {
   const h = e.target.closest('.rs-h'); if (!h || e.button !== 0) return;
   const el = h.closest('[data-id]'), it = findItem(el.dataset.id)[1]; if (!it) return;
-  e.preventDefault(); e.stopPropagation(); pressCancel();
+  e.preventDefault(); e.stopPropagation();
   rs = { el, it, k: h.dataset.rs, y0: e.clientY, s: m(it.s), e: m(it.e), top0: parseFloat(el.style.top), h0: el.offsetHeight, v: null };
   el.classList.add('resizing'); tl.classList.add('rs-on');
 }, true);
@@ -6829,17 +6919,31 @@ function openNote(title, info, mine, q, ex = {}) {
     ${ex.desc ? `<div class="sh-desc">${esc(ex.desc)}</div>` : ''}
     ${ex.html || ''}
     ${ex.meta?.length ? `<div class="sh-meta">${ex.meta.map(([ic, t]) => `<div><i class="ti ${ic}"></i><span>${esc(t)}</span></div>`).join('')}</div>` : ''}
+    ${ex.book || ''}
     ${mine ? `<div class="mine"><b>筆記摘要</b>${esc(mine)}</div>` : ''}
     ${info.points ? `<div class="sh-sec">重點整理</div><ul class="sh-list">${info.points.map(p => `<li>${esc(p)}</li>`).join('')}</ul>` : ''}
     ${info.full ? `<details class="full-note"${info.points ? '' : ' open'}><summary>完整筆記 <i class="ti ti-chevron-down"></i></summary>
       <div class="full-txt">${linkify(info.full)}</div></details>` : ''}
     ${info.links ? `<div class="sh-sec">參考連結</div><div class="sh-links">${info.links.map(([t, u]) => `<a href="${esc(u)}" target="_blank" rel="noopener"><i class="ti ti-external-link"></i> ${esc(t)}</a>`).join('')}</div>` : ''}
     ${ex.pending ? '<div class="sh-pending"><i class="ti ti-loader-2 spin"></i> 正在用 Google 查詢這個地點的資訊（描述、營業時間、評分），查好會自動出現</div>' : ''}
-    ${!ex.pending && !ex.quiet && !mine && !info.points && !info.full && !info.links && !ex.desc ? `<div class="sh-empty">還沒有筆記，${ex.edit ? '按下面的「編輯卡片」' : '長按卡片'}可以編輯</div>` : ''}
+    ${!ex.pending && !ex.quiet && !mine && !info.points && !info.full && !info.links && !ex.desc ? `<div class="sh-empty">還沒有筆記，${ex.edit ? '按下面的「編輯卡片」' : '按右下角的「編輯」'}可以編輯</div>` : ''}
     ${ex.action || ex.edit ? `<div class="ed-actions">${ex.edit ? '<button type="button" class="btn ghost sh-edit" style="flex:1"><i class="ti ti-pencil"></i> 編輯卡片</button>' : ''}${ex.action ? `<button type="button" class="btn primary sh-act" style="flex:1"><i class="ti ${ex.action.icon}"></i> ${esc(ex.action.label)}</button>` : ''}</div>` : ''}`);
   if (ex.action) sheet.querySelector('.sh-act').onclick = ex.action.fn;
+  sheet.querySelector('.bk-copy')?.addEventListener('click', async e => { if (await copyText(e.currentTarget.dataset.copy)) toast('已複製訂位代號'); });
   if (ex.edit) sheet.querySelector('.sh-edit').onclick = () => withAuth(ex.edit);   // 沒有編輯碼的先輸入編輯碼
 }
+// 訂位細節（11/4 照 App 的 bookBox；App 先做，網頁先只顯示、還不能編輯）：人數、訂位名字、訂位代號（可複製）、備註、打開確認信
+// 只有檢視權限的人，後端不給名字和代號
+function bookHtml(b) {
+  if (!b) return '';
+  const rows = [['人數', +b.people > 0 ? `${+b.people} 位` : ''], ['訂位名字', b.name], ['訂位代號', b.ref], ['備註', b.note]].filter(r => r[1]);
+  const link = /^https?:\/\//.test(b.link || '') ? b.link : '';
+  if (!rows.length && !link) return '';
+  return `<div class="bk-box"><div class="bk-h">訂位</div>${rows.map(([k, v]) => `<div class="bk-row"><span class="k">${k}</span><span class="v">${esc(v)}</span>${k === '訂位代號' ? `<button type="button" class="bk-copy" data-copy="${esc(v)}" aria-label="複製訂位代號"><i class="ti ti-copy"></i></button>` : ''}</div>`).join('')}
+    ${link ? `<a class="bk-mail" href="${esc(link)}" target="_blank" rel="noopener"><i class="ti ti-mail"></i> 打開確認信</a>` : ''}</div>`;
+}
+// Google 顯示這家店已歇業／暫停營業：資訊卡時間上面一塊淡紅底（11/4 照 App）
+const closedHtml = pid => { const c = closedOf(pid); return c ? `<div class="closed-box"><i class="ti ti-alert-triangle-filled"></i><span>${c === '已歇業' ? 'Google 地圖顯示這家店已經永久歇業，建議換一家' : 'Google 地圖顯示這家店暫停營業中，出發前再確認一次'}</span></div>` : ''; };
 // 點卡片：打開這張卡片的資訊（有筆記就一起顯示）；備選的卡片多一顆「排進行程」
 function openCardInfo(id) {
   const [day, it] = findItem(id); if (!it) return;
@@ -6855,6 +6959,7 @@ function openCardInfo(id) {
   const hs = homeStay(it, day);   // 回住處休息：照片、筆記用住處的，描述沒寫就放住處地址
   if (hs) meta.push(['ti-home', hs.name]);
   openNote(it.t, multi ? null : NOTES[it.note] || (hs && NOTES[hs.name]), it.mine, multi ? '' : it.map || hs?.map || '', { pid: multi ? '' : it.map ? it.pid : hs?.pid, desc: it.desc === PENDING ? '' : it.desc || hs?.addr || '', meta, action, alert: it.alert, pending: it.desc === PENDING,
+    html: closedHtml(multi ? '' : it.pid), book: it.booked ? bookHtml(it.book) : '',
     edit: () => { if (!findItem(id)[1]) return; edFromInfo = id; openEditor(id); sheet.classList.add('ed-in'); } });
   sheet._infoId = id;   // 背景查好時，如果還開著這張的資訊就重畫
 }
@@ -7108,7 +7213,7 @@ tl.addEventListener('click', e => {
 // ---------- 長按拖曳：拖到空白處＝改時間；停在另一張卡片正中間＝兩個行程交換時段 ----------
 const ANDROID = /Android/i.test(navigator.userAgent);
 if (ANDROID) document.documentElement.classList.add('android');
-const LONG_PRESS = 250, MOVE_TOL = 8, DRAG_TOL = 14;   // DRAG_TOL：長按拖曳等待的那 0.25 秒，手指可以晃多少（安卓按著不動也會抖好幾 px，8 太嚴、一抖就變成捲動）
+const LONG_PRESS = 250, MOVE_TOL = 8, DRAG_TOL = 14, HOLD_MS = 450;   // HOLD_MS：一般模式長按多久拿起來（跟 App 一樣 0.45 秒，比編輯模式久，看行程時不會一碰就拿起來）   // DRAG_TOL：長按拖曳等待的那 0.25 秒，手指可以晃多少（安卓按著不動也會抖好幾 px，8 太嚴、一抖就變成捲動）
 let drag = null, suppressClick = false;
 const cardAt = (x, y) => {
   const el = document.elementFromPoint(x, y)?.closest('.layer [data-id]');
@@ -7118,7 +7223,6 @@ function dragStart(x, y, el, sub) {
   drag = { el, sub, x0: x, y0: y, y: y, sy0: scrollY, target: null, active: false, timer: null };
   drag.timer = setTimeout(drag.activate = () => {
     if (!drag || drag.active) return;
-    pressCancel();
     drag.active = true; dbg('◎ 長按到了，開始拖曳');
     if (sub) {
       // 某一站／某個選項：卡片有裁切，所以另外做一張跟著手指走的小卡片
@@ -7138,7 +7242,7 @@ function dragStart(x, y, el, sub) {
     tl.classList.add('drag-on');
     navigator.vibrate?.(10);
     autoScroll();
-  }, LONG_PRESS);
+  }, editing ? LONG_PRESS : HOLD_MS);
 }
 function dragMove(x, y, e) {
   if (!drag) return;
@@ -7154,7 +7258,8 @@ function dragMove(x, y, e) {
     const tol = drag.mouse ? MOVE_TOL : DRAG_TOL;
     // 還在等長按、手指只是小小晃動：攔下來。安卓 Chrome 只要看到一次沒被攔的移動就開始捲畫面，之後整個手勢都攔不住，
     // 長按到了卡片也只會跟著畫面跑（10/22 安卓朋友的偵錯畫面：拖曳中每一筆 move 都是「可攔=否」、畫面一直在捲）
-    if (!drag.mouse && Math.abs(x - drag.x0) <= tol && Math.abs(y - drag.y0) <= tol) { if (e?.cancelable) e.preventDefault(); return; }
+    // 一般模式的 iPhone 不攔：攔了第一下，整個手勢就捲不動了（安卓照舊要攔）
+    if (!drag.mouse && Math.abs(x - drag.x0) <= tol && Math.abs(y - drag.y0) <= tol) { if (e?.cancelable && (editing || ANDROID)) e.preventDefault(); return; }
     if (Math.abs(x - drag.x0) > tol || Math.abs(y - drag.y0) > tol) { if (drag.mouse) { clearTimeout(drag.timer); drag.activate(); } else if (ANDROID && editing) { clearTimeout(drag.timer); drag.pan = { y, t: performance.now(), v: 0 }; dbg('↕ 網站自己捲'); if (e?.cancelable) e.preventDefault(); }
       else { dbg(`✕ 還沒到長按就移動 ${Math.round(x - drag.x0)},${Math.round(y - drag.y0)}（超過 ${tol}px）→ 當成捲動`); dragCancel('moved'); } }
     return;
@@ -7163,6 +7268,11 @@ function dragMove(x, y, e) {
   drag.x = x; drag.y = y;
   // 小卡片浮在手指上方，才看得到底下標的時間
   if (drag.ghost) drag.ghost.style.transform = `translate(${x - drag.x0}px, ${y - 14 - drag.gH - drag.gTop}px)`;
+  // 整張卡片拖到上面天數的圓圈（或備選）：放開就搬到那一天，時間不變（11/4 照 App；編輯模式天數列藏起來了，不算）
+  const dayTab = !drag.sub && !editing ? document.elementFromPoint(x, y)?.closest('.tab.day[data-page], .tab.side[data-page="cand"]') : null;
+  const toDay = dayTab && dayTab.dataset.page !== current ? dayTab.dataset.page : null;
+  if (toDay !== drag.toDay) showDayDrop(drag.toDay = toDay, dayTab);
+  if (toDay) { clearDropMarks(); showBox(null); drag.target = drag.into = null; drag.at = null; return; }
   // 整張卡片拖曳時卡片本身不動（只變半透明），由虛線框標出會放到哪裡
   let t = cardAt(x, y);
   if (drag.sub) {
@@ -7190,7 +7300,7 @@ function dragMove(x, y, e) {
   if (tgt !== drag.target || into?.row !== drag.into?.row) {
     clearDropMarks();
     if (into) { t.classList.add('drop-into'); into.row.classList.add('ins'); }
-    else tgt?.classList.add('drop-target');
+    else { tgt?.classList.add('drop-target'); showSwap(tgt); }
     drag.target = tgt; drag.into = into;
   }
 }
@@ -7267,11 +7377,46 @@ function showSlot(mins) {
 }
 function clearDropMarks() {
   tl.querySelectorAll('.drop-target, .drop-into, .ins, .ins-after').forEach(el => el.classList.remove('drop-target', 'drop-into', 'ins', 'ins-after'));
+  swapEl?.remove(); swapEl = null;
+}
+// 交換的標籤：放在被指到那張卡片的下緣中間（跟 App 一樣）
+let swapEl = null;
+function showSwap(t) {
+  if (!t) return;
+  const box = cardsEl.getBoundingClientRect(), r = t.getBoundingClientRect();
+  swapEl = div('swap-badge'); swapEl.innerHTML = '<i class="ti ti-arrows-up-down"></i>交換';
+  Object.assign(swapEl.style, { left: r.left - box.left + r.width / 2 + 'px', top: r.bottom - box.top + 'px' });
+  cardsEl.appendChild(swapEl);
+}
+// 停在哪一天的圓圈上：那格加框放大，上面一個泡泡「移到第 5 天／11/11 週三」（靠邊的往內推，尖角還是對準那一格）
+let dayBubEl = null, dayTabEl = null;
+function showDayDrop(k, tab) {
+  dayBubEl?.remove(); dayBubEl = null; dayTabEl?.classList.remove('day-drop'); dayTabEl = null;
+  if (!k || !tab) return;
+  dayTabEl = tab; tab.classList.add('day-drop');
+  const r = tab.getBoundingClientRect(), want = r.left + r.width / 2, x = Math.min(Math.max(want, 74), innerWidth - 74), d = k === 'cand' ? null : dayInfo(k);
+  dayBubEl = div('day-bubble');
+  dayBubEl.innerHTML = `<b>${k === 'cand' ? '移到備選' : `移到第 ${dayNum(k)} 天`}</b><small>${k === 'cand' ? '時間不變' : esc([d.date, d.wd].filter(Boolean).join(' '))}</small>`;
+  Object.assign(dayBubEl.style, { left: x + 'px', top: r.top - 10 + 'px' });
+  dayBubEl.style.setProperty('--ar', Math.max(-40, Math.min(want - x, 40)) + 'px');
+  document.body.appendChild(dayBubEl);
+}
+// 放在某一天的圓圈上：搬到那一天，時間不變（已訂位的先問）；提示裡可以復原
+function dropToDay(id, to) {
+  const from = current, it = (DATA[from] || []).find(x => x.id === id); if (!it || to === from) return false;
+  const name = to === 'cand' ? '備選' : `第 ${dayNum(to)} 天`;
+  if (it.booked && !confirm(`「${it.t}」是已訂位的行程，確定要移到${name}嗎？`)) return false;
+  moveDay(id, from, to);
+  saveData(`移到${name}`); renderPage(current); updateHeader(current);
+  toast(`已把「${it.t}」移到${to === 'cand' ? '備選' : `${name} ${T(it.s)}`}`, '復原', () => {
+    moveDay(id, to, from); saveData(); renderPage(current); updateHeader(current); toast('已復原');
+  });
+  return true;
 }
 function autoScroll() {
   if (!drag?.active) return;
   const edge = 90, y = drag.y;
-  const v = y < edge + 60 ? -Math.ceil((edge + 60 - y) / 8) : y > innerHeight - edge ? Math.ceil((y - innerHeight + edge) / 8) : 0;
+  const v = drag.toDay ? 0 : y < edge + 60 ? -Math.ceil((edge + 60 - y) / 8) : y > innerHeight - edge ? Math.ceil((y - innerHeight + edge) / 8) : 0;
   if (v) { scrollBy(0, v); dragMove(drag.x ?? drag.x0, drag.y); }
   requestAnimationFrame(autoScroll);
 }
@@ -7291,11 +7436,12 @@ function dragEnd() {
   clearTimeout(drag.timer);
   if (!drag.active) { drag = null; return; }
   suppressClick = true; setTimeout(() => suppressClick = false, 400);
-  const { el, target, into, sub, ghost, slot, at, reorder, reRow } = drag;
+  const { el, target, into, sub, ghost, slot, at, reorder, reRow, toDay } = drag;
   reRow?.classList.remove('ins', 'ins-after');
-  clearDropMarks(); showSlot(null); showBox(null);
+  clearDropMarks(); showSlot(null); showBox(null); showDayDrop(null);
   tl.classList.remove('drag-on');
   drag = null;
+  if (toDay && !sub && dropToDay(el.dataset.id, toDay)) { setTimeout(refreshInfo); return; }
   if (sub) {
     ghost.remove(); el.classList.remove('sub-dragging');
     if (reorder != null) reorderSub(sub, reorder);
@@ -7318,7 +7464,7 @@ function dragCancel(why) {
   clearTimeout(drag.timer);
   if (drag.active) {
     drag.el.classList.remove('dragging', 'sub-dragging'); drag.el.style.transform = ''; drag.ghost?.remove();
-    clearDropMarks(); showSlot(null); showBox(null); tl.classList.remove('drag-on');
+    clearDropMarks(); showSlot(null); showBox(null); showDayDrop(null); tl.classList.remove('drag-on');
   }
   drag = null;
 }
@@ -7441,8 +7587,11 @@ function subDragStart(e, x, y) {
   return true;
 }
 // 手機：touch；電腦：滑鼠（方便測試）
+// 一般模式（11/4 照 App）：有編輯碼的人不用按「編輯」，長按卡片 0.45 秒拿起來就能拖（改時間、交換、放進別張、拖某一站）；
+// 拿起來沒拖就放開＝放回原位（長按不再打開編輯，跟 App 一樣；編輯從卡片資訊的「編輯卡片」或編輯模式）。航班卡片、導航鈕不拖
+const holdDrag = e => !editing && isDay(current) && !!getAuth() && !busy && !sheet.classList.contains('on') && !e.target.closest('.nav, .blk.flight, .add-sub, .chev');
 tl.addEventListener('touchstart', e => {
-  if (!editing || e.touches.length > 1) return;
+  if (e.touches.length > 1 || !(editing || holdDrag(e))) return;
   const t = e.touches[0];
   if (subDragStart(e, t.clientX, t.clientY)) return;
   const el = e.target.closest('.layer [data-id]');
@@ -7491,43 +7640,6 @@ addEventListener('mousemove', e => { if (drag) dragMove(e.clientX, e.clientY, e)
 addEventListener('mouseup', dragEnd);
 tl.addEventListener('contextmenu', e => { if (editing || e.target.closest('.layer [data-id]')) e.preventDefault(); });   // 長按不要跳出系統選單
 
-// ---------- 一般模式：長按卡片，直接編輯這一張 ----------
-// 改完按「儲存」就直接存到雲端，不用進編輯模式、也不用再按「完成」
-const PRESS_MS = 700;
-let press = null, pressFired = false;
-function pressStart(e, x, y) {
-  if (editing || !(isDay(current) || current === 'cand') || busy || sheet.classList.contains('on')) return;
-  if (e.target.closest('.nav, .add-sub')) return;
-  const row = e.target.closest('.layer .stop[data-kind]'), card = e.target.closest('.layer [data-id], .cand-page [data-id]');
-  if (!card) return;
-  const el = row || card;
-  press = { x, y, el, timer: setTimeout(() => pressFire(card.dataset.id, row), PRESS_MS) };
-  setTimeout(() => { if (press?.el === el) el.classList.add('pressing'); }, 120);   // 手指停住一下才開始縮，捲動時不會一直閃
-}
-function pressCancel() {
-  if (!press) return;
-  clearTimeout(press.timer); press.el.classList.remove('pressing'); press = null;
-}
-function pressFire(id, row) {
-  const el = press?.el; pressCancel();
-  pressFired = true; setTimeout(() => pressFired = false, 600);
-  navigator.vibrate?.(10);
-  const open = () => row ? openSubEditor(id, row.dataset.kind, +row.dataset.idx) : openEditor(id);
-  if (!findItem(id)[1]) return;
-  if (getAuth()) open(); else openAuth(open);
-}
-for (const el of [tl, candEl]) {
-  el.addEventListener('touchstart', e => { if (e.touches.length === 1) pressStart(e, e.touches[0].clientX, e.touches[0].clientY); else pressCancel(); }, { passive: true });
-  el.addEventListener('touchmove', e => { if (press && (Math.abs(e.touches[0].clientX - press.x) > MOVE_TOL || Math.abs(e.touches[0].clientY - press.y) > MOVE_TOL)) pressCancel(); }, { passive: true });
-  el.addEventListener('touchend', pressCancel);
-  el.addEventListener('touchcancel', pressCancel);
-  el.addEventListener('mousedown', e => { if (e.button === 0) pressStart(e, e.clientX, e.clientY); });
-}
-addEventListener('mousemove', e => { if (press && (Math.abs(e.clientX - press.x) > MOVE_TOL || Math.abs(e.clientY - press.y) > MOVE_TOL)) pressCancel(); });
-addEventListener('mouseup', pressCancel);
-addEventListener('scroll', pressCancel, { passive: true });
-// 長按放開後的那一下點擊，不要被當成「展開／收合」或「導航」
-[tl, candEl].forEach(el => el.addEventListener('click', e => { if (pressFired) { pressFired = false; e.stopPropagation(); e.preventDefault(); } }, true));
 candEl.addEventListener('contextmenu', e => { if (e.target.closest('[data-id]')) e.preventDefault(); });
 
 fab.addEventListener('click', () => {
@@ -9129,8 +9241,9 @@ function openDayPicker(id) {
     <div id="dpTime">
       <div class="ed-field"><span class="ed-lab">時間</span>
         <div class="ed-time"><input id="dpS" type="time" step="300" aria-label="開始時間"><span class="ed-arrow">→</span><span class="ed-endbox" id="dpEnd"></span></div></div>
-      <div class="ed-field"><span class="ed-lab">那天的行程 <span class="ed-lab-hint">點一個，就接在它後面</span></span>
+      <div class="ed-field"><span class="ed-lab">那天的行程 <span class="ed-lab-hint">點一個就接在它後面，也可以拖「放這裡」</span></span>
         <div class="dp-list" id="dpList"></div></div>
+      <div class="ed-push" id="dpPushWrap"><div><label class="ed-switch"><input type="checkbox" class="sw" id="dpPush"><span>後面的行程自動移動 <small id="dpPushTxt"></small></span></label></div></div>
     </div>
     <div class="ed-actions">
       <button type="button" class="btn ghost" id="dpEdit"><i class="ti ti-pencil"></i> 編輯內容</button>
@@ -9138,20 +9251,52 @@ function openDayPicker(id) {
     </div>`);
   const $ = x => sheet.querySelector('#' + x);
   const start = () => $('dpS').value ? fromInput($('dpS').value) : m(it.s);
+  // 11/4 照 App（DayPickerSheet）：「放這裡」那一列可以上下拖，拖過哪一列就讓位，放開就接在上面那個行程後面（拖到最上面＝排在第一個行程前面）；
+  // 跟後面的行程重疊時可以打開「後面的行程自動移動」，後面的一起往後移（畫成移動後的時間）
+  const ROW_H = 44;   // 一列 40 高＋間隔 4
+  const dayItems = () => [...(DATA[day] || [])].sort((a, b) => m(a.s) - m(b.s));
+  const posOf = (items, s) => { const i = items.findIndex(o => m(o.s) > s); return i < 0 ? items.length : i; };   // 同一個開始時間排在後面
+  const startAt = (items, i) => Math.min(Math.max(i === 0 ? (items.length ? m(items[0].s) - dur : start()) : m(items[i - 1].e), NIGHT), DAY_END - dur);
+  const pushBy = (items, s, i) => { const later = items.slice(i); return later.length ? Math.max(0, s + dur - Math.min(...later.map(o => m(o.s)))) : 0; };
   const draw = () => {
-    const s = start(), e = s + dur, items = [...(DATA[day] || [])].sort((a, b) => m(a.s) - m(b.s));
+    const s = start(), e = s + dur, items = dayItems(), at = posOf(items, s);
+    const by = pushBy(items, s, at), push = by > 0 && $('dpPush').checked;
     $('dpEnd').textContent = clock(e);
-    const rows = items.map(o => ({ o, s: m(o.s) }));
-    rows.push({ me: true, s });
-    rows.sort((a, b) => a.s - b.s || (a.me ? 1 : -1));
-    $('dpList').innerHTML = rows.map(r => r.me
-      ? `<div class="dp-row me ${it.cls || 'eat'}"><span class="tm">${T(hhmm(s))}–${T(hhmm(e))}</span><span class="nm">${esc(it.t)}</span><span class="tag">放這裡</span></div>`
-      : `<button type="button" class="dp-row ${r.o.cls || 'eat'}${m(r.o.s) < e && s < m(r.o.e) ? ' hit' : ''}" data-end="${m(r.o.e)}">
-          <span class="tm">${T(r.o.s)}–${T(r.o.e)}</span><span class="nm">${esc(r.o.t)}</span>${m(r.o.s) < e && s < m(r.o.e) ? '<span class="tag">重疊</span>' : ''}</button>`).join('')
-      || '<div class="ov-empty">這天還沒有行程</div>';
-    $('dpGo').disabled = e > DAY_END;
-    $('dpGo').textContent = e > DAY_END ? '超過凌晨 05:00' : `排進第 ${dayNum(day)} 天`;
+    const row = (o, i) => { const sh = push && i >= at ? by : 0, hit = !sh && m(o.s) < e && s < m(o.e);
+      return `<button type="button" class="dp-row ${o.cls || 'eat'}${hit ? ' hit' : ''}" data-i="${i}" data-end="${m(o.e) + sh}">
+        <span class="tm${sh ? ' moved' : ''}">${T(hhmm(m(o.s) + sh))}–${T(hhmm(m(o.e) + sh))}</span><span class="nm">${esc(o.t)}</span>${hit ? '<span class="tag">重疊</span>' : ''}</button>`; };
+    const me = `<div class="dp-row me ${it.cls || 'eat'}"><span class="tm">${T(hhmm(s))}–${T(hhmm(e))}</span><span class="nm">${esc(it.t)}</span><span class="tag">放這裡</span>${items.length ? '<i class="ti ti-grip-vertical grip"></i>' : ''}</div>`;   // 那天沒有行程就不用拖
+    $('dpList').innerHTML = items.slice(0, at).map(row).join('') + me + items.slice(at).map((o, k) => row(o, at + k)).join('')
+      + (items.length ? '' : '<div class="ov-empty">這天還沒有行程</div>');
+    $('dpPushWrap').classList.toggle('on', by > 0);
+    if (by > 0) $('dpPushTxt').textContent = `（往後 ${durLabel(by)}）`;
+    const late = e > DAY_END || (push && items.slice(at).some(o => m(o.e) + by > DAY_END));
+    $('dpGo').disabled = late;
+    $('dpGo').textContent = late ? '超過凌晨 05:00' : `排進第 ${dayNum(day)} 天`;
   };
+  // 拖「放這裡」：手指移多少就跟著移，其他列讓位；放開才真的換時間
+  $('dpList').addEventListener('pointerdown', ev => {
+    const me = ev.target.closest('.dp-row.me'); if (!me) return;
+    ev.preventDefault(); me.setPointerCapture(ev.pointerId);
+    const items = dayItems(), at = posOf(items, start()), y0 = ev.clientY, list = $('dpList');
+    let to = at;
+    me.classList.add('dragging'); list.classList.add('dragging');
+    const move = e => {
+      const dy = e.clientY - y0;
+      to = Math.min(Math.max(at + Math.round(dy / ROW_H), 0), items.length);
+      me.style.transform = `translateY(${dy}px)`;
+      list.querySelectorAll('.dp-row:not(.me)').forEach(r => { const i = +r.dataset.i; r.style.transform = i >= at && i < to ? `translateY(${-ROW_H}px)` : i < at && i >= to ? `translateY(${ROW_H}px)` : ''; });
+      const s = startAt(items, to); me.querySelector('.tm').textContent = `${T(hhmm(s))}–${T(hhmm(s + dur))}`;
+    };
+    const up = () => {
+      me.removeEventListener('pointermove', move); me.removeEventListener('pointerup', up); me.removeEventListener('pointercancel', up);
+      list.classList.remove('dragging');
+      if (to !== at) $('dpS').value = T(hhmm(startAt(items, to)));
+      draw();
+    };
+    me.addEventListener('pointermove', move); me.addEventListener('pointerup', up); me.addEventListener('pointercancel', up);
+  });
+  $('dpPush').addEventListener('change', draw);
   sheet.querySelector('.day-pick').addEventListener('click', e => {
     const b = e.target.closest('.dp-day'); if (!b) return;
     day = b.dataset.v;
@@ -9167,12 +9312,13 @@ function openDayPicker(id) {
   });
   $('dpGo').addEventListener('click', () => {
     if (!day) return;
-    const s = start();
+    const s = start(), items = dayItems(), at = posOf(items, s), by = $('dpPush').checked ? pushBy(items, s, at) : 0, later = by ? items.slice(at) : [];
+    later.forEach(x => shiftItem(x, by));   // 後面的行程一起往後移（多個地點的每一站跟著平移）
     it.s = hhmm(s); it.e = hhmm(s + dur);
     moveDay(id, 'cand', day);
     const to = day;
     saveData(`排到第 ${dayNum(to)} 天`); closeSheet(); renderPage(current); updateHeader(current);
-    toast(`已把「${it.t}」排到第 ${dayNum(to)} 天 ${T(it.s)}${clashText(id, to)}`, '前往', () => { goHash(to); });
+    toast(`已把「${it.t}」排到第 ${dayNum(to)} 天 ${T(it.s)}${later.length ? `，後面 ${later.length} 個行程往後移 ${durLabel(by)}` : ''}${clashText(id, to)}`, '前往', () => { goHash(to); });
   });
   $('dpEdit').addEventListener('click', () => openEditor(id));
   // 一打開就先選好第 1 天，下面的時間和行程直接出現，點別天只是換內容，畫面不會跳
@@ -9664,9 +9810,9 @@ const TUT_STEPS = [
     el: () => tl, to: () => ({ dx: -140, dy: 0 }), pos: tutBlank, done: () => current === 'd2' },
   { text: '點一下「THE HOUSE」<br>看看行程的資訊', gesture: 'tap', el: () => tutCard('tl'),
     done: () => sheet.classList.contains('on') && !sheet.querySelector('#edT') && !editing, after: '這就是行程資訊。<br>往下滑關掉面板，進行下一關。' },
-  { text: '長按「Ristr8to」不要放開<br>直接修改這一張', gesture: 'press', el: () => tutCard('tc'),
+  { text: '點「Ristr8to」<br>再按下面的「編輯卡片」', gesture: 'tap', el: () => tutCard('tc'),
     done: () => sheet.classList.contains('on') && !!sheet.querySelector('#edT') && !editing },
-  // 下面三關都在修改面板裡；中途把面板關掉就回到「長按 Ristr8to」那一關
+  // 下面三關都在修改面板裡；中途把面板關掉就回到「點 Ristr8to」那一關
   { text: '停留時間的尺往左滑<br>改成 1 小時 30 分', gesture: 'swipe', inSheet: 2, el: () => sheet.querySelector('.dr-win'), to: () => ({ dx: -60, dy: 0 }),
     done: () => ed && ed.dur >= 90 && ed.dur <= 120 },   // 最多 2 小時：太長的話 THE HOUSE 被推到 14:30 之後，下一關就沒地方往上拖
   { text: '待久一點，後面也要跟著延後<br>打開「後面的行程自動移動」', gesture: 'tap', inSheet: 2, el: () => sheet.querySelector('#edPushWrap.on .sw'),
@@ -9727,7 +9873,7 @@ function tutRun() {
   function finish() {
     clearInterval(timer); hand.hidden = true; ui.classList.add('done');
     box.innerHTML = `<div class="tut-win"><i class="ti ti-circle-check-filled"></i><b>你學會了！</b>
-      <ul><li><b>左右滑：</b>切換日期。</li><li><b>點擊卡片：</b>查看卡片資訊。</li><li><b>長按卡片：</b>只要修改單張卡片時，長按即可編輯。</li><li><b>編輯模式：</b>按下鉛筆進入，可以拖曳移動或是交換。</li></ul>
+      <ul><li><b>左右滑：</b>切換日期。</li><li><b>點擊卡片：</b>查看卡片資訊。</li><li><b>長按卡片：</b>拿起來拖著走，可以改時間、交換（不用進編輯模式）。</li><li><b>編輯模式：</b>按下鉛筆進入，可以拖曳移動或是交換。</li></ul>
       <button type="button" class="btn primary tut-go">開始排行程</button></div>`;
     box.querySelector('.tut-go').addEventListener('click', () => leave('done'));
   }
