@@ -328,6 +328,22 @@ html.sheet-lock body{position:fixed;left:0;right:0;bottom:0;overflow:hidden}
 .ph-pick{display:flex;flex-direction:column;align-items:center;gap:4px;color:var(--text2);font-size:13px}
 .ph-pick i{font-size:24px;color:var(--accent-fg)}
 .ph-cam.ph-del{right:auto;left:8px}
+/* 換照片的小選單、從 Google 換一張的面板（11/4 照 App） */
+.ph-menu{position:fixed;z-index:400;min-width:180px;padding:6px;border-radius:14px;background:#fff;box-shadow:0 6px 24px rgba(0,0,0,.18)}
+.ph-menu button{display:flex;align-items:center;gap:8px;width:100%;padding:10px 12px;border:0;border-radius:10px;background:none;font:inherit;font-size:15px;color:var(--text);text-align:left;cursor:pointer}
+.ph-menu button:hover{background:var(--fill)}
+.gp-mask{position:fixed;inset:0;z-index:390;background:rgba(0,0,0,.35);display:flex;align-items:flex-end;justify-content:center}
+.gp-panel{width:100%;max-width:520px;max-height:88vh;display:flex;flex-direction:column;padding:22px 18px calc(12px + env(safe-area-inset-bottom));border-radius:20px 20px 0 0;background:#fff;box-sizing:border-box}
+.gp-h b{display:block;font-size:20px}
+.gp-h small{display:block;margin-top:2px;font-size:13px;color:var(--text2)}
+.gp-err{margin-top:10px;font-size:13px;color:#C2412D}
+.gp-grid{flex:1;min-height:120px;overflow:auto;display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:14px 0 10px;align-content:start}
+.gp-ph{position:relative;aspect-ratio:1;padding:0;border:0;border-radius:10px;overflow:hidden;background:var(--fill);cursor:pointer}
+.gp-ph img{width:100%;height:100%;object-fit:cover;display:block}
+.gp-ph.saving::after{content:"";position:absolute;inset:0;background:rgba(0,0,0,.35)}
+.gp-by{position:absolute;left:6px;bottom:6px;max-width:calc(100% - 12px);padding:2px 6px;border-radius:999px;background:rgba(0,0,0,.45);color:#fff;font-size:10px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.gp-wait,.gp-none{grid-column:1/-1;padding:50px 0;text-align:center;color:var(--muted);font-size:14px}
+.gp-wait i{font-size:24px}
 .ph-cam{position:absolute;right:8px;bottom:8px;z-index:2;width:34px;height:34px;padding:0;border:0;border-radius:50%;background:rgba(255,255,255,.92);color:var(--text);font-size:18px;display:flex;align-items:center;justify-content:center;box-shadow:0 1px 4px rgba(0,0,0,.25);cursor:pointer}
 .ph-row{display:flex;gap:8px;margin-top:8px}
 .ph-row input{flex:1;min-width:0}
@@ -1204,6 +1220,24 @@ button.ov-stay{width:100%;font:inherit;text-align:left;cursor:pointer}
 .ov-stay b{display:block;font-size:15px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .ov-stay small{display:block;margin-top:1px;font-size:12px;color:var(--text2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .ov-stay > i:last-child{color:var(--muted);font-size:18px}
+/* 預訂頁「餐廳・景點」（11/4 照 App 的 bookedRow）：照片（沒有就類型底色＋圖示）＋名稱、日期、時間・人數；過去的變淡，點了看卡片資訊 */
+.bk-list{display:flex;flex-direction:column;gap:8px}
+/* 編輯卡片的訂位細節（11/4 照 App 的 bookFields）：打開「已訂位」才展開 */
+.af-dup{margin-top:6px;font-size:13px;font-weight:500;color:#B4532A}   /* 加地點：已經有同一家（11/4 照 App） */
+.bk-two{display:flex;gap:10px}
+.bk-two > .ed-field{flex:1;min-width:0}
+.bk-step{display:flex;align-items:center;height:44px;border-radius:12px;background:var(--fill)}
+.bk-step button{flex:none;width:40px;height:44px;border:0;background:none;color:var(--text);font-size:16px;cursor:pointer}
+.bk-step button:disabled{opacity:.3;cursor:default}
+.bk-step span{flex:1;text-align:center;font-size:16px;font-variant-numeric:tabular-nums}
+.bk-item{display:flex;align-items:center;gap:12px;width:100%;padding:10px 12px 10px 10px;border:0;border-radius:12px;background:var(--fill);font:inherit;text-align:left;color:var(--text);cursor:pointer}
+.bk-item.past{opacity:.6}
+.bk-pic{position:relative;flex:none;width:64px;height:64px;border-radius:12px;overflow:hidden;background:var(--c-bg);color:var(--c-fg);display:flex;align-items:center;justify-content:center;font-size:24px}
+.bk-pic img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.bk-item > .bk-txt{flex:1;min-width:0}
+.bk-item b{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;font-size:15px;font-weight:700}
+.bk-item small{display:block;margin-top:2px;font-size:12px;color:var(--text2);font-variant-numeric:tabular-nums}
+.bk-item > i{flex:none;color:var(--muted);font-size:16px}
 .seg.ed-modes.m3 button{font-size:13px;gap:2px}
 .ov-hero{position:relative;display:block;width:100%;margin:0 0 14px;padding:0;border:0;border-radius:16px;background:none;text-align:left;font:inherit;cursor:pointer}
 .ov-hero .cover{height:160px}
@@ -2593,7 +2627,9 @@ function applyServer(r) {
 }
 
 // 比較內容時：空字串、false、空清單都當成「沒有」
-const ITEM_KEYS = ['s', 'e', 'cls', 't', 'desc', 'hours', 'map', 'loc', 'pid', 'orig', 'area', 'short', 'travel', 'troute', 'booked', 'alert', 'mine', 'note', 'group', 'stops', 'alts', 'ride', 'home'];
+const ITEM_KEYS = ['s', 'e', 'cls', 't', 'desc', 'hours', 'map', 'loc', 'pid', 'orig', 'area', 'short', 'travel', 'troute', 'booked', 'alert', 'mine', 'note', 'group', 'stops', 'alts', 'ride', 'home', 'book'];
+// 訂位細節（11/4 跟上 App）：人數、名字、代號、確認信、備註都沒填＝沒有
+const bookOf = b => b && (+b.people > 0 || ['name', 'ref', 'link', 'note'].some(k => String(b[k] || '').trim())) ? { people: +b.people || 0, name: b.name || '', ref: b.ref || '', link: b.link || '', note: b.note || '' } : null;
 const SUB_KEYS = ['s', 'dur', 'name', 'short', 'orig', 'area', 'desc', 'cls', 'hours', 'alert', 'map', 'loc', 'pid', 'mine', 'note'];
 const isEmpty = v => v === '' || v == null || v === false;
 // 一家店的資料：不管是一張卡片、合併區塊的一站、還是多選一的選項都一樣，互相轉換時整份帶著走
@@ -2746,11 +2782,13 @@ const canon = it => {
     let v = it[k];
     if (k === 'stops' || k === 'alts') { v = (v || []).map(canonSub); if (!v.length) continue; }
     if (k === 'ride' && !v?.legs?.length) continue;
+    if (k === 'book') { v = bookOf(v); if (!v) continue; }
     if (!isEmpty(v)) o[k] = v;
   }
   return JSON.stringify(o);
 };
-const outItem = (it, day) => ({ ...JSON.parse(canon(it)), id: it.id, day });
+// 訂位細節整個清空時也要送一個空的（沒帶的話後端會保留原本的，給還沒更新的舊版網頁用）
+const outItem = (it, day) => ({ ...JSON.parse(canon(it)), ...(it.book && !bookOf(it.book) ? { book: {} } : {}), id: it.id, day });
 
 // 跟上次存到雲端的樣子比，找出新增／修改、刪除、改標題
 function diffOps(ref) {
@@ -2840,9 +2878,11 @@ function shrinkPhoto(file, max = 1200) {
 }
 // 上傳在背景進行：選好照片馬上看到預覽，可以繼續改別的、直接按儲存；傳完再自動補存網址
 const pendingPhoto = {};   // 筆記代號 → 還在上傳的照片（先拿來顯示）
-function wirePhoto(id, key) {
+// pid：這個地點在 Google 的代號，有的話換照片可以選「從 Google 換一張」（11/4 照 App）
+function wirePhoto(id, key, pid) {
   const $ = x => sheet.querySelector('#' + x);
   const input = $(id); if (!input) return;
+  if (pid) input.dataset.pid = pid;
   const box = $(id + 'Prev'), st = $(id + 'St');
   // 顯示範圍記在輸入框上（儲存時接到網址後面）；換了照片就回到正中央
   const p0 = splitPhoto(NOTES[key]?.photo);
@@ -2860,7 +2900,10 @@ function wirePhoto(id, key) {
   // 還沒有照片：點框框上傳；有照片：點右下角的小圓圈換一張
   box.addEventListener('click', e => {
     if (e.target.closest('.ph-del')) { if (confirm('刪除照片？')) { input.value = ''; input.dispatchEvent(new Event('input')); } return; }   // 拿掉照片：先問一次（10/27），跟清掉網址一樣、按儲存才生效
-    if (e.target.closest('.ph-cam') || box.classList.contains('empty')) $(id + 'File').click(); });
+    if (!e.target.closest('.ph-cam') && !box.classList.contains('empty')) return;
+    if (!input.dataset.pid) { $(id + 'File').click(); return; }
+    phMenu(e, () => $(id + 'File').click(), () => googlePick(input.dataset.pid, key, url => { sheet._photoJob = null; input.value = url; input.dispatchEvent(new Event('input')); }));
+  });
   box.addEventListener('pointerdown', e => {
     if (e.target.closest('.ph-cam')) return;
     const frame = e.target.closest('.ph-drag'), img = frame?.querySelector('img');
@@ -2903,6 +2946,70 @@ function wirePhoto(id, key) {
       });
   });
   show(input.value.trim());
+}
+// 重新查詢某一站／某個選項（11/4 照 App 的 requerySub）：用那一站的地圖連結或店名＋城市查，補營業時間、座標、地點代號、空著的提醒；
+// 筆記照那一站的筆記鍵存（已經有重點、完整筆記就不蓋），描述空著才請 AI 寫；其他站、整張的時間都不動
+async function requerySub(cardId, kind, idx) {
+  const get = () => { const card = findItem(cardId)[1]; return (kind === 'stop' ? card?.stops : card?.alts)?.[idx]; };
+  const s0 = get(); if (!s0 || !getAuth()) return;
+  const name = s0.name;
+  let p = null;
+  try { p = (await api({ ...getAuth(), action: 'lookupPlace', link: s0.map || withCity(name), day: findItem(cardId)[0] }, 90000)).place; }
+  catch (e) { toast('重新查詢失敗：' + (e.code === 'network' ? '請檢查網路再試一次' : e.message)); return; }
+  let sub = get();
+  if (!sub || sub.name !== name) return;   // 查的時候被改掉、刪掉了：不動
+  if (!p?.places) { toast(`Google 找不到「${name}」`); return; }
+  if (p.hours) sub.hours = p.hours;
+  if (p.loc) { sub.loc = p.loc; sub.pid = p.pid || sub.pid || ''; }
+  if (!sub.map && p.gmap) sub.map = p.gmap;
+  if (!sub.alert) sub.alert = placeAlert(p);
+  const holder = { note: subNoteKey(sub), t: name };
+  placeNote(holder, p); sub.note = holder.note;
+  saveData('重新查詢地點'); if (!drag) renderPage(current);
+  if (!sub.desc) {
+    const d = await describe(p);
+    sub = get();
+    if (sub && sub.name === name && !sub.desc && d?.desc) { sub.desc = d.desc; reviewNote({ note: sub.note, t: name }, d); saveData('查詢地點'); if (!drag) renderPage(current); }
+  }
+  toast(`「${name}」重新查好了`);
+}
+// 換照片的小選單：從相簿選／從 Google 換一張（有地點代號才出現，11/4 照 App）
+function phMenu(e, lib, google) {
+  document.querySelector('.ph-menu')?.remove();
+  const mnu = div('ph-menu');
+  mnu.innerHTML = '<button type="button" data-ph="lib"><i class="ti ti-photo"></i>從相簿選</button><button type="button" data-ph="g"><i class="ti ti-world"></i>從 Google 換一張</button>';
+  Object.assign(mnu.style, { left: Math.min(e.clientX, innerWidth - 196) + 'px', top: Math.min(e.clientY + 8, innerHeight - 110) + 'px' });
+  document.body.appendChild(mnu);
+  const close = () => { mnu.remove(); removeEventListener('pointerdown', away, true); };
+  const away = ev => { if (!mnu.contains(ev.target)) close(); };
+  setTimeout(() => addEventListener('pointerdown', away, true));
+  mnu.addEventListener('click', ev => { const b = ev.target.closest('[data-ph]'); if (!b) return; close(); (b.dataset.ph === 'lib' ? lib : google)(); });
+}
+// 從 Google 換一張（11/4 照 App 的 GooglePhotoSheet）：這家店在 Google 上的照片（最多 6 張）排成兩欄，左下角標拍攝者；挑一張轉存成這張卡片的照片
+async function googlePick(pid, key, done) {
+  const auth = getAuth(); if (!auth) { openAuth(); return; }
+  const mask = div('gp-mask');
+  mask.innerHTML = `<div class="gp-panel" role="dialog" aria-label="從 Google 換一張"><div class="gp-h"><b>從 Google 換一張</b><small>挑一張當這個地點的照片</small></div>
+    <div class="gp-err" hidden></div><div class="gp-grid"><div class="gp-wait"><i class="ti ti-loader-2 spin"></i></div></div>
+    <button type="button" class="btn ghost gp-x">取消</button></div>`;
+  document.body.appendChild(mask);
+  let busy = false;
+  const close = () => { if (!busy) mask.remove(); };
+  const err = msg => { const el = mask.querySelector('.gp-err'); el.textContent = msg; el.hidden = !msg; };
+  const why = (e, fb) => e.code === 'quota' ? e.message + '；可以先用相簿裡的照片' : e.code === 'network' ? fb : e.message || fb;
+  mask.addEventListener('click', e => { if (e.target === mask || e.target.closest('.gp-x')) close(); });
+  let photos = [];
+  try { photos = (await api({ ...auth, action: 'placePhotos', pid }, 60000)).photos || []; }
+  catch (e) { err(why(e, '拿不到照片，請檢查網路再試一次')); }
+  const grid = mask.querySelector('.gp-grid');
+  grid.innerHTML = photos.length ? photos.map((p, i) => `<button type="button" class="gp-ph" data-i="${i}"><img src="${esc(p.thumb)}" alt="" loading="lazy">${p.by ? `<span class="gp-by">${esc(p.by)}</span>` : ''}</button>`).join('')
+    : mask.querySelector('.gp-err').hidden ? '<div class="gp-none">Google 上沒有這家店的照片</div>' : '';
+  grid.addEventListener('click', async e => {
+    const b = e.target.closest('.gp-ph'); if (!b || busy) return;
+    busy = true; err(''); b.classList.add('saving');
+    try { const r = await api({ ...auth, action: 'placePhoto', photo: photos[+b.dataset.i].ref, name: key || 'photo' }, 60000); busy = false; mask.remove(); done(r.url); }
+    catch (ex) { busy = false; b.classList.remove('saving'); err(why(ex, '照片存不起來，請再試一次')); }
+  });
 }
 // 儲存時：照片還在上傳就先記下來，傳完再補存；回傳這次有沒有動到照片
 function savePhoto(id, key) {
@@ -3702,6 +3809,23 @@ function shortName(t) {
 const OV_TABS = [['days', '每天'], ['stay', '預訂'], ['todo', '待辦清單']];   // 預訂：機票＋住宿
 let ovTab = 'days';   // 打開網站、從「我的旅程」進來都從「每天」開始；在這趟裡換天數再回總覽才留在原本那頁
 const ovTabIdx = () => OV_TABS.findIndex(([k]) => k === ovTab);
+// 預訂頁「餐廳・景點」：已訂位的卡片（不含交通卡片），照第幾天、開始時間排
+const BK_ICON = { eat: 'tools-kitchen-2', cafe: 'coffee', bar: 'glass-cocktail', spa: 'massage', shop: 'shopping-bag', see: 'building-monument', hotel: 'bed', other: 'map-pin' };
+function bookedListHtml() {
+  const list = DAY_KEYS.flatMap((k, i) => (DATA[k] || []).filter(it => it.booked && !it.ride?.legs?.length).map(it => ({ it, k, i })))
+    .sort((a, b) => a.i - b.i || m(a.it.s) - m(b.it.s));
+  if (!list.length) return '';
+  const dates = tripDates(), now = tripNow();
+  return '<div class="ov-sec">餐廳・景點</div><div class="bk-list">' + list.map(({ it, k, i }) => {
+    const ph = NOTES[it.note || it.t]?.photo, d = dayInfo(k), ppl = +it.book?.people || 0;
+    const past = now ? i + 1 < dayNum(now.day) || (k === now.day && m(it.e) <= now.mins) : dates[0] && dates[dates.length - 1]?.ymd < ymd(new Date());
+    const ty = (TYPES.find(([t]) => t === it.cls) ? it.cls : 'other');
+    return `<button type="button" class="bk-item${past ? ' past' : ''}" data-bkitem="${it.id}">
+      <span class="bk-pic ${it.cls || 'other'}"><i class="ti ti-${BK_ICON[ty] || 'map-pin'}"></i>${ph ? photoImg(ph, ' loading="lazy" onerror="this.remove()"', 200) : ''}</span>
+      <span class="bk-txt"><b>${esc(it.t)}</b><small>${esc([d.date, d.wd].filter(Boolean).join(' '))}</small><small>${T(it.s)}–${T(it.e)}${ppl ? `・${ppl} 位` : ''}</small></span>
+      <i class="ti ti-chevron-right"></i></button>`;
+  }).join('') + '</div>';
+}
 function renderOverview() {
   const today = tripNow()?.day;
   const days = DAY_KEYS.map(k => ({ k, info: dayInfo(k), items: [...(DATA[k] || [])].sort((a, b) => m(a.s) - m(b.s)) }));
@@ -3744,6 +3868,8 @@ function renderOverview() {
   if (!tripStays().length && canEdit) html += '<button type="button" class="ov-stay add" id="staysAdd"><i class="ti ti-bed"></i><span><b>加入住處</b><small>每天第一段交通從住處算，加入行程可以一鍵回住處</small></span><i class="ti ti-plus"></i></button>';
   if (tripStays().length) html += stayListHtml()
     + (canEdit ? '<button type="button" class="ov-add-full" id="staysAdd"><i class="ti ti-plus"></i>加入住處</button>' : '');
+  // 餐廳・景點：行程裡「已訂位」的卡片照日期、時間排（住宿和機票中間；11/4 照 App，沒有就不顯示這一段）
+  html += bookedListHtml();
   // 機票：去程／回程一張卡片；放在住宿下面（國內線也可能搭，所以一律顯示）
   html += '<div class="ov-sec">機票</div>';
   if (tripFlights().length) html += flightCardHtml() + (canEdit ? '<button type="button" class="ov-add-full" id="flightAdd"><i class="ti ti-plus"></i>加入機票</button>' : '');
@@ -5468,6 +5594,7 @@ ovEl.addEventListener('click', e => {
   if (e.target.closest('#tripSet')) { withAuth(openTripSettings); return; }
   if (stayPressed) { stayPressed = false; e.preventDefault(); return; }   // 長按放開的那一下不要再打開資訊
   const sr = e.target.closest('.st-row[data-stay]'); if (sr) { openStayInfo(+sr.dataset.stay); return; }
+  const bk = e.target.closest('[data-bkitem]'); if (bk) { openCardInfo(bk.dataset.bkitem); return; }   // 預訂頁的餐廳・景點：看卡片資訊
   if (e.target.closest('#staysAdd')) { withAuth(() => openStayEditor(null)); return; }
   if (e.target.closest('#flightAdd')) { withAuth(() => openFlightEditor(null)); return; }
   const fd = e.target.closest('[data-fldir]'); if (fd) { flightDir = fd.dataset.fldir; flightOpen = null; renderOverview(); return; }
@@ -7956,6 +8083,17 @@ function addToBatch(raw, pre) {
     openSheet('<div id="afBody"></div>', null); drawAdd();
   }) }));
 }
+// 同一家在哪裡：「備選」「第 3 天」「第 3 天「塔佩門周邊」裡」；地點代號一樣、或名字一樣（不分大小寫）就算，每一站、每個選項也比
+function dupWhere(p) {
+  const pid = p.pid || p.placeId || '', nm = String(p.name || '').toLowerCase();
+  const same = x => (pid && x.pid === pid) || (nm && String(x.name ?? x.t ?? '').toLowerCase() === nm);
+  const where = k => k === 'cand' ? '備選' : `第 ${dayNum(k)} 天`;
+  for (const k of ALL_KEYS) for (const it of DATA[k] || []) {
+    if (same({ pid: it.pid, name: it.t })) return where(k);
+    if ([...(it.stops || []), ...(it.alts || [])].some(same)) return `${where(k)}「${it.t}」裡`;
+  }
+  return '';
+}
 function drawAdd() {
   const body = sheet.querySelector('#afBody'); if (!body || !af) return;
   body.className = (af.step === 1 ? 'af-s1' : '') + (af.wk ? ' af-wk' : '');
@@ -7968,6 +8106,7 @@ function drawAdd() {
     const cands = (DATA.cand || []).filter(c => !af.sub?.taken?.includes(c.id)).reverse();
     const p = af.pick;
     const toCand = af.day === 'cand';   // 從備選頁進來：選好就直接加入備選（不用選時間）
+    const dupW = p && !af.sub ? dupWhere(p) : '';   // 行程或備選裡已經有同一家：提醒，還是可以照樣加（11/4 照 App）
     const subCard = af.sub ? subCardOf(af.sub) : null, L = af.link;   // L：貼上的 Google 地圖連結（讀取中／讀不到／是清單）
     body.innerHTML = head(subCard ? (af.sub.kind === 'stop' ? (af.sub.collect ? `加入第 ${(subCard.stops || []).length + 1} 站` : '新增一站') : af.sub.collect ? `加入第 ${(subCard.alts || []).length + 1} 個選項` : '新增選項') : toCand ? '想去哪裡？' : '要去哪裡？', subCard ? esc(subCard.t || (subCard.stops || subCard.alts || []).map(x => x.name).join('、')) : toCand ? '加入備選' : `第 ${dayNum(af.day)} 天．${d.date}`) + `
       <div class="ed-field ps-field af-search${p ? ' linked' : ''}${L ? ' has-link' : ''}"><i class="ti ${p ? 'ti-map-pin-check' : L ? (L.st === 'loading' ? 'ti-loader-2 spin' : 'ti-link') : 'ti-search'}"></i><input type="text" id="afQ" value="${esc(af.q)}" placeholder="輸入店名、景點、Google 地圖網址…" autocomplete="off" enterkeyhint="search"${L ? ' hidden' : ''}>${L ? `<div class="af-linkchip"><span>Google 地圖連結${L.links.length > 1 ? `（${L.links.length} 個）` : ''}</span><button type="button" class="af-linkx" id="afLinkX" aria-label="清掉連結"><i class="ti ti-x"></i></button></div>` : ''}${p || toCand || L ? '' : `<button type="button" class="af-candbtn" aria-label="從備選挑" aria-expanded="false"><i class="ti ti-bookmark-filled"></i></button>
@@ -7985,7 +8124,8 @@ function drawAdd() {
       <button type="button" class="af-home" id="afManual"><i class="ti ti-pencil"></i><span>手動輸入行程<small>沒有固定地點，例如自由活動、機場接送</small></span><i class="ti ti-chevron-right"></i></button>`}
       ${p ? `<div class="af-card">
           <div class="af-info"><b>${esc(p.name)}</b>${p.rating ? `<span class="af-rate"><i class="ti ti-star-filled"></i> ${p.rating}${p.count ? `（${p.count}）` : ''}</span>` : ''}<small>${esc(p.addr || '')}</small></div>
-          <div class="af-acts"><button type="button" class="btn ghost" id="afRetry">不是這家</button><button type="button" class="btn primary" id="afNext">${toCand ? '加入備選' : '下一步'}</button></div></div>`
+          ${dupW ? `<div class="af-dup"><i class="ti ti-alert-triangle"></i> ${esc(dupW)}已經有這個地點了</div>` : ''}
+          <div class="af-acts"><button type="button" class="btn ghost" id="afRetry">不是這家</button><button type="button" class="btn primary" id="afNext">${toCand ? (dupW ? '還是加入' : '加入備選') : '下一步'}</button></div></div>`
       : ''}`;
     const q = body.querySelector('#afQ'), region = TRIP?.region;
     tripBias();   // 先在背景準備好搜尋中心
@@ -8298,9 +8438,9 @@ function openEditor(id, startAt, toDay, replaceId, keep) {
   if (it?.ride?.legs?.length && !keep && !toDay && !replaceId) { openRideEditor(id); return; }
   if (keep) ed = keep; else ed = it
     ? { id, isNew: false, noteKey: it.note || it.t, t: it.t, desc: it.desc || '', cls: it.cls, s: it.s, dur: m(it.e) - m(it.s), map: it.map || '', travel: it.travel || '',
-        booked: !!it.booked, alert: it.alert || '', mine: it.mine || '', area: it.area || '', group: !!it.group, pick: !it.group && !!it.alts?.length, kind: 'one', orig: { s: it.s, e: it.e },
+        booked: !!it.booked, book: { ...(it.book || {}) }, alert: it.alert || '', mine: it.mine || '', area: it.area || '', group: !!it.group, pick: !it.group && !!it.alts?.length, kind: 'one', orig: { s: it.s, e: it.e },
         day: findItem(id)[0], fromDay: findItem(id)[0], home: !it.group && !it.alts?.length ? homeStay(it, findItem(id)[0]) : null }
-    : { id: null, isNew: true, noteKey: '', t: '', desc: '', cls: 'eat', s: startAt, dur: 60, map: '', travel: '', booked: false, alert: '', mine: '', group: false, pick: false, kind: 'one', day: current, fromDay: current };
+    : { id: null, isNew: true, noteKey: '', t: '', desc: '', cls: 'eat', s: startAt, dur: 60, map: '', travel: '', booked: false, book: {}, alert: '', mine: '', group: false, pick: false, kind: 'one', day: current, fromDay: current };
   // 從備選排進某一天：帶入備選的資料，時間換成新增時點的那個時間
   if (!keep && it && toDay) Object.assign(ed, { day: toDay, s: startAt, fromCand: true });
   // 從備選替換：時段沿用被換掉的那張（開始、結束都一樣），交通時間不沿用（路線變了）
@@ -8376,7 +8516,16 @@ function openEditor(id, startAt, toDay, replaceId, keep) {
       ${ed.isNew ? '' : '<div class="ed-push" id="edPushWrap"><div><label class="ed-switch"><input type="checkbox" class="sw" id="edPush"><span>後面的行程自動移動 <small id="edPushTxt"></small></span></label></div></div>'}
       <div class="err" id="edTimeErr" hidden></div>
     </div>
-    ${ed.group ? '' : `<label class="ed-switch"><input type="checkbox" class="sw" id="edBooked"${ed.booked ? ' checked' : ''}><span>已訂位</span></label>`}
+    ${ed.group ? '' : `<label class="ed-switch"><input type="checkbox" class="sw" id="edBooked"${ed.booked ? ' checked' : ''}><span>已訂位</span></label>
+    <div class="ed-push${ed.booked ? ' on' : ''}" id="edBookWrap"><div>
+      <div class="bk-two">
+        <div class="ed-field"><span class="ed-lab">人數</span><div class="bk-step"><button type="button" id="edPplMinus" aria-label="少一位"><i class="ti ti-minus"></i></button><span id="edPpl"></span><button type="button" id="edPplPlus" aria-label="多一位"><i class="ti ti-plus"></i></button></div></div>
+        <label class="ed-field"><span class="ed-lab">訂位名字</span><input id="edBkName" type="text" value="${esc(ed.book?.name || '')}" placeholder="用誰的名字訂" autocomplete="name"></label>
+      </div>
+      <label class="ed-field"><span class="ed-lab">訂位代號</span><input id="edBkRef" type="text" value="${esc(ed.book?.ref || '')}" placeholder="確認信上的代號" autocomplete="off" autocapitalize="characters"></label>
+      <label class="ed-field"><span class="ed-lab">確認信連結</span><input id="edBkLink" type="text" value="${esc(ed.book?.link || '')}" placeholder="https://…" autocomplete="off" inputmode="url" autocapitalize="off"></label>
+      <label class="ed-field"><span class="ed-lab">訂位備註</span><input id="edBkNote" type="text" value="${esc(ed.book?.note || '')}" placeholder="例如：靠窗、已付訂金 ฿500" autocomplete="off"></label>
+    </div></div>`}
 `;
   const f_map = `    ${ed.group || ed.pick ? '' : `
     <label class="ed-field"><span class="ed-lab">地圖</span>
@@ -8523,6 +8672,7 @@ function wireEditor() {
     ed.t = v('edT') ?? ed.t; ed.gt = v('edGT') ?? ed.gt;
     if ($('edDesc')) ed.desc = v('edDesc'); if ($('edArea')) ed.area = v('edArea'); if ($('edMap')) ed.map = v('edMap');
     if ($('edAlert')) ed.alert = v('edAlert'); if ($('edMine')) ed.mine = v('edMine'); if ($('edBooked')) ed.booked = $('edBooked').checked;
+    if ($('edBkName')) ed.book = { ...ed.book, name: v('edBkName'), ref: v('edBkRef'), link: v('edBkLink'), note: v('edBkNote') };
     if ($('edS')?.value) ed.s = hhmm(fromInput($('edS').value));
   };
   // 第一站＋已加的站，排好時間（一站接一站）
@@ -8623,6 +8773,12 @@ function wireEditor() {
   const setRuler = $('edRuler') ? wireRuler($('edRuler'), () => ed.dur, v => { ed.dur = v; refresh(); }, !ed.isNew) : null;
   // 已訂位：一動到時間（開始、結束、停留時間刻度尺）就先問一次，跟時間線上拖動一樣（10/27 拿掉面板上常駐的提醒框）；按取消就不讓改
   // 手機點一下會連續來 pointerdown、touchstart、focusin：按取消後 800ms 內的同一下點擊直接擋掉、不再問（10/27 會跳兩次）
+  // 訂位細節：「已訂位」打開才展開；人數 −／＋（0＝沒填，最多 99）
+  const drawPpl = () => { if (!$('edPpl')) return; const n = +ed.book?.people || 0; $('edPpl').textContent = n ? `${n} 位` : '—'; $('edPplMinus').disabled = !n; };
+  drawPpl();
+  $('edBooked')?.addEventListener('change', () => $('edBookWrap')?.classList.toggle('on', $('edBooked').checked));
+  $('edPplMinus')?.addEventListener('click', () => { ed.book = { ...ed.book, people: Math.max(0, (+ed.book?.people || 0) - 1) }; drawPpl(); });
+  $('edPplPlus')?.addEventListener('click', () => { ed.book = { ...ed.book, people: Math.min(99, (+ed.book?.people || 0) + 1) }; drawPpl(); });
   let bookNo = 0;
   const bookGuard = e => {
     if (ed.isNew || ed.bookOk || !$('edBooked')?.checked) return;
@@ -8661,7 +8817,7 @@ function wireEditor() {
   };
   $('edMap')?.addEventListener('input', updateMapStatus);
   updateMapStatus();
-  wirePhoto('edPhoto', ed.noteKey || $('edT').value.trim());
+  wirePhoto('edPhoto', ed.noteKey || $('edT').value.trim(), ed.id && !ed.group && !ed.pick ? findItem(ed.id)[1]?.pid : '');
   $('edSave').addEventListener('click', saveEditor);
   $('edDel')?.addEventListener('click', deleteItem);
   // 交通時間：Segmented Control 選中的那格＝這一段的交通方式，格子裡是分鐘數；下面一行說明怎麼來的
@@ -8814,6 +8970,8 @@ function saveEditor() {
     cls: ed.cls, ...(ed.pick ? {} : { map: $('edMap').value.trim(), desc: $('edDesc').value.trim(), area: $('edArea')?.value.trim() || '' }),
     ...(fullEl && (NOTES[noteKey] || photoTouched) ? { note: noteKey } : {}), booked: $('edBooked').checked,
     alert: $('edAlert').value.trim(), mine: $('edMine').value.trim(),
+    // 訂位細節（11/4 照 App）：關掉已訂位也留著，不小心關掉再打開不用重填
+    book: { people: +ed.book?.people || 0, name: $('edBkName').value.trim(), ref: $('edBkRef').value.trim(), link: $('edBkLink').value.trim(), note: $('edBkNote').value.trim() },
   });
   if (ed.home && !ed.isNew) fields.home = fields.map === undefined || fields.map === ed.map || fields.map === (ed.home.map || ed.home.name);   // 回住處的卡片：改名字（Check in…）還是連到住處；地點換掉才不是
   if (fields.map !== undefined && fields.map !== ed.map) Object.assign(fields, ed.home && fields.map === (ed.home.map || ed.home.name)
@@ -9564,7 +9722,8 @@ function openSubEditor(cardId, kind, idx, fromCand, replace) {
       <div id="sbSwapWrap">${candListHtml(swaps)}</div>` : '<span class="ed-lab">名稱</span>'}
       <input id="sbName" type="text" aria-label="名稱" value="${esc(sub.name)}" placeholder="${isStop ? '例如：山竹冰沙' : '例如：The Artist Spa'}" autocomplete="off"></${swaps.length ? 'div' : 'label'}>
     <div class="err" id="sbNameErr" hidden>請輸入名稱</div>
-    <label class="ed-field"><span class="ed-lab">${isStop ? '原文店名' : '一句話說明'}</span>
+    <label class="ed-field">${!isNew && !c && !old ? `<span class="ed-lab-row"><span class="ed-lab">${isStop ? '原文店名' : '一句話說明'}</span>
+      <button type="button" class="swap-btn" id="sbRelook" title="用 Google 重新查這一站：營業時間、座標、照片、評論重點（沒有的補上）"><i class="ti ti-refresh"></i> 重新查詢資訊</button></span>` : `<span class="ed-lab">${isStop ? '原文店名' : '一句話說明'}</span>`}
       <input id="sbSub" type="text" value="${esc(isStop ? sub.orig : sub.desc)}" placeholder="${isStop ? '例如：Joost Smoothies' : '例如：高 CP 值人氣平價按摩'}" autocomplete="off"></label>
     ${isStop ? `
     <label class="ed-field"><span class="ed-lab">描述</span>
@@ -9625,7 +9784,14 @@ function openSubEditor(cardId, kind, idx, fromCand, replace) {
   };
   ['sbName', 'sbMap', 'sbS'].forEach(id => $(id)?.addEventListener('input', () => { $('sbNameErr').hidden = true; refresh(); }));
   wireRuler($('sbRuler'), () => sed.dur, v => { sed.dur = v; refresh(); }, !isNew && !old && !c);   // 停留多久：刻度尺
-  wirePhoto('sbPhoto', nk);
+  wirePhoto('sbPhoto', nk, sub.pid || '');
+  // 重新查詢這一站（11/4 照 App）：先關掉面板，在背景查，好了資訊卡、筆記自己更新
+  $('sbRelook')?.addEventListener('click', e => {
+    e.preventDefault();
+    if (sig() !== sig0 && !confirm('還沒存的修改不會保留，要重新查詢嗎？')) return;
+    closeSheet(); toast(`正在用 Google 重新查詢「${sub.name}」，好了會自動更新`);
+    requerySub(cardId, kind, idx);
+  });
   $('sbSave').addEventListener('click', saveSub);
   $('sbDel')?.addEventListener('click', deleteSub);
   refresh();
