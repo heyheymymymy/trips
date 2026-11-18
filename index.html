@@ -951,6 +951,7 @@ button.rt-chip{cursor:pointer}
 .pressing{transform:scale(.97);transition:transform .55s ease!important}
 .stop.pressing{transform:none;background:rgba(0,0,0,.04)}
 .dragging{pointer-events:none;opacity:.4}   /* 卡片留在原位變半透明，虛線框標出新位置 */
+.dragging.drag-home{opacity:1}   /* 拖回原位：卡片不變淡，加框＋「放回原位」標籤（11/18 照 App） */
 .drop-target{box-shadow:inset 0 0 0 2px var(--accent-fg)}
 /* 拖卡片停在上面天數的圓圈（或備選）上：圓圈加框放大，上面冒一個泡泡「移到第 5 天」（11/4 照 App 的 DayDropBubble；手指會蓋住圓圈） */
 .tab.day-drop{box-shadow:inset 0 0 0 2px var(--accent-fg);transform:scale(1.1);transition:transform .2s cubic-bezier(.3,1.4,.6,1)}
@@ -7613,15 +7614,16 @@ function dragMove(x, y, e) {
     return;
   }
   const into = intoSpot(t, x, y);
-  const pos = into || !drag.it ? null : dropAt(y);
+  const pos = into || !drag.it ? null : dropAt(y), home = !!pos?.home;
   drag.at = pos?.at ?? null;
   showBox(drag.at);
   const tgt = into ? t : pos?.swap ? tl.querySelector(`.layer [data-id="${pos.swap}"]`) : null;
-  if (tgt !== drag.target || into?.row !== drag.into?.row) {
+  if (tgt !== drag.target || into?.row !== drag.into?.row || home !== !!drag.home) {
     clearDropMarks();
     if (into) { t.classList.add('drop-into'); into.row.classList.add('ins'); }
+    else if (home) { drag.el.classList.add('drop-target', 'drag-home'); showSwap(drag.el, '放回原位', 'arrow-back-up'); }   // 跟交換一樣的框和標籤
     else { tgt?.classList.add('drop-target'); showSwap(tgt); }
-    drag.target = tgt; drag.into = into;
+    drag.target = tgt; drag.into = into; drag.home = home;
   }
 }
 // 看虛線框的「正中央」落在哪裡：落在別張卡片的中段（卡片中心上下各 1/4 長度，至少 10 分鐘）＝交換
@@ -7635,9 +7637,12 @@ function dropAt(clientY) {
     return Math.abs(mid - c) <= r;
   });
   if (o) return { swap: o.id };
+  // 拖回原本的時間附近（差不到一格 5 分鐘）＝放回原位（11/18 照 App：原本是 17:23 這種不在 5 分鐘格子上的時間，拖回來只會停在 17:20 或 17:25，疊不回去）
+  if (Math.abs(raw - m(it.s)) < 5) return { home: true };
   let best = SNAP + 1, s = raw;
   for (const x of others) for (const c of [m(x.e), m(x.s) - dur]) if (Math.abs(c - raw) < best) { best = Math.abs(c - raw); s = c; }
-  return { at: Math.max(START * 60, Math.min(s, DAY_END - dur)) };
+  const at = Math.max(START * 60, Math.min(s, DAY_END - dur));
+  return at === m(it.s) ? { home: true } : { at };
 }
 // 虛線框：新的開始到結束時間
 let boxEl = null;
@@ -7696,15 +7701,15 @@ function showSlot(mins) {
   slotEl.innerHTML = `<span>拉出來放在 ${T(hhmm(mins))}</span>`;
 }
 function clearDropMarks() {
-  tl.querySelectorAll('.drop-target, .drop-into, .ins, .ins-after').forEach(el => el.classList.remove('drop-target', 'drop-into', 'ins', 'ins-after'));
+  tl.querySelectorAll('.drop-target, .drop-into, .ins, .ins-after, .drag-home').forEach(el => el.classList.remove('drop-target', 'drop-into', 'ins', 'ins-after', 'drag-home'));
   swapEl?.remove(); swapEl = null;
 }
 // 交換的標籤：放在被指到那張卡片的下緣中間（跟 App 一樣）
 let swapEl = null;
-function showSwap(t) {
+function showSwap(t, text = '交換', icon = 'arrows-up-down') {
   if (!t) return;
   const box = cardsEl.getBoundingClientRect(), r = t.getBoundingClientRect();
-  swapEl = div('swap-badge'); swapEl.innerHTML = '<i class="ti ti-arrows-up-down"></i>交換';
+  swapEl = div('swap-badge'); swapEl.innerHTML = `<i class="ti ti-${icon}"></i>${text}`;
   Object.assign(swapEl.style, { left: r.left - box.left + r.width / 2 + 'px', top: r.bottom - box.top + 'px' });
   cardsEl.appendChild(swapEl);
 }
