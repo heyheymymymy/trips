@@ -113,6 +113,39 @@ button:focus,a:focus,.tab:focus-visible{outline:none}   /* 滑鼠點過的按鈕
 @keyframes inR{from{transform:translateX(48px);opacity:0}to{transform:none;opacity:1}}
 .in-l{animation:inL .26s ease}
 .in-r{animation:inR .26s ease}
+/* 手帳時間線（11/18 照 App：只能看的人預設看這個；兩欄照片、上午／中午／晚上段頭、點連到地點名稱） */
+.jr{position:relative;padding:18px 16px 150px;background-color:#FFFDF9;background-image:linear-gradient(#F2EDE6 .6px,transparent .6px),linear-gradient(90deg,#F2EDE6 .6px,transparent .6px);background-size:24px 24px;--cw:160px}
+.jr-start{text-align:center;font-size:13px;font-weight:500;color:var(--text2);padding:0 40px}.jr-start small{display:block;font-size:11px;color:var(--muted);font-weight:400;margin-top:2px}
+.jr-dots{display:flex;flex-direction:column;align-items:center;gap:7px;padding:6px 0;position:relative}.jr-dots i{width:3px;height:3px;border-radius:50%;background:var(--muted);opacity:.7}
+.jr-dots span{position:absolute;left:calc(50% + 14px);top:50%;transform:translateY(-50%);font-size:11px;color:var(--muted);white-space:nowrap}
+.jr-join{width:9px;height:10px;margin:0 auto}
+.jr-seg{position:relative}
+.jr-bar{position:absolute;left:calc(50% - 4.5px);width:9px;border-radius:5px;top:15px;bottom:-4px}.jr-seg.nohead .jr-bar{top:0}
+.jr-head{position:relative;height:30px}
+.jr-head b{position:absolute;left:calc(50% - 15px);top:0;width:30px;height:30px;border-radius:50%;display:grid;place-items:center;color:#fff;font-size:16px}
+.jr-head span{position:absolute;left:calc(50% + 23px);top:4px;font-size:12px;font-weight:500;color:var(--text2);background:rgba(255,255,255,.85);border-radius:6px;padding:2px 8px;white-space:nowrap;font-variant-numeric:tabular-nums}
+.jr-cols{position:relative;margin-top:12px}.jr-seg.nohead .jr-cols{margin-top:10px}
+.jr-e{position:absolute;top:0;left:0;width:var(--cw);display:flex;flex-direction:column;gap:5px;cursor:pointer;-webkit-tap-highlight-color:transparent}
+.jr-e.l{align-items:flex-end;text-align:right}.jr-e.r{align-items:flex-start;text-align:left}
+.jr-chip{font-size:11px;line-height:13px;color:var(--muted);display:flex;align-items:center;gap:3px}.jr-chip .ti{font-size:13px}
+.jr-t{font-size:15px;font-weight:500;line-height:20px;color:var(--ink);display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;word-break:break-word}.jr-t .nw{white-space:nowrap}
+.jr-t .ti{font-size:15px;margin-right:3px;vertical-align:-1px}
+.jr-meta{font-size:11px;line-height:14px;font-weight:500;color:var(--muted);font-variant-numeric:tabular-nums}
+.jr-meta em{font-style:normal;font-size:10px;font-weight:600;color:#C2412D;background:#FBE3DE;border-radius:9px;padding:1px 5px;margin:0 4px}
+.jr-ph{display:block;box-sizing:border-box;width:calc(var(--cw) * .92);background:#fff;padding:4px;border-radius:5px;border:.5px solid rgba(43,38,34,.22);box-shadow:0 2px 4px rgba(60,30,10,.16)}
+.jr-ph img,.jr-ph .jr-nb{display:block;width:100%;aspect-ratio:3/4;object-fit:cover;border-radius:3px;background:#EEE9E2}
+.jr-nb{background:#EADCCB!important;display:flex!important;align-items:center;justify-content:center;text-align:center;padding:12px;box-sizing:border-box;font-family:"BioRhyme",serif;font-weight:800;font-size:20px;line-height:1.3;color:var(--accent-fg);overflow:hidden;word-break:break-word}
+.jr-ph.sq .jr-nb{aspect-ratio:1}
+.jr-stack{position:relative;width:calc(var(--cw) * .92);height:calc(var(--cw) * .92 * .74 * 4 / 3 + 47px)}
+.jr-stack .jr-ph{position:absolute;top:9px;left:50%;width:calc(var(--cw) * .92 * .74 + 8px)}
+.jr-sub{font-size:12px;line-height:16px;color:var(--text2);display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.jr-mine{width:calc(var(--cw) * .92);font-size:12.5px;line-height:18px;color:#8A5A3C;padding-top:3px;display:-webkit-box;-webkit-line-clamp:5;-webkit-box-orient:vertical;overflow:hidden;word-break:break-word}
+.jr-mk{position:absolute;width:11px;height:11px;border-radius:50%;background:#fff;border:2.5px solid;box-sizing:border-box;pointer-events:none}
+.jr-ln{position:absolute;width:14.5px;height:2.5px;border-radius:2px;pointer-events:none}
+.jr-end{display:flex;flex-direction:column;align-items:center;gap:6px;cursor:pointer;margin-top:2px}
+.jr-end b{width:30px;height:30px;border-radius:50%;display:grid;place-items:center;color:#fff;font-size:15px}
+.jr-end span{font-size:13px;font-weight:500;color:var(--text2);text-align:center;padding:0 40px}.jr-end>i{font-style:normal;font-family:"BioRhyme",serif;font-weight:800;font-size:13px;color:var(--accent-fg);opacity:.7}
+.jr-empty{text-align:center;color:var(--muted);font-size:14px;padding-top:60px}
 .ov-sec{font-size:12px;font-weight:600;color:var(--muted);margin:22px 0 8px}
 .ov-sec:first-child{margin-top:0}
 /* 總覽分三頁：每天（每天、這趟旅程、已訂位）／住宿／待辦清單（待辦、注意事項），用 Segmented Control 切換 */
@@ -2104,6 +2137,7 @@ input.sw:focus-visible{outline:2px solid var(--accent-bg);outline-offset:2px}
   </header>
   <button type="button" class="day-home" id="dayHome" hidden></button>
   <div class="tl" id="tl"></div>
+  <div class="jr" id="journal" hidden></div>
   <div class="ov" id="ov" hidden></div>
   <div class="cand-page" id="candPage" hidden></div>
   <div class="trips-page" id="tripsPage" hidden></div>
@@ -2832,14 +2866,22 @@ const joinPhoto = (src, x, y) => !src || (Math.round(x) === 50 && Math.round(y) 
 // 雲端硬碟的照片：drive.google.com/thumbnail 每次都要先轉址（而且轉址不能存快取），直接換成轉過去的 lh3 網址，手機可以存一天，重新整理不用再下載
 const fastSrc = (u, w) => { const mm = /^https:\/\/drive\.google\.com\/thumbnail\?id=([\w-]+)(?:&sz=w(\d+))?$/.exec(u || ''); return mm ? `https://lh3.googleusercontent.com/d/${mm[1]}=w${w || mm[2] || 1200}` : u; };
 const photoImg = (url, attrs = '', w) => { const p = splitPhoto(url); p.src = fastSrc(p.src, w); return `<img src="${esc(p.src)}" alt="" style="object-position:${p.x}% ${p.y}%"${attrs}>`; };
-// 打開某一天就先在背景下載那天卡片的照片（Google 每張要等 0.5–1 秒才開始傳），點開卡片時直接從快取顯示；一次 3 張、同一張只抓一次
+// 打開旅程就在背景下載卡片的照片（Google 每張要等 0.5–1 秒才開始傳），點開卡片時直接從快取顯示；一次 3 張、同一張只抓一次。
+// 11/18 照 App 改成整趟：看的那天排最前面，接著後面幾天、前面幾天、備選、住處；換到別天時那天的插隊到最前面。省流量模式只抓看的那天
 const photoWarm = new Set(), photoQueue = [];
 let photoActive = 0;
 function warmPhotos(page) {
-  if (!isDay(page) && page !== 'cand') return;
-  for (const it of DATA[page] || []) for (const k of it.group || it.alts?.length ? (it.stops || it.alts || []).map(subNoteKey) : [it.note || it.t]) {
-    const src = fastSrc(splitPhoto(NOTES[k]?.photo).src);
-    if (src && !photoWarm.has(src)) { photoWarm.add(src); photoQueue.push(src); }
+  if (!loaded || !TRIP) return;
+  const srcOf = k => fastSrc(splitPhoto(NOTES[k]?.photo).src);
+  const keysOf = p => (DATA[p] || []).flatMap(it => it.group || it.alts?.length ? (it.stops || it.alts || []).map(subNoteKey) : [it.note || it.t]);
+  // 看的這一頁：還沒下載的插到最前面
+  const now = (isDay(page) || page === 'cand') ? keysOf(page).map(srcOf).filter(src => src && !photoWarm.has(src)) : [];
+  now.forEach(src => photoWarm.add(src)); photoQueue.unshift(...now);
+  if (!navigator.connection?.saveData) {
+    const i = Math.max(0, DAY_KEYS.indexOf(page));
+    const order = [...DAY_KEYS.slice(i), ...DAY_KEYS.slice(0, i).reverse(), 'cand'];
+    const rest = [...order.flatMap(keysOf), ...(TRIP.stays || []).map(h => h.name)];
+    for (const k of rest) { const src = srcOf(k); if (src && !photoWarm.has(src)) { photoWarm.add(src); photoQueue.push(src); } }
   }
   const next = () => { if (!photoQueue.length) return; photoActive++; const img = new Image(); img.onload = img.onerror = () => { photoActive--; next(); }; img.src = photoQueue.shift(); };
   while (photoActive < 3 && photoQueue.length) next();
@@ -3684,6 +3726,10 @@ function renderPage(page) {
   if (page === 'overview') renderOverview();
   candEl.hidden = page !== 'cand';
   if (page === 'cand') renderCand();
+  // 手帳時間線（11/18 照 App）：只能看的人預設、或選單選了「手帳」；編輯中一定是卡片
+  const jr = isDay(page) && loaded && journalOn();
+  if (jrEl) jrEl.hidden = !jr;
+  if (jr) { tl.style.display = 'none'; cardsEl = curLayer = null; if (dayHomeEl) dayHomeEl.hidden = true; renderJournal(page, prevPage); return; }
   if (!isDay(page)) { tl.style.display = 'none'; cardsEl = curLayer = null; return; }
   tl.style.display = ''; tl.style.height = baseH + 'px'; addBottom = 0;
   renderGrid();
@@ -3708,6 +3754,145 @@ function renderPage(page) {
   markNow();
 }
 
+
+// ---------- 手帳時間線（11/18 照 App 的 JournalView） ----------
+// 給別人預覽、只能看：一天一條線，前後行程空超過一小時才斷開（中間虛點寫空檔多久），換時段（上午／中午／晚上）換一段；
+// 每個時段只有第一段放段頭（日出／太陽／月亮星星＋「上午 06:00」）。卡片排成兩欄（誰短放誰），每一則在中線上一個點、短線連到地點名稱，
+// 先發生的點一定比較上面（至少差 34px）。有照片＝白邊直式照片、沒照片＝淡咖啡底 BioRhyme 名稱方框、多個地點／多選一＝照片歪歪地疊起來；
+// 照片下面寫筆記摘要；最後「回 住處 休息／Good night」。點一則打開原本的卡片資訊
+var jrEl = document.getElementById('journal');   // var、function：renderPage 可能比這幾行早跑
+function jrKey() { return 'trip-style-' + TRIP_ID; }
+function jrStyle() { try { return localStorage.getItem(jrKey()) || ''; } catch { return ''; } }
+// any＝不管是不是編輯中（選單上顯示現在選的是哪一個）
+function journalOn(any) { return (any || !editing) && (jrStyle() ? jrStyle() === 'journal' : TRIP_ROLE !== 'edit'); }
+const JR_PER = [['上午', '06:00', 'sunrise', '#E8B54A', '#F3E3B8'], ['中午', '12:00', 'sun', '#6FA8D6', '#D3E4F2'], ['晚上', '18:00', 'moon-stars', '#46598C', '#C9D0E2']];
+const jrPeriod = mins => { const h = Math.floor(mins / 60) % 24; return h < 5 ? 2 : h < 12 ? 0 : h < 18 ? 1 : 2; };
+const JR_MODE_IC = { walk: 'walk', drive: 'car', moto: 'motorbike', transit: 'bus' };
+function jrParts(list) {
+  const out = []; let cur = [], end = 0, gap = 0, dotted = true;
+  for (const it of list) {
+    const s = m(it.s), big = s - end > 60, turn = cur.length && jrPeriod(m(cur[cur.length - 1].s)) !== jrPeriod(s);
+    if (cur.length && (big || turn)) { out.push({ items: cur, gap, dotted }); gap = Math.max(0, s - end); dotted = big; cur = []; }
+    cur.push(it); end = cur.length === 1 ? m(it.e) : Math.max(end, m(it.e));
+  }
+  if (cur.length) out.push({ items: cur, gap, dotted });
+  out.forEach((p, i) => { p.per = jrPeriod(m(p.items[0].s)); p.head = !i || out[i - 1].per !== p.per; });
+  return out;
+}
+// 地點名稱：中英混在一起的，把交界後面那段（短的）設成不換行，放不下時整段掉到下一行（「Magic Brew Coffee／泰奶」，不會剩一個「奶」）
+function jrTitle(t) {
+  const cjk = c => /[　-鿿豈-￯]/.test(c), latin = c => /[A-Za-z0-9)'&!.]/.test(c);
+  for (let i = t.length - 2; i > 0; i--) {
+    if (t[i] !== ' ' || !((latin(t[i - 1]) && cjk(t[i + 1])) || (cjk(t[i - 1]) && latin(t[i + 1])))) continue;
+    const a = t.slice(0, i).trim(), b = t.slice(i + 1).trim();
+    if (!a || !b) break;
+    return b.length <= 12 ? `${esc(a)} <span class="nw">${esc(b)}</span>` : a.length <= 12 ? `<span class="nw">${esc(a)}</span> ${esc(b)}` : esc(t);
+  }
+  return esc(t);
+}
+const jrNote = k => NOTES[k]?.photo || '';
+function jrEntry(it, page, chip) {
+  const multi = it.group && it.stops?.length ? 'group' : it.alts?.length ? 'pick' : '', fl = !!it.flight, ride = !!it.ride;
+  const type = !fl && !ride ? TYPE_NAME[it.cls] || '' : '';
+  const n = multi === 'group' ? it.stops.length : multi === 'pick' ? it.alts.length : 0;
+  const bits = [T(it.s) + (!fl && m(it.e) > m(it.s) ? '–' + T(it.e) : ''), type, it.booked ? '已訂位' : '', multi === 'group' ? `${n} 站` : multi === 'pick' ? `${'一二三四五六七八九'[n - 1] || n}選一` : ''].filter(Boolean);
+  const closed = closedOf(it.pid);
+  const meta = `<div class="jr-meta">${bits.map(esc).join(' · ')}${closed ? `<em>${closed}</em>` : ''}</div>`;
+  const chipH = chip ? `<div class="jr-chip"><i class="ti ti-${JR_MODE_IC[chip.mode] || 'car'}"></i>${esc(chip.text)}</div>` : '';
+  const title = (ic) => `<div class="jr-t jr-anchor">${ic ? `<i class="ti ti-${ic}"></i>` : ''}${jrTitle(it.t || '')}</div>`;
+  let body;
+  if (fl) body = title('plane') + meta;
+  else if (ride) body = title('train') + meta;
+  else if (multi) {
+    const subs = (multi === 'group' ? it.stops : it.alts).slice(0, 3), tilts = [[-6, -0.11, 0], [7, 0.14, 10], [-1.5, 0.02, 20]];
+    const cards = subs.map((x, i) => { const p = jrNote(subNoteKey(x));
+      return `<span class="jr-ph" style="transform:translateX(calc(-50% + var(--cw) * .92 * .74 * ${tilts[i][1]})) translateY(${tilts[i][2]}px) rotate(${tilts[i][0]}deg);z-index:${3 - i}">${p ? photoImg(p, ' loading="lazy" decoding="async"') : `<span class="jr-nb">${esc(x.name)}</span>`}</span>`; }).join('');
+    const line = multi === 'group' ? it.stops.map(x => x.short || x.name).join(' → ') : it.alts.map(x => x.name).join('／');
+    body = title() + meta + `<div class="jr-stack">${cards}</div><div class="jr-sub">${esc(line)}</div>`;
+  } else {
+    const p = jrNote(it.note || it.t);
+    body = p ? title() + meta + `<span class="jr-ph">${photoImg(p, ' loading="lazy" decoding="async"')}</span>`
+             : `<div class="jr-meta jr-anchor">${bits.map(esc).join(' · ')}${closed ? `<em>${closed}</em>` : ''}</div><span class="jr-ph sq"><span class="jr-nb">${esc(it.t || '')}</span></span>`;
+    if (it.mine) body += `<div class="jr-mine">${esc(it.mine)}</div>`;
+  }
+  return `<div class="jr-e" data-id="${esc(it.id)}">${chipH}${body}</div>`;
+}
+function renderJournal(page, prevPage) {
+  const list = withFlights(itemsOf(page), page), parts = jrParts(list);
+  const h = morningStay(page), set = DATA.days?.[page]?.home || '';
+  let html = '';
+  if (h && set !== '-') {
+    const out = !(h.nights || []).includes(dayInfo(page).date);
+    html += `<div class="jr-start">${esc(set || `從 ${shortName(h.name)} 出發`)}${out ? `<small>${h.cout ? `${esc(h.cout)} 前退房` : '今天退房'}</small>` : ''}</div><div class="jr-dots"><i></i><i></i><i></i></div>`;
+  }
+  if (!parts.length) html += '<div class="jr-empty">這天還沒有行程</div>';
+  const gapText = g => '空檔 ' + (g >= 60 ? `${Math.floor(g / 60)} 小時${g % 60 ? ` ${g % 60} 分` : ''}` : `${g} 分`);
+  parts.forEach((p, i) => {
+    const [name, since, ic, dot, bar] = JR_PER[p.per];
+    if (i) html += p.dotted ? `<div class="jr-dots"><i></i><i></i><i></i>${p.gap ? `<span>${gapText(p.gap)}</span>` : ''}</div>` : `<div class="jr-join" style="background:${JR_PER[parts[i - 1].per][4]}"></div>`;
+    html += `<div class="jr-seg${p.head ? '' : ' nohead'}" data-dot="${dot}"><div class="jr-bar" style="background:${bar}"></div>`
+      + (p.head ? `<div class="jr-head"><b style="background:${dot}"><i class="ti ti-${ic}"></i></b><span>${name}  ${since}</span></div>` : '')
+      + `<div class="jr-cols">${p.items.map((it, k) => {
+          const prev = k ? p.items[k - 1] : i ? parts[i - 1].items.slice(-1)[0] : null;
+          const chip = it.travel && !it.ride && !prev?.ride && (prev || morningStay(page)) ? { text: it.travel, mode: String(it.troute || '').split('|')[1] || 'drive' } : null;
+          return jrEntry(it, page, chip);
+        }).join('')}</div></div>`;
+  });
+  const night = tonightStay(page), last = list[list.length - 1];
+  if (parts.length) {
+    if (night && !(last?.flight && last.kind === 'dep')) {
+      const c = JR_PER[parts[parts.length - 1].per][3];
+      html += `<div class="jr-dots"><i></i><i></i><i></i></div><div class="jr-end" data-stay="${(TRIP?.stays || []).indexOf(night)}"><b style="background:${c}"><i class="ti ti-bed"></i></b><span>回 ${esc(shortName(night.name))} 休息</span><i>Good night</i></div>`;
+    } else html += '<div style="width:7px;height:7px;border-radius:50%;background:var(--line);margin:2px auto 0"></div>';
+  }
+  jrEl.innerHTML = html;
+  layoutJournal();
+  // 左右滑、點天數換天：從那個方向滑進來
+  if (isDay(prevPage) && prevPage !== page && !reduceMotion) playIn(jrEl, dayNum(page) > dayNum(prevPage) ? 'in-r' : 'in-l');
+}
+// 兩欄：量了真正的高度再排（照片是固定比例，圖還沒載好高度也不會變）
+function layoutJournal() {
+  if (jrEl.hidden) return;
+  const W = jrEl.clientWidth - 32, G = 44, cw = (W - G) / 2;
+  jrEl.style.setProperty('--cw', cw + 'px');
+  jrEl.querySelectorAll('.jr-cols').forEach(cols => {
+    cols.querySelectorAll('.jr-mk,.jr-ln').forEach(x => x.remove());
+    const dot = cols.parentElement.dataset.dot, es = [...cols.querySelectorAll(':scope > .jr-e')];
+    const bottom = [0, 0]; let last = -1e9; const marks = [];
+    for (const e of es) {
+      const side = bottom[0] <= bottom[1] ? 0 : 1;
+      e.classList.toggle('l', !side); e.classList.toggle('r', !!side);
+      const a = e.querySelector('.jr-anchor'), lh = a ? parseFloat(getComputedStyle(a).lineHeight) || 20 : 20;
+      const dy = a ? a.offsetTop + Math.min(a.offsetHeight, lh) / 2 : 10, h = e.offsetHeight;
+      const y = Math.max(bottom[side], last + 34 - dy);
+      e.style.top = y + 'px'; e.style.left = (side ? cw + G : 0) + 'px';
+      bottom[side] = y + h + 22; last = y + dy;
+      const cy = y + dy;
+      marks.push(`<i class="jr-ln" style="top:${cy - 1.25}px;left:${side ? W / 2 + 4.5 : cw + 3}px;background:${dot}"></i><i class="jr-mk" style="top:${cy - 5.5}px;left:${W / 2 - 5.5}px;border-color:${dot}"></i>`);
+    }
+    cols.insertAdjacentHTML('beforeend', marks.join(''));
+    cols.style.height = Math.max(0, Math.max(...bottom) - 22) + 'px';
+  });
+}
+addEventListener('resize', () => { if (!jrEl.hidden) layoutJournal(); });
+document.fonts?.ready.then(() => { if (!jrEl.hidden) layoutJournal(); });
+jrEl.addEventListener('click', e => {
+  const st = e.target.closest('.jr-end'); if (st) { const i = +st.dataset.stay; if (i >= 0) openStayInfo(i); return; }
+  const el = e.target.closest('.jr-e'); if (!el) return;
+  const it = withFlights(itemsOf(current), current).find(x => x.id === el.dataset.id); if (!it) return;
+  if (it.flight) openFlightSheet(it.flight.id); else openCardInfo(it.id);
+});
+// 左右滑換天（第 1 天往右＝總覽、最後一天往左＝備選）
+{ let x0 = 0, y0 = 0, t0 = 0;
+  jrEl.addEventListener('touchstart', e => { if (e.touches.length !== 1) return; x0 = e.touches[0].clientX; y0 = e.touches[0].clientY; t0 = performance.now(); }, { passive: true });
+  jrEl.addEventListener('touchend', e => {
+    const t = e.changedTouches[0], dx = t.clientX - x0, dy = t.clientY - y0, fast = Math.abs(dx) / Math.max(1, performance.now() - t0) > 0.4;
+    if (!isDay(current) || Math.abs(dx) < (fast ? 30 : 70) || Math.abs(dx) < Math.abs(dy) * 1.5) return;
+    const n = dayNum(current), to = dx < 0 ? (n < DAY_KEYS.length ? 'd' + (n + 1) : 'cand') : (n > 1 ? 'd' + (n - 1) : 'overview');
+    if (to === 'cand' || to === 'overview') { skipAnim = true; goHash(to); playIn(to === 'cand' ? candEl : ovEl, to === 'cand' ? 'in-r' : 'in-l'); }
+    else { swipeKeep = { y: 0, st: START }; goHash(to); scrollTo(0, 0); }
+  });
+}
 // ---------- 備選景點 ----------
 // 跟每天一樣的彩色卡片，沒有時間軸、由上往下排。編輯時「日期」選某一天就排進去
 const candEl = document.getElementById('candPage');
@@ -5801,18 +5986,25 @@ acctBtn.addEventListener('click', e => {
   // 最上面是帳號（還沒登入＝Google 登入；登入了＝頭像、名字），隔一條線，下面才是其他選項
   if (!a) acctMenu.innerHTML = `<button type="button" class="am-item am-login" id="acctLogin"><i class="ti ti-brand-google"></i>用 Google 登入</button>${mine}
     ${myTrips().length ? '<button type="button" class="am-item" id="acctCarry"><i class="ti ti-link"></i>用連結帶到其他裝置</button>' : ''}
-    ${amScale()}
+    ${inTrip ? amStyle() : ''}${amScale()}
     ${tut}
 ${set}${amPriv}`;
   else acctMenu.innerHTML = `<div class="am-who"><span class="acct-pic">${acctPic(a)}</span><span><b>${esc(a.name || 'Google 帳號')}</b><small>${esc(a.email || '')}</small><small>旅程已同步</small></span></div>
     ${mine}
     <button type="button" class="am-item" id="acctNick"><i class="ti ti-user-edit"></i>暱稱<span class="am-val">${esc(getNick() || '還沒填')}</span><i class="ti ti-chevron-right am-go"></i></button>
-    ${amScale()}
+    ${inTrip ? amStyle() : ''}${amScale()}
     ${tut}
     <button type="button" class="am-item" id="acctOut"><i class="ti ti-logout"></i>登出</button>${set}${amPriv}`;
   acctMenu.hidden = false; acctBtn.setAttribute('aria-expanded', 'true');
 });
 // 時間軸大小：三個並排，點了馬上重排，畫面中間那個時間留在原地
+// 顯示方式（11/18 照 App）：卡片／手帳，每趟各自記在這支手機；沒選過＝只能看的人看手帳、有編輯碼的看卡片
+const amStyle = () => TRIP_ID ? `<div class="am-item am-scale"><i class="ti ti-layout-columns"></i>顯示<span class="am-seg">${[['card', '卡片'], ['journal', '手帳']].map(([v, n]) => `<button type="button" data-jrs="${v}"${(v === 'journal') === journalOn(true) ? ' class="on"' : ''}>${n}</button>`).join('')}</span></div>` : '';
+function setJrStyle(v) {
+  try { localStorage.setItem(jrKey(), v); } catch {}
+  document.querySelectorAll('#acctMenu [data-jrs]').forEach(b => b.classList.toggle('on', b.dataset.jrs === v));
+  if (isDay(current)) { renderPage(current); scrollTo(0, 0); }
+}
 const amScale = () => `<div class="am-item am-scale"><i class="ti ti-arrows-vertical"></i>時間軸<span class="am-seg">${TL_SCALES.map(([v, n]) => `<button type="button" data-tls="${v}"${v === tlScale() ? ' class="on"' : ''}>${n}</button>`).join('')}</span></div>`;
 function setTlScale(v) {
   if (v === tlScale()) return;
@@ -5834,7 +6026,8 @@ function setTlScale(v) {
 }
 function acctClick(e) {
   if (e.target.closest('#tlsBtn')) { setTlsOpen(!tlsOpen); return; }
-  const sc = e.target.closest('[data-tls]'); if (sc) { setTlScale(+sc.dataset.tls); return; }   // 選了不收起來（10/23），可以連續換著比較；點外面、按 Esc、再按一次時間軸才收
+  const sc = e.target.closest('[data-tls]'); if (sc) { setTlScale(+sc.dataset.tls); return; }
+  const js = e.target.closest('[data-jrs]'); if (js) { setJrStyle(js.dataset.jrs); return; }   // 選了不收起來（10/23），可以連續換著比較；點外面、按 Esc、再按一次時間軸才收
   if (e.target.closest('#acctTrips')) { acctMenuClose(); location.hash = 'trips'; return; }
   if (e.target.closest('#acctSet')) { acctMenuClose(); withAuth(openTripSettings); return; }
   if (e.target.closest('#acctOut')) { acctMenuClose(); logoutAccount(); }
