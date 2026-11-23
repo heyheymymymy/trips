@@ -3831,6 +3831,17 @@ function jrTitle(t) {
   return esc(t);
 }
 const jrNote = k => NOTES[k]?.photo || '';
+// 住處的卡片自己沒照片：用住處的照片（11/23 照 App）。認得出的住處卡片（homeStay），或自己建的「回家休息」這種：
+// 地點常是 Google 上住處旁邊的一個點，名稱像回住處、離這天的住處 150 公尺內也算（飯店裡的餐廳名稱不像回住處，不會被換）
+const JR_HOME_RE = /回家|回飯店|回旅館|回民宿|回住處|休息|入住|退房|check.?in|check.?out/i;
+function jrStay(it, day) {
+  const h = homeStay(it, day); if (h) return h;
+  const ll = s => { const p = String(s || '').split(',').map(Number); return p.length === 2 && p.every(isFinite) ? p : null; };
+  const a = ll(it.loc), n = JR_HOME_RE.test(it.t || '') && homeFor(day), b = n && ll(n.loc);
+  if (!a || !b) return null;
+  const r = Math.PI / 180, x = Math.sin((b[0] - a[0]) * r / 2) ** 2 + Math.cos(a[0] * r) * Math.cos(b[0] * r) * Math.sin((b[1] - a[1]) * r / 2) ** 2;
+  return 2 * 6371000 * Math.asin(Math.sqrt(x)) <= 150 ? n : null;
+}
 function jrEntry(it, page, chip) {
   const multi = it.group && it.stops?.length ? 'group' : it.alts?.length ? 'pick' : '', fl = !!it.flight, ride = !!it.ride;
   const type = !fl && !ride ? TYPE_NAME[it.cls] || '' : '';
@@ -3850,7 +3861,7 @@ function jrEntry(it, page, chip) {
     const line = multi === 'group' ? it.stops.map(x => x.short || x.name).join(' → ') : it.alts.map(x => x.name).join('／');
     body = title() + meta + `<div class="jr-stack">${cards}</div><div class="jr-sub">${esc(line)}</div>`;
   } else {
-    const p = jrNote(it.note || it.t);
+    const p = jrNote(it.note || it.t) || jrNote(jrStay(it, page)?.name);
     body = p ? title() + meta + `<span class="jr-ph">${photoImg(p, ' loading="lazy" decoding="async"')}</span>`
              : `<div class="jr-meta jr-anchor">${bits.map(esc).join(' · ')}${closed ? `<em>${closed}</em>` : ''}</div><span class="jr-ph sq"><span class="jr-nb">${esc(it.t || '')}</span></span>`;
     if (it.mine) body += `<div class="jr-mine">${esc(it.mine)}</div>`;
