@@ -2369,7 +2369,9 @@ function rememberTrip(t, role, key, code) {
     ...(t.has_owner !== undefined ? { has_owner: t.has_owner, created_by: t.created_by || '' } : old?.has_owner !== undefined ? { has_owner: old.has_owner, created_by: old.created_by } : {}) });
   try { localStorage.setItem(MINE_KEY, JSON.stringify(list.slice(0, 50))); } catch {}
 }
-let TRIP_CODE = TRIP_ID ? myTrips().find(x => x.id === TRIP_ID)?.code || '' : '';
+// 邀請一起規劃的連結帶編輯碼（&c=，11/23 照 App）：點開就能編輯；讀到就從網址拿掉（不留在瀏覽紀錄、不會被再分享出去）
+let TRIP_CODE = TRIP_ID ? QS.get('c') || myTrips().find(x => x.id === TRIP_ID)?.code || '' : '';
+if (QS.get('c')) { const q = new URLSearchParams(location.search); q.delete('c'); history.replaceState(history.state, '', location.pathname + '?' + q + location.hash); }
 // 擁有者鑰匙：建立旅程時雲端給的，只記在建立的人的手機（「帶到其他裝置」也會一起帶）；刪除旅程要用
 function setTripOwner(id, owner) { const list = myTrips(), t = list.find(x => x.id === id); if (!t || !owner) return; t.owner = owner; try { localStorage.setItem(MINE_KEY, JSON.stringify(list)); } catch {} mineTouched(id); }
 const tripRemoved = id => { try { localStorage.setItem(MINE_KEY, JSON.stringify(myTrips().filter(x => x.id !== id))); localStorage.removeItem('trip-cache-' + id + TEST_SUFFIX); } catch {} mineTouched(id, true); };
@@ -4311,10 +4313,11 @@ function openCover() {
 // 邀請連結：手機有分享選單就用（LINE 等），沒有就複製
 // t：要分享的旅程（預設正在看的這趟；「我的旅程」長按時是列表裡那一趟，鑰匙叫 key）
 async function shareTrip(kind, t = TRIP) {
-  const url = location.origin + tripUrl(t.id, t.view_key || t.key, '');
-  const text = (kind === 'edit' ? `一起來規劃「${t.name}」！要修改時按 ✏️，編輯碼 ${t.code}` : `「${t.name}」的行程`) + ' ' + url;
+  // 邀請一起規劃：連結直接帶編輯碼（11/23 照 App），點開就能編輯；有裝 App 的直接打開 App
+  const url = location.origin + tripUrl(t.id, t.view_key || t.key, '') + (kind === 'edit' && t.code ? '&c=' + encodeURIComponent(t.code) : '');
+  const text = (kind === 'edit' ? `一起來規劃「${t.name}」！點連結加入就能一起改行程` : `「${t.name}」的行程`) + ' ' + url;
   // 先顯示要傳出去的文字（系統分享選單看不到完整內容）；https（正式版）多一顆「分享…」叫出手機的分享選單，本機測試是 http 只能複製
-  openCopySheet(kind === 'edit' ? '邀請一起規劃' : '分享行程', kind === 'edit' ? '會附上編輯碼，收到的人可以一起改行程' : '只能看行程，不會附上編輯碼', text, kind === 'edit' ? '已複製連結和編輯碼' : '已複製連結', '', '取消', true);
+  openCopySheet(kind === 'edit' ? '邀請一起規劃' : '分享行程', kind === 'edit' ? '連結裡已經帶編輯權限，收到的人點開就能一起改' : '只能看行程，不會附上編輯碼', text, kind === 'edit' ? '已複製連結和編輯碼' : '已複製連結', '', '取消', true);
 }
 // 顯示一段要傳出去的文字：「取消／複製」；extra：放在文字上面的內容（例如大字編輯碼）
 function openCopySheet(title, sub, text, done, extra = '', cancel = '取消', share = false) {
