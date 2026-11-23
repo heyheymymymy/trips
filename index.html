@@ -1761,6 +1761,13 @@ html:not(.desk-map) .tl-add:not(.tl-route) small{color:rgba(255,255,255,.8)}   /
 .tl-add.empty{height:auto;padding:22px 12px;flex-direction:column;gap:2px;font-size:15px}
 .tl-add.empty i{font-size:22px}
 .tl-add small{font-size:12px;font-weight:400;color:var(--text2)}
+/* 這天還沒有行程的起點卡片（11/23 照 App 的 EmptyDayCard）：搜尋地點加入、匯入 Google 地圖清單／從備選挑 */
+.tl-start{position:absolute;left:4px;right:0;z-index:3;box-sizing:border-box;padding:14px;border:1.2px dashed #9a948d;border-radius:16px;background:var(--fill);display:flex;flex-direction:column;align-items:center;gap:10px;text-align:center}
+.tl-start>b{font-size:16px;color:var(--ink)}.tl-start>small{font-size:12px;color:var(--text2);margin-top:-7px}
+.tl-start button{width:100%;border-radius:12px;font:inherit;font-weight:600;display:flex;align-items:center;justify-content:center;gap:4px;cursor:pointer}
+.ts-go{height:42px;border:0;background:var(--accent-fg);color:#fff;font-size:15px!important}
+.ts-im{height:38px;border:1px solid var(--line);background:#fff;color:var(--accent-fg);font-size:14px!important}
+.ts-hint{font-size:12px;color:var(--muted);display:flex;align-items:center;gap:3px;min-height:38px}
 .af-s1{min-height:72vh}
 .af-s1.af-wk{min-height:0}   /* 多天並排的小面板：不用為了手機鍵盤拉高 */
 .af-wk .ps-list,.af-wk .af-drop .cand-drop{position:static;margin-top:8px}   /* 小面板：搜尋建議、備選清單排在搜尋框下面，面板跟著長高，不會被切掉（10/25） */
@@ -3234,7 +3241,8 @@ function liveConnect(info) {
   ws.onmessage = e => {
     let msg; try { msg = JSON.parse(e.data); } catch { return; }
     if (msg.event !== 'broadcast' || msg.payload?.payload?.cid === LIVE_CID) return;
-    clearTimeout(me.wait); me.wait = setTimeout(() => load(), 400);   // 對方連續存好幾次：等一下再一起抓
+    me.last = { by: msg.payload.payload.by || '', action: msg.payload.payload.action || '' };
+    clearTimeout(me.wait); me.wait = setTimeout(() => liveReload(me.last), 400);   // 對方連續存好幾次：等一下再一起抓
   };
   ws.onclose = () => {
     clearInterval(me.beat);
@@ -3242,6 +3250,24 @@ function liveConnect(info) {
     me.tries++;
     if (document.visibilityState === 'visible') setTimeout(() => { if (liveSock === me) liveConnect(info); }, Math.min(30000, 2000 * me.tries));
   };
+}
+// 旅伴存了：重新下載，比對前後的卡片，下面跳一行「小明 把「真心市集」改到 11:30」（11/23 照 App）
+async function liveReload(last) {
+  const snap = () => { const o = {}; for (const k of [...DAY_KEYS, 'cand']) for (const it of DATA[k] || []) o[it.id] = { t: it.t, day: k, s: it.s, j: JSON.stringify(it) }; return o; };
+  const before = snap();
+  await load();
+  const after = snap(), msg = liveNote(last?.by, last?.action, before, after);
+  if (msg) toast(msg);
+}
+function liveNote(by, action, o, n) {
+  const who = (by || '').trim() || '旅伴', place = d => d === 'cand' ? '備選' : `第 ${dayNum(d)} 天`, msgs = [];
+  for (const id in n) if (!o[id]) msgs.push(`加了「${n[id].t}」到${place(n[id].day)}`);
+  for (const id in o) if (!n[id]) msgs.push(`刪了「${o[id].t}」`);
+  for (const id in n) { const p = o[id], x = n[id]; if (!p || p.j === x.j) continue;
+    msgs.push(p.day !== x.day ? `把「${x.t}」移到${place(x.day)}` : p.s !== x.s ? `把「${x.t}」改到 ${T(x.s)}` : `改了「${x.t}」`); }
+  if (msgs.length === 1) return `${who} ${msgs[0]}`;
+  if (msgs.length > 1) return `${who} 改了 ${msgs.length} 張卡片`;
+  return { saveNotes: `${who} 改了筆記`, saveChecks: `${who} 更新了待辦清單`, saveDay: `${who} 改了每天的標題`, saveTrip: `${who} 改了旅程設定` }[action] || '';
 }
 function liveClose() { if (!liveSock) return; const l = liveSock; liveSock = null; clearInterval(l.beat); clearTimeout(l.wait); try { l.ws.close(); } catch {} }
 // 手機切到背景時 iOS 會切斷連線：切回來重新連上（重連時順便抓一次最新的）
@@ -3316,8 +3342,16 @@ const y = s => (m(s) - START * 60) * PX;
 // 航班卡片（自動產生）也要避開：還沒有行程但有航班時，航班前面放得下就放上面，放不下就放航班下面
 function addButton(page) {
   const real = DATA[page] || [], items = withFlights(real, page), last = items.reduce((mx, it) => Math.max(mx, m(it.e)), 0);
-  const b = document.createElement('button'); b.type = 'button'; b.className = 'tl-add' + (real.length ? '' : ' empty');
-  b.innerHTML = real.length ? '<i class="ti ti-plus"></i> 加入行程' : '<i class="ti ti-plus"></i> 加入第一個行程<small>從搜尋店家、景點開始</small>';
+  // 這天還沒有行程：虛線起點卡片（11/23 照 App）——搜尋地點加入；還沒有備選＝匯入 Google 地圖清單、有備選＝提示到備選把地點排進來
+  const cand = (DATA.cand || []).length, b = document.createElement(real.length ? 'button' : 'div');
+  if (real.length) { b.type = 'button'; b.className = 'tl-add'; b.innerHTML = '<i class="ti ti-plus"></i> 加入行程'; }
+  else {
+    b.className = 'tl-start';
+    b.innerHTML = `<b>這天還沒有行程</b><small>${cand ? `搜尋店家、景點，或從備選的 ${cand} 個地點排進來` : '搜尋店家、景點，或把 Google 地圖存的清單整份匯入'}</small>
+      <button type="button" class="ts-go"><i class="ti ti-search"></i> 搜尋地點加入</button>
+      ${cand ? '<span class="ts-hint"><i class="ti ti-bookmark"></i>天數列最右邊的書籤＝備選，點地點就能排進這天</span>' : '<button type="button" class="ts-im"><i class="ti ti-download"></i> 匯入 Google 地圖清單</button>'}`;
+    b.querySelector('.ts-im')?.addEventListener('click', e => { e.stopPropagation(); withAuth(() => openImport()); });
+  }
   // 很短的行程卡片會比時間長度高（有最小高度），所以也看實際畫出來的卡片底部，取比較下面的
   const drawn = [...(curLayer || tl).children].filter(el => el.classList.contains('mv') && el.classList.contains('blk') || el.classList.contains('grp'))
     .reduce((mx, el) => Math.max(mx, (+el.dataset.t || 0) + el.offsetHeight), 0);
@@ -3328,15 +3362,15 @@ function addButton(page) {
     if (40 + h + 12 <= first) top = 40;
   }
   b.style.top = top + 'px'; b.classList.add('mv'); b.dataset.t = top; movable.push(b);   // 展開合併區塊時跟著往下移
-  b.addEventListener('click', e => { e.stopPropagation(); withAuth(() => openAddFlow(page)); });
+  (real.length ? b : b.querySelector('.ts-go')).addEventListener('click', e => { e.stopPropagation(); withAuth(() => openAddFlow(page)); });
   const desk = deskMap(page);   // 電腦：加入行程用右邊地圖上方的搜尋列，時間線底下只留自動排交通
   if (desk) { b.remove(); top -= 48; } else (curLayer || tl).appendChild(b);
-  addBottom = top + 64;
+  addBottom = top + (real.length || desk ? 64 : b.offsetHeight + 24);
   // 下面一格「自動排交通」：算這天每一段的交通時間（原本是編輯模式右下角的小按鈕，10/21 拿掉後改放這裡）。至少兩個行程才有交通要算
   if (real.length + flightItems(page).length >= 2) {
     const r = document.createElement('button'); r.type = 'button'; r.className = 'tl-add tl-route mv';
     r.innerHTML = '<i class="ti ti-route"></i> 自動排交通';
-    const rt = top + 48; r.style.top = rt + 'px'; r.dataset.t = rt; movable.push(r);
+    const rt = top + (real.length || desk ? 48 : b.offsetHeight + 8); r.style.top = rt + 'px'; r.dataset.t = rt; movable.push(r);
     r.addEventListener('click', e => { e.stopPropagation(); withAuth(() => openRoutePlanner(page)); });
     (curLayer || tl).appendChild(r); addBottom = rt + 64;
   }
