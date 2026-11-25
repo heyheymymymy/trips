@@ -468,6 +468,7 @@ html.sheet-lock body{position:fixed;left:0;right:0;bottom:0;overflow:hidden}
 .seg-thumb{position:absolute;top:3px;bottom:3px;left:3px;width:calc((100% - 6px) / 3);border-radius:8px;background:#fff;box-shadow:0 1px 3px rgba(60,40,20,.16);transition:transform .2s ease}
 .seg[data-i="1"] .seg-thumb{transform:translateX(100%)}
 .seg[data-i="2"] .seg-thumb{transform:translateX(200%)}
+.seg.ts-buf .seg-thumb{width:calc((100% - 6px) / 4)}
 .seg button{position:relative;z-index:1;flex:1;min-width:0;padding:0;border:0;border-radius:8px;background:none;font:inherit;font-size:14px;color:var(--text2);cursor:pointer;transition:color .2s}
 .seg button.on{color:var(--text);font-weight:600}
 :is(#edKind,#edConv,#rdKind) button > .ti{font-size:15px;vertical-align:-2px;margin-right:1px}   /* 卡片樣式的圖示（10/27） */
@@ -636,7 +637,7 @@ html.on-map .map-btn{bottom:calc(var(--strip-b) + 64px)}   /* 「卡片」按鈕
   .wk-body{margin-top:12px}   /* 最上面那個整點的字有一半在線上面：留空間，不要被每天的標題壓住 */
   /* 卡片裡的東西（航班的「預計 4 小時」、交通泡泡…）各自有 z-index：每一欄的內容自己一層（isolation），捲上去時才不會穿過最上面的「第 N 天」；刻度那欄蓋在最上面（左右捲時日期標題從它底下過） */
   .wk-col .layer .blk,.wk-col .layer .grp{left:4px;right:4px;cursor:grab}
-  .wk-col .layer .nav,.wk-col .layer .car,.wk-col .layer .car-line{display:none}
+  .wk-col .layer .nav,.wk-col .layer .car,.wk-col .layer .car-line,.wk-col .layer .gap-box{display:none}
   .wk-col .layer .blk.has-nav{padding-right:10px}   /* 多天並排不放導航鈕：右邊不用留位置，下面的標籤才不會被切掉 */
   .wk-col .layer .blk:not(.compact):not(.ride):not(.flight) > .t{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}   /* 一般卡片的店名也一行，長店名換兩行會把下面的標籤擠出卡片 */
   .wk-col .layer .blk.compact .bcs.in{flex:none}   /* 矮卡片：店名先縮成「…」，時間那顆完整留著 */
@@ -865,6 +866,19 @@ html.on-map:not(.sheet-lock),html.on-map:not(.sheet-lock) body{background:#f4f0e
 .car.stale,.car-line.stale{opacity:.5}
 .car.late{color:#B4412F;border-color:#EBB7AD}
 a.car.walk-go{text-decoration:none;cursor:pointer}
+/* 空檔灰框、來不及紅框（11/25 照 App）：灰框淡灰底虛線、置中「空檔 1 小時 45 分」；紅框＝交通泡泡變紅加「差 20 分」；點了跳小選單 */
+.gap-box{position:absolute;left:8px;right:4px;z-index:3;display:flex;align-items:center;justify-content:center;box-sizing:border-box;border:1.2px dashed var(--line);border-radius:10px;
+  background:color-mix(in srgb,var(--fill) 70%,transparent);font-size:12px;font-weight:500;color:var(--muted);font-variant-numeric:tabular-nums;cursor:pointer;-webkit-tap-highlight-color:transparent}
+.gap-box:active{background:var(--fill)}
+.car.gap-late{gap:3px;height:20px;padding:0 6px;color:#C2412D;background:#FBEAE6;border-color:rgba(194,65,45,.6);cursor:pointer;-webkit-tap-highlight-color:transparent}
+.car.gap-late b{font-weight:600}
+.drag-on .gap-box{display:none}
+.gap-menu{position:fixed;z-index:70;width:min(300px,calc(100% - 24px));padding:6px;border-radius:14px;background:#fff;box-shadow:0 8px 28px rgba(0,0,0,.14),0 0 0 1px rgba(0,0,0,.04);animation:dropIn .16s ease}
+.gap-menu .gm-head{padding:8px 10px 6px;font-size:12px;color:var(--muted)}
+.gap-menu .am-item b{display:block;font-weight:500}
+.gap-menu .am-item small{display:block;margin-top:1px;font-size:12px;color:var(--text2)}
+.gap-menu .am-item:disabled{opacity:.4;cursor:default}
+.gap-menu .am-item:disabled:active{background:none}
 a.car.walk-go.late{color:#B4412F}
 .car .go{font-size:10px;margin-left:2px;opacity:.7}   /* 走到車站的時間比空檔長：可能趕不上 */
 .rd-ab{display:flex;align-items:center;box-shadow:inset 0 1px 0 var(--border)}
@@ -3552,6 +3566,101 @@ const bcBooked = booked => booked ? '<span class="bc"><i class="ti ti-circle-che
 const bcExtra = (booked, al, pending) => (booked ? '<span class="bc"><i class="ti ti-circle-check"></i>已訂位</span>' : '') +
   (al ? `<span class="bc grow"><i class="ti ti-alert-triangle"></i><span>${esc(al)}</span></span>` : '') +
   (pending ? '<span class="bc"><i class="ti ti-loader-2 spin"></i>查詢資訊中</span>' : '');
+// ---------- 空檔、來不及（11/25 照 App 11/24 做的） ----------
+// 兩張卡片中間：扣掉交通＋緩衝還多 30 分以上＝灰框「空檔 1 小時 45 分」，點了在這裡加入行程／緊縮行程（後面的往上拉，碰到已訂位停）
+// 空出來的比交通時間短＝交通泡泡變紅「差 20 分」（差幾分不算緩衝），點了後面往後移；只給有編輯身分的人看
+const GAP_MIN = 30;
+const tripBuffer = () => TRIP?.buffer ?? 10;   // 交通之外多留幾分鐘（旅程設定 0/5/10/15）
+// 交通時間文字 → 分鐘：「7 分」「1 小時 5 分」「1h20m」「約 20 分鐘」；看不懂＝null
+function travelMins(s) {
+  const t = String(s || '').replace(/\s+/g, ''); if (!t) return null;
+  const h = /(\d+)(?=小時|hr|h)/.exec(t), mm = /(\d+)(?=分|min|m)/.exec(t);
+  if (!h && !mm) { const d = t.replace(/\D/g, ''); return d ? +d : null; }
+  return (h ? +h[1] : 0) * 60 + (mm ? +mm[1] : 0);
+}
+const gapLen = n => n >= 60 ? `${Math.floor(n / 60)} 小時${n % 60 ? ` ${n % 60} 分` : ''}` : `${n} 分`;
+// 這天的空檔／來不及：只看兩張卡片中間（第一張之前、最後一張之後不算）；交通卡片前後不算（走路泡泡自己會標紅）；重疊的不算
+function gapMarks(day) {
+  const out = []; let last = null;
+  for (const it of withFlights(itemsOf(day), day)) {
+    const p = last; if (!last || m(it.e) > m(last.e)) last = it;
+    if (!p || it.ride?.legs?.length || p.ride?.legs?.length || m(it.s) < m(p.e)) continue;
+    const from = m(p.e), until = m(it.s), gap = until - from, tv = travelMins(it.travel), need = (tv ?? 0) + tripBuffer(), free = gap - need, late = tv != null && gap < tv;
+    if (late || free >= GAP_MIN) out.push({ day, after: p.id, to: it.id, from, until, travel: tv, need, free, late, short: Math.max(0, (tv ?? 0) - gap) });
+  }
+  return out;
+}
+const gapAfter = g => withFlights(itemsOf(g.day), g.day).filter(it => m(it.s) >= g.until && it.id !== g.after);
+// 緊縮行程：下一張開始往後的一起往上拉 free 分鐘；碰到已訂位（或航班）就停，它和之後的不動。回傳 id → 新的開始分鐘
+function compressMoves(g) {
+  const out = {};
+  for (const it of gapAfter(g)) { if (it.booked || it.flight) break; out[it.id] = m(it.s) - g.free; }
+  return out;
+}
+// 來不及＞後面往後移：下一張開始往後推到剛好（交通＋緩衝）；推到下一段空檔就吸收掉（後面不用再推）。會動到的已訂位卡片要先問
+function pushMoves(g) {
+  let by = g.need - (g.until - g.from), prev = null;
+  const moves = {}, booked = [];
+  for (const it of gapAfter(g)) {
+    if (prev) by -= Math.max(0, m(it.s) - m(prev.e) - ((travelMins(it.travel) ?? 0) + tripBuffer()));   // 上一張跟這張中間原本多出來的先吸收
+    if (by <= 0 || it.flight) break;
+    if (it.booked) booked.push(it);
+    moves[it.id] = m(it.s) + by; prev = it;
+  }
+  return { moves, booked };
+}
+// 點灰框／紅框：跳出小選單（App 是 iOS 原生選單）
+let gapMenuEl = null;
+function closeGapMenu() { gapMenuEl?.remove(); gapMenuEl = null; }
+function openGapMenu(anchor, to) {
+  closeGapMenu();
+  const g = gapMarks(current).find(x => x.to === to); if (!g) return;
+  const item = (act, icon, title, sub, off) => `<button type="button" class="am-item" data-act="${act}"${off ? ' disabled' : ''}><i class="ti ti-${icon}"></i><span><b>${title}</b>${sub ? `<small>${esc(sub)}</small>` : ''}</span></button>`;
+  let html;
+  if (g.late) {
+    const by = g.need - (g.until - g.from), n = Object.keys(pushMoves(g).moves).length;
+    html = `<div class="gm-head">交通 ${g.travel} 分＋緩衝 ${g.need - g.travel} 分，還差 ${gapLen(by)}</div>` +
+      item('push', 'arrow-bar-to-down', `後面往後移 ${gapLen(by)}`, n > 1 ? `這個和後面 ${n - 1} 個行程，碰到空檔就不再往後推` : '只移這一個');
+  } else {
+    const n = Object.keys(compressMoves(g)).length;
+    html = `<div class="gm-head">空檔 ${gapLen(g.free)}（已扣掉交通和緩衝）</div>` + item('add', 'plus', '在這裡加入行程') +
+      item('compress', 'arrow-bar-to-up', '緊縮行程', !n ? '下一個是已訂位的行程，不能往上拉' : `後面 ${n} 個行程提前 ${gapLen(g.free)}` + (n < gapAfter(g).length ? '，已訂位的不動' : ''), !n);
+  }
+  const el = gapMenuEl = div('gap-menu', html); document.body.appendChild(el);
+  // 放在點的那個框下面；下面放不下就放上面
+  const r = anchor.getBoundingClientRect(), w = el.offsetWidth, h = el.offsetHeight, cx = r.left + r.width / 2;
+  const top = g.late ? r.bottom + 6 : Math.min(r.top + 6, r.bottom - 6);
+  el.style.left = Math.max(12, Math.min(cx - w / 2, innerWidth - w - 12)) + 'px';
+  el.style.top = (top + h > innerHeight - 12 ? Math.max(12, (g.late ? r.top : top) - h - 6) : top) + 'px';
+  el.addEventListener('click', e => { const b = e.target.closest('[data-act]'); if (!b || b.disabled) return; closeGapMenu(); gapAct(b.dataset.act, g); });
+}
+addEventListener('pointerdown', e => { if (gapMenuEl && !gapMenuEl.contains(e.target) && !e.target.closest('[data-gap]')) closeGapMenu(); }, true);
+addEventListener('keydown', e => { if (e.key === 'Escape') closeGapMenu(); });
+addEventListener('scroll', closeGapMenu, true);
+function gapAct(act, g) {
+  if (act === 'add') { withAuth(() => openAddFlow(g.day, hhmm(Math.min(Math.ceil((g.from + g.need) / 5) * 5, DAY_END - 60)))); return; }   // 上一張結束＋交通＋緩衝，取到 5 分
+  if (act === 'compress') { const mv = compressMoves(g), n = Object.keys(mv).length; if (n) gapShift(g.day, mv, '緊縮行程', `已緊縮行程：後面 ${n} 個行程提前 ${gapLen(g.free)}`); return; }
+  const { moves, booked } = pushMoves(g), n = Object.keys(moves).length, by = g.need - (g.until - g.from);
+  if (!n || by <= 0) return;
+  if ((DATA[g.day] || []).some(it => moves[it.id] != null && moves[it.id] + m(it.e) - m(it.s) > DAY_END)) { toast('往後移會超過凌晨 05:00，請手動調整'); return; }
+  if (booked.length && !confirm(`會動到已訂位的「${booked.map(x => x.t).join('」「')}」，確定要往後移嗎？`)) return;
+  const first = (DATA[g.day] || []).find(it => it.id === g.to)?.t || '';
+  gapShift(g.day, moves, '往後移', `已把「${first}」${n > 1 ? `和後面 ${n - 1} 個行程` : ''}往後移 ${gapLen(by)}`);
+}
+// 一起改時間（合併區塊裡的店家跟著移；交通卡片存檔時 fitRides 會把搭車時間一起平移），可以復原
+function gapShift(day, moves, label, msg) {
+  withAuth(() => {
+    const snap = takeSnap();
+    for (const it of DATA[day] || []) {
+      if (moves[it.id] == null) continue;
+      const d = moves[it.id] - m(it.s);
+      it.stops?.forEach(x => x.s = hhmm(m(x.s) + d));
+      it.s = hhmm(m(it.s) + d); it.e = hhmm(m(it.e) + d);
+    }
+    saveData(label); renderPage(current);
+    toast(msg, '復原', () => undoSnap(snap));
+  });
+}
 const HOME_GAP = 10;   // 住處卡片底部到時間軸最上面的距離（.day-home + .tl 的 margin-top）
 function renderCards(items, day) {
   // 交通卡片：畫的範圍＝實際搭車的時間；跟它連著的起點、終點卡片重疊 30 分鐘以內就讓位（例如 13:05 到站、「松本車站」排 13:00），不算重疊
@@ -3577,6 +3686,8 @@ function renderCards(items, day) {
     el.style.right = 'auto';
     el.style.width = `calc((100% - 4px) / ${n} - 3px)`;
   };
+  // 空檔灰框、來不及紅框（11/25 照 App）：只給有編輯身分的人看；滑動預覽、週視圖、操作練習不畫
+  const gaps = TRIP_ROLE === 'edit' && live && !weekOpen && !TUT && isDay(day) ? Object.fromEntries(gapMarks(day).map(g => [g.to, g])) : {}, chipFor = new Set();
   items.forEach((it, i) => {
     const prev = items[i - 1] || (i === 0 ? homePrev(day) : null);
     // 交通卡片跟起點、終點卡片中間的空白（走到車站、出站走過去）：虛線連起來，標「🚶 13 分」
@@ -3605,11 +3716,14 @@ function renderCards(items, day) {
       // 空隙比泡泡高時，虛線把兩張卡片連起來。前後地點變了（換店、搬動）就變淡加問號
       // 從住處出發：虛線從最上面的住處卡片（在時間軸上面 10px）連下來；太近就把泡泡壓在這張卡片上緣（10/24 之前一律壓在上緣，沒有虛線）
       // 從住處出發＝homePrev 那張（id 'home'）；「Check in」這種連到住處的一般卡片也有 home，不能當成最上面的住處（10/27 虛線從最上面穿過航班卡片）
-      const top0 = prev.id === 'home', end = top0 ? -HOME_GAP : y(prev.e) - 3, gap = y(it.s) - end, stale = routeStale(prev, it);
-      if (gap > 18) { const ln = div('car-line' + (stale ? ' stale' : '')); ln.style.height = gap + 'px'; place(ln, Math.round(end)); }
-      const el = div('car' + (stale ? ' stale' : ''), `<i class="ti ti-${modeIcon(parseRoute(it.troute).mode)}"></i>${esc(it.travel.replace(/\s+/g, ''))}${stale ? '<span class="q">?</span>' : ''}`);
+      // 有空檔灰框：泡泡貼在上一張下面，下面剩的空白畫灰框（不畫虛線）；來不及：換成紅色的泡泡，後面加「差 20 分」，點了跳選單
+      const top0 = prev.id === 'home', end = top0 ? -HOME_GAP : y(prev.e) - 3, gap = y(it.s) - end, stale = routeStale(prev, it), g = gaps[it.id];
+      if (gap > 18 && !(g && !g.late)) { const ln = div('car-line' + (stale ? ' stale' : '')); ln.style.height = gap + 'px'; place(ln, Math.round(end)); }
+      const el = div('car' + (stale ? ' stale' : '') + (g?.late ? ' gap-late' : ''), `<i class="ti ti-${modeIcon(parseRoute(it.troute).mode)}"></i>${esc(it.travel.replace(/\s+/g, ''))}${stale ? '<span class="q">?</span>' : ''}${g?.late ? `<b>差 ${g.short} 分</b>` : ''}`);
       if (stale) el.title = '前後的地點變了，這個時間可能不準，可以重新計算';
-      place(el, Math.round((top0 && gap <= 24 ? y(it.s) - 3 : gap >= 0 ? end + gap / 2 : y(it.s)) - 9));
+      if (g?.late) { el.dataset.gap = it.id; el.setAttribute('role', 'button'); }
+      if (g) chipFor.add(it.id);
+      place(el, Math.round((g && !g.late ? y(hhmm(g.from)) + 12 : top0 && gap <= 24 ? y(it.s) - 3 : gap >= 0 ? end + gap / 2 : y(it.s)) - (g?.late ? 10 : 9)));
     }
     const top = y(it.s), mins = m(it.e) - m(it.s), h = Math.max(mins * PX - 3, 28);
     const extra = clash.has(it.id) ? ' clash' : '';
@@ -3673,6 +3787,13 @@ function renderCards(items, day) {
     setCol(b, it.id);
     b.style.height = h + 'px'; place(b, top);
   });
+  for (const g of Object.values(gaps)) {
+    if (g.late) continue;
+    const a = y(hhmm(g.from)) + (chipFor.has(g.to) ? 24 : 5), z = y(hhmm(g.until)) - 6;
+    if (z - a < 22) continue;
+    const gb = div('gap-box', `<span>空檔 ${gapLen(g.free)}</span>`); gb.dataset.gap = g.to; gb.setAttribute('role', 'button');
+    gb.style.height = (z - a) + 'px'; place(gb, Math.round(a));
+  }
 }
 
 // ---------- 換頁 ----------
@@ -4437,11 +4558,12 @@ async function copyText(text) {
 }
 // 旅程設定：名稱、目的地、住處（交通方式 10/27 搬到自動排交通）（日期和天數之後再做：要搬動每天的卡片）
 // keep：從「修改紀錄」「換編輯碼」滑回來時，剛剛改到一半的設定還在
+const BUFFERS = [0, 5, 10, 15];   // 交通之外多留幾分鐘（11/25 照 App；存 trips.buffer）
 function openTripSettings(keep) {
   const n0 = DAY_KEYS.length, end0 = (() => { const d = new Date(TRIP.start + 'T00:00'); d.setDate(d.getDate() + n0 - 1); return ymd(d); })();
   // 交通方式：還沒自己選過（開始規劃的「選交通方式」還沒完成）就先不選，選開車才算完成那一步
   const cv0 = splitPhoto(TRIP.cover);
-  const st = keep || { dayStart: TRIP.day_start || '10:00', cover: { src: cv0.src, x: cv0.x, y: cv0.y, busy: false }, name: TRIP.name, dest: TRIP.dest, start: TRIP.start, end: end0, cal: TRIP.start.slice(0, 7), members: [...(TRIP.members || [])], memDraft: '', types: JSON.parse(JSON.stringify(tripTypes())), tyEdit: null };
+  const st = keep || { dayStart: TRIP.day_start || '10:00', buffer: TRIP.buffer ?? 10, cover: { src: cv0.src, x: cv0.x, y: cv0.y, busy: false }, name: TRIP.name, dest: TRIP.dest, start: TRIP.start, end: end0, cal: TRIP.start.slice(0, 7), members: [...(TRIP.members || [])], memDraft: '', types: JSON.parse(JSON.stringify(tripTypes())), tyEdit: null };
   if (!keep) { st.legs = placeLegs(TRIP, end0); st.legOpen = -1; legsFix(st); }   // 目的地和日期：每個地點自己的日期（一個目的地就是出發到回程）
   const canMem = canDeleteTrip();   // 建立的人才能新增、移除同行的人   // 住處另外在總覽的「住宿」管理
   const nDays = () => { const a = parseD(st.start), b = parseD(st.end); return a && b && b >= a ? Math.round((b - a) / 864e5) + 1 : 0; };
@@ -4476,6 +4598,8 @@ function openTripSettings(keep) {
           <div class="ty-acts">${st.types.some(x => x.k === st.tyEdit) && t.n ? '<button type="button" class="btn ghost danger" id="tsTyDel"><i class="ti ti-trash"></i> 刪除</button>' : ''}<button type="button" class="btn primary" id="tsTyOk">完成</button></div></div>`; })() : ''}</div>
       <div class="ed-field"><span class="ed-lab">每天通常幾點出門 <span class="ed-lab-hint">空白的那天從這個時間開始排</span></span>
         <input id="tsDayStart" class="ts-time" type="time" step="900" value="${st.dayStart}"></div>
+      <div class="ed-field"><span class="ed-lab">交通之外多留幾分鐘 <span class="ed-lab-hint">算空檔、來不及、緊縮行程時用</span></span>
+        <div class="seg ts-buf" id="tsBuf"><span class="seg-thumb" style="transform:translateX(${Math.max(0, BUFFERS.indexOf(st.buffer)) * 100}%)"></span>${BUFFERS.map(v => `<button type="button" data-buf="${v}"${v === st.buffer ? ' class="on"' : ''}>${v} 分</button>`).join('')}</div></div>
       <div class="ts-more">
         <button type="button" class="inv-btn trip-set" id="tsHistory"><i class="ti ti-history"></i><span><b>修改紀錄</b><small>誰改了什麼，救回刪掉的行程</small></span><i class="ti ti-chevron-right"></i></button>
         ${canMem ? '<button type="button" class="inv-btn trip-set" id="tsReset"><i class="ti ti-key"></i><span><b>換編輯碼或連結</b><small>傳錯人了？舊的會馬上失效</small></span><i class="ti ti-chevron-right"></i></button>' : ''}</div>
@@ -4557,6 +4681,7 @@ function openTripSettings(keep) {
     if (b.id === 'tsHistory') { sheetSlide(1, () => openHistory({ back })); return; }
     if (b.id === 'tsReset') { sheetSlide(1, () => openResetLinks({ back })); return; }
     if (b.dataset.mrm) { st.members.splice(+b.dataset.mrm, 1); draw(); return; }
+    if (b.dataset.buf) { st.buffer = +b.dataset.buf; draw(); return; }
   });
   sheet.querySelector('#tsSave').addEventListener('click', async e => {
     const err = msg => { const el = body.querySelector('#tsErr'); el.textContent = msg; el.hidden = false; el.scrollIntoView({ block: 'nearest' }); };
@@ -4580,6 +4705,7 @@ function openTripSettings(keep) {
     }
     if (canMem && st.memDraft.trim() && !st.members.includes(st.memDraft.trim())) st.members.push(st.memDraft.replace(/,/g, ' ').trim());   // 打了名字忘了按加入
     if (st.dayStart !== (TRIP.day_start || '10:00')) changes.day_start = st.dayStart;
+    if (st.buffer !== (TRIP.buffer ?? 10)) changes.buffer = st.buffer;
     { const t = st.types.find(x => x.k === st.tyEdit), n = body.querySelector('#tsTyName')?.value.trim().slice(0, 6); if (t && n) t.n = n; }   // 改到一半直接按儲存
     const types = st.types.filter(x => x.n);
     if (JSON.stringify(types) !== JSON.stringify(tripTypes())) changes.types = types;
@@ -7555,6 +7681,8 @@ function openAuth(then) {
 
 // 編輯模式下：點卡片＝編輯，點空白處＝在那個時間新增
 tl.addEventListener('click', e => {
+  const gp = e.target.closest('[data-gap]');   // 空檔灰框、來不及紅框：一般、編輯模式都是跳選單
+  if (gp && isDay(current)) { e.stopPropagation(); e.preventDefault(); if (gapMenuEl) closeGapMenu(); else openGapMenu(gp, gp.dataset.gap); return; }
   const fb = e.target.closest('.blk.flight[data-flid]');   // 航班卡片：一般、編輯模式都是打開那段機票
   if (fb && isDay(current)) { e.stopPropagation(); e.preventDefault(); const adj = e.target.closest('[data-adj]'); if (adj) withAuth(() => openFlightTime(fb.dataset.flid, adj.dataset.adj)); else openFlightSheet(fb.dataset.flid); return; }   // 灰色：調預留時間；中間：看機票
   if (!editing && suppressClick) { suppressClick = false; e.stopPropagation(); e.preventDefault(); return; }   // 電腦版剛拖完，不要當成點擊
